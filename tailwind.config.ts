@@ -21,7 +21,8 @@ const config: Config = {
         "muted-foreground": "#6B7280",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "Arial", "sans-serif"],
+        sans: ["ProximaNova", "system-ui", "Arial", "sans-serif"],
+        proxima: ["ProximaNova", "system-ui", "Arial", "sans-serif"],
       },
       borderRadius: {
         lg: "0.5rem",

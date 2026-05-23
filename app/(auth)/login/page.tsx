@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -39,18 +40,24 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-black font-bold text-xl">N</span>
+          <div className="flex justify-center mb-5">
+            <Image
+              src="/brand/logo-nex-preto.png"
+              alt="Nex Coworking"
+              width={140}
+              height={52}
+              className="object-contain"
+              priority
+            />
           </div>
-          <h1 className="text-2xl font-700 text-foreground">Nex Coworking</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm font-semibold text-gray-dark tracking-wide uppercase">
             Marketing, Comunicacao & Vendas
           </p>
         </div>
 
         {/* Form */}
         <div className="bg-white rounded-xl border border-gray-medium p-6 shadow-sm">
-          <h2 className="text-base font-600 mb-5">Entrar na plataforma</h2>
+          <h2 className="text-base font-bold mb-5">Entrar na plataforma</h2>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <Input
               label="E-mail"
