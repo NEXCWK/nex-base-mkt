@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
-  serverExternalPackages: ["bcryptjs", "nodemailer", "node-cron"],
+  experimental: {
+    serverComponentsExternalPackages: ["bcryptjs", "nodemailer", "node-cron"],
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "drive.google.com" },
