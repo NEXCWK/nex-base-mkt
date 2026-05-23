@@ -51,6 +51,10 @@ const handler = NextAuth({
     error: "/login",
   },
   secret: process.env.NEXTAUTH_SECRET,
+  // Railway injeta RAILWAY_STATIC_URL automaticamente; fallback para NEXTAUTH_URL
+  ...(process.env.RAILWAY_STATIC_URL
+    ? { url: `https://${process.env.RAILWAY_STATIC_URL}` }
+    : {}),
 });
 
 export { handler as GET, handler as POST };
