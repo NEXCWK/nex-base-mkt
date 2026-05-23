@@ -3,7 +3,7 @@ builder = "nixpacks"
 buildCommand = "npm run build"
 
 [deploy]
-startCommand = "npm run start"
+startCommand = "node_modules/.bin/next start -H 0.0.0.0"
 healthcheckPath = "/login"
 healthcheckTimeout = 120
 restartPolicyType = "on_failure"
