@@ -1,0 +1,190 @@
+"use client";
+import { useState, useRef } from "react";
+import { Upload, File, ExternalLink, Trash2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+interface DriveFile {
+  id: string;
+  name: string;
+  mimeType: string;
+  webViewLink: string;
+  webContentLink: string;
+  createdTime: string;
+  size?: string;
+}
+
+interface FileUploadProps {
+  section: string;
+  category?: string;
+  label?: string;
+}
+
+function formatSize(bytes?: string): string {
+  if (!bytes) return "";
+  const n = parseInt(bytes);
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("pt-BR");
+}
+
+export function FileUpload({ section, category, label }: FileUploadProps) {
+  const [files, setFiles] = useState<DriveFile[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const [fetched, setFetched] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  async function fetchFiles() {
+    setLoading(true);
+    setError("");
+    try {
+      const sec = category ? `${section}/${category}` : section;
+      const res = await fetch(`/api/drive?section=${encodeURIComponent(sec)}`);
+      if (!res.ok) throw new Error("Erro ao carregar arquivos");
+      setFiles(await res.json());
+      setFetched(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro desconhecido");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("section", section);
+      if (category) fd.append("category", category);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Falha no upload");
+      }
+      await fetchFiles();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro no upload");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  async function handleDelete(fileId: string) {
+    if (!confirm("Remover este arquivo?")) return;
+    try {
+      const res = await fetch("/api/drive", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileId }),
+      });
+      if (!res.ok) throw new Error("Erro ao remover");
+      setFiles((f) => f.filter((x) => x.id !== fileId));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro ao remover");
+    }
+  }
+
+  if (!fetched) {
+    return (
+      <div className="border border-gray-medium rounded-lg p-6 text-center">
+        {label && <h3 className="font-600 mb-3">{label}</h3>}
+        <Button variant="outline" size="sm" onClick={fetchFiles} disabled={loading}>
+          {loading ? <Loader2 size={14} className="animate-spin" /> : null}
+          Carregar arquivos
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-gray-medium rounded-lg overflow-hidden">
+      {label && (
+        <div className="px-4 py-3 border-b border-gray-medium bg-gray-light">
+          <h3 className="font-600 text-sm">{label}</h3>
+        </div>
+      )}
+
+      {/* Upload area */}
+      <div className="p-4 border-b border-gray-medium">
+        <div
+          className={cn(
+            "border-2 border-dashed border-gray-medium rounded-lg p-6 text-center cursor-pointer hover:border-black transition-colors",
+            uploading && "opacity-50 cursor-not-allowed"
+          )}
+          onClick={() => !uploading && inputRef.current?.click()}
+        >
+          {uploading ? (
+            <Loader2 size={20} className="animate-spin mx-auto mb-2 text-muted-foreground" />
+          ) : (
+            <Upload size={20} className="mx-auto mb-2 text-muted-foreground" />
+          )}
+          <p className="text-sm text-muted-foreground">
+            {uploading ? "Enviando..." : "Clique para selecionar ou arraste um arquivo"}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            PDF, DOCX, PPTX, PNG, JPG, MP4
+          </p>
+          <input
+            ref={inputRef}
+            type="file"
+            className="hidden"
+            accept=".pdf,.docx,.pptx,.png,.jpg,.jpeg,.mp4"
+            onChange={handleUpload}
+            disabled={uploading}
+          />
+        </div>
+        {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
+      </div>
+
+      {/* File list */}
+      <div className="divide-y divide-gray-medium">
+        {files.length === 0 && (
+          <div className="p-6 text-center text-sm text-muted-foreground">
+            Nenhum arquivo ainda.
+          </div>
+        )}
+        {files.map((f) => (
+          <div key={f.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-light transition-colors">
+            <File size={16} className="shrink-0 text-muted-foreground" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{f.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {formatDate(f.createdTime)}
+                {f.size ? ` · ${formatSize(f.size)}` : ""}
+              </p>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <a
+                href={f.webViewLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white transition-colors"
+                title="Abrir no Drive"
+              >
+                <ExternalLink size={14} />
+              </a>
+              <button
+                onClick={() => handleDelete(f.id)}
+                className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
+                title="Remover"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
