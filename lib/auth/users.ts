@@ -13,12 +13,23 @@ export interface User {
   role: "admin" | "member";
 }
 
+// Senha inicial: Nex@2026
+const INITIAL_HASH = "$2b$10$ixJ.MOpRPYn90.INcSmMou/RA7.nJf5lCWxeshP9.BFTjF3YbIBPW";
+
+const SEED_USERS: User[] = [
+  { id: "1", email: "larissa@nexcoworking.com.br", name: "Larissa", password: INITIAL_HASH, firstAccess: true, role: "member" },
+  { id: "2", email: "leticia@nexcoworking.com.br", name: "Leticia", password: INITIAL_HASH, firstAccess: true, role: "member" },
+  { id: "3", email: "felipe@nexcoworking.com.br", name: "Felipe", password: INITIAL_HASH, firstAccess: true, role: "admin" },
+  { id: "4", email: "bruna@nexcoworking.com.br", name: "Bruna", password: INITIAL_HASH, firstAccess: true, role: "member" },
+  { id: "5", email: "luiza@nexcoworking.com.br", name: "Luiza", password: INITIAL_HASH, firstAccess: true, role: "member" },
+];
+
 export function readUsers(): User[] {
   try {
     const raw = fs.readFileSync(USERS_FILE, "utf-8");
     return JSON.parse(raw);
   } catch {
-    return [];
+    return SEED_USERS;
   }
 }
 
