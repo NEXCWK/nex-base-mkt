@@ -14,8 +14,12 @@ export interface User {
 }
 
 export function readUsers(): User[] {
-  const raw = fs.readFileSync(USERS_FILE, "utf-8");
-  return JSON.parse(raw);
+  try {
+    const raw = fs.readFileSync(USERS_FILE, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
 }
 
 function writeUsers(users: User[]): void {
