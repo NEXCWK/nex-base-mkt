@@ -16,6 +16,7 @@ import {
   Building,
   FileText,
   BarChart2,
+  GraduationCap,
   LogOut,
   ChevronRight,
 } from "lucide-react";
@@ -32,6 +33,7 @@ const navItems = [
   { href: "/portfolio", label: "Portfolio de Produtos", icon: Building },
   { href: "/propostas", label: "Modelo de Propostas", icon: FileText },
   { href: "/reports", label: "Reports Comerciais", icon: BarChart2 },
+  { href: "/treinamento", label: "Treinamento", icon: GraduationCap },
 ];
 
 export function Sidebar() {
