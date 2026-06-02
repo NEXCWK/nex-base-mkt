@@ -29,11 +29,14 @@ export const authOptions: NextAuthOptions = {
   ],
   session: { strategy: "jwt" },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.firstAccess = (user as unknown as { firstAccess: boolean }).firstAccess;
         token.role = (user as unknown as { role: string }).role;
+      }
+      if (trigger === "update" && session?.firstAccess !== undefined) {
+        token.firstAccess = session.firstAccess;
       }
       return token;
     },
