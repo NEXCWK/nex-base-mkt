@@ -1,8 +1,48 @@
 [
   {
-    "id": "seed-script-comercial",
-    "name": "Script Comercial",
-    "content": "# Premissas Básicas\n\nO atendimento consultivo é a base de tudo. Antes de iniciar qualquer conversa, tenha em mente:\n\n- Apresente-se no início de todo e qualquer atendimento.\n- Realize sempre o atendimento consultivo.\n- Atente-se à concordância verbal, acentuação, coesão e coerência do texto.\n- Evite respostas curtas e ríspidas.\n- Cuide do tom de voz em toda interação.\n- Transmita sempre intenção de prestatividade e colaboração.\n- Utilize os materiais comerciais (infográficos e imagens) sempre após a explicação escrita de um produto, para reforçar o que foi explicado.\n- Procure sempre se referir ao lead pelo nome.\n- Ao final das explicações, devolva a conversa ao lead com uma pergunta.\n\n*Consulte nosso material de Tom de Voz para transmitir o Nex em cada atendimento.*\n\n---\n\n# Início do Atendimento\n\nSempre inicie o atendimento com uma saudação natural: *\"Olá\"*, *\"Boa tarde\"*, *\"Oi, como vai?\"*\n\nEm seguida, apresente-se: *\"Felipe do Nex aqui!\"*\n\nMostre ao lead que você está ali para direcioná-lo na melhor solução: *\"Em que posso ajudar?\"*\n\n### Exemplo de abertura\n\n*\"Olá, bom dia! Tudo bem? Felipe do Nex aqui! Em que posso ajudar, Ana?\"*\n\n---\n\n# Desenvolvimento do Atendimento\n\nTenha em mente o atendimento consultivo e parta da premissa de que o lead pode não ter clareza sobre sua necessidade ou sobre como nossas soluções podem ajudá-lo.\n\nConfirme a dor do lead e convide-o a contar um pouco mais sobre o que precisa:\n\n*\"Ah, maravilha! E você precisa do espaço de trabalho para todos os dias da semana ou somente para dias esporádicos?\"*\n\n*\"Show! E você usará a sala de reunião para uma reunião, de fato, ou a ideia é um dia de trabalho com sua equipe?\"*\n\nCom o entendimento da necessidade do cliente, estamos aptos a indicar a melhor solução:\n\n*\"Ótimo! Pelo que me contou, a nossa solução mais indicada são os Escritórios Privativos!\"*\n\nNesse momento, envie as informações sobre o produto.\n\n---\n\n# Finalização do Atendimento\n\nPasse todas as informações sobre o produto de maneira clara e objetiva.\n\nAo final da explicação, sempre deixe uma pergunta ao cliente — as chances de retorno são maiores:\n\n*\"Fez sentido para você, Ana?\"*\n\n### Réplica Positiva\n\nCom a confirmação do lead, o objetivo passa a ser o agendamento da visita ou a conversão:\n\n*\"Vamos marcar uma visita com nossa Head de Operações para você conhecer o espaço?\"*\n\n*\"Posso já deixar agendadas essas horas para você?\"*\n\n*\"Realizando a adesão agora pela manhã, consigo enviar os documentos ainda essa tarde!\"*\n\n### Réplica Negativa\n\nEm caso de objeção, ofereça outras soluções mais adequadas:\n\n*\"Ah, entendo! Como solução mais econômica, temos as Mesas Fixas em área compartilhada, a partir de R$ 749,00/mês. Posso enviar mais informações?\"*\n\n### Encerramento\n\nAo final de todo atendimento, lembre que um lead perdido hoje pode ser o novo negócio de amanhã. Deixe sempre as portas abertas:\n\n*\"Uma pena não conseguirmos te atender, Ana! De todo modo, estamos sempre à disposição para o que você precisar. Até uma melhor oportunidade!\"*\n\n---\n\n# Perguntas-Chave por Produto\n\n## Escritório Privativo e Mesa Fixa\n\n- Produto de interesse\n- Budget disponível\n- Urgência de início\n\n## Eventos e Reuniões\n\n- Data e disponibilidade\n- Horário (período, diária, dentro ou fora do horário comercial)\n- Formato do evento (plenária, espinha de peixe, mesa redonda, etc.)\n- Detalhes gerais da experiência desejada\n- Budget disponível",
+    "id": "seed-script-01",
+    "name": "Premissas Básicas",
+    "content": "O atendimento consultivo é a base de tudo. Antes de iniciar qualquer conversa, tenha em mente:\n\n- Apresente-se no início de todo e qualquer atendimento.\n- Realize sempre o atendimento consultivo.\n- Atente-se à concordância verbal, acentuação, coesão e coerência do texto.\n- Evite respostas curtas e ríspidas.\n- Cuide do tom de voz em toda interação.\n- Transmita sempre intenção de prestatividade e colaboração.\n- Utilize os materiais comerciais (infográficos e imagens) sempre após a explicação escrita de um produto, para reforçar o que foi explicado.\n- Procure sempre se referir ao lead pelo nome.\n- Ao final das explicações, devolva a conversa ao lead com uma pergunta.\n\n*Consulte nosso material de Tom de Voz para transmitir o Nex em cada atendimento.*",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "seed-script-02",
+    "name": "Início do Atendimento",
+    "content": "Sempre inicie o atendimento com uma saudação natural: *\"Olá\"*, *\"Boa tarde\"*, *\"Oi, como vai?\"*\n\nEm seguida, apresente-se: *\"Felipe do Nex aqui!\"*\n\nMostre ao lead que você está ali para direcioná-lo na melhor solução: *\"Em que posso ajudar?\"*\n\n### Exemplo de abertura\n\n*\"Olá, bom dia! Tudo bem? Felipe do Nex aqui! Em que posso ajudar, Ana?\"*",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "seed-script-03",
+    "name": "Desenvolvimento do Atendimento",
+    "content": "Tenha em mente o atendimento consultivo e parta da premissa de que o lead pode não ter clareza sobre sua necessidade ou sobre como nossas soluções podem ajudá-lo.\n\nConfirme a dor do lead e convide-o a contar um pouco mais sobre o que precisa:\n\n*\"Ah, maravilha! E você precisa do espaço de trabalho para todos os dias da semana ou somente para dias esporádicos?\"*\n\n*\"Show! E você usará a sala de reunião para uma reunião, de fato, ou a ideia é um dia de trabalho com sua equipe?\"*\n\nCom o entendimento da necessidade do cliente, estamos aptos a indicar a melhor solução:\n\n*\"Ótimo! Pelo que me contou, a nossa solução mais indicada são os Escritórios Privativos!\"*\n\nNesse momento, envie as informações sobre o produto.",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "seed-script-04",
+    "name": "Finalização do Atendimento",
+    "content": "Passe todas as informações sobre o produto de maneira clara e objetiva.\n\nAo final da explicação, sempre deixe uma pergunta ao cliente — as chances de retorno são maiores:\n\n*\"Fez sentido para você, Ana?\"*\n\n### Réplica Positiva\n\nCom a confirmação do lead, o objetivo passa a ser o agendamento da visita ou a conversão:\n\n*\"Vamos marcar uma visita com nossa Head de Operações para você conhecer o espaço?\"*\n\n*\"Posso já deixar agendadas essas horas para você?\"*\n\n*\"Realizando a adesão agora pela manhã, consigo enviar os documentos ainda essa tarde!\"*\n\n### Réplica Negativa\n\nEm caso de objeção, ofereça outras soluções mais adequadas:\n\n*\"Ah, entendo! Como solução mais econômica, temos as Mesas Fixas em área compartilhada, a partir de R$ 749,00/mês. Posso enviar mais informações?\"*\n\n### Encerramento\n\nAo final de todo atendimento, lembre que um lead perdido hoje pode ser o novo negócio de amanhã. Deixe sempre as portas abertas:\n\n*\"Uma pena não conseguirmos te atender, Ana! De todo modo, estamos sempre à disposição para o que você precisar. Até uma melhor oportunidade!\"*",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "seed-script-05",
+    "name": "Perguntas-Chave — Escritório Privativo e Mesa Fixa",
+    "content": "- Produto de interesse\n- Budget disponível\n- Urgência de início",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "seed-script-06",
+    "name": "Perguntas-Chave — Eventos e Reuniões",
+    "content": "- Data e disponibilidade\n- Horário (período, diária, dentro ou fora do horário comercial)\n- Formato do evento (plenária, espinha de peixe, mesa redonda, etc.)\n- Detalhes gerais da experiência desejada\n- Budget disponível",
     "createdBy": "sistema",
     "createdAt": "2026-01-01T00:00:00.000Z",
     "updatedAt": "2026-01-01T00:00:00.000Z"
