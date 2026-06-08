@@ -357,7 +357,7 @@ function DocumentsPanel({ apiPath, newLabel, emptyTitle, emptyDesc }: DocumentsP
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 type MainTab = "arquivos" | "scripts" | "descontos";
-type ScriptSubTab = "scripts" | "fups";
+type ScriptSubTab = "scripts" | "fups" | "keypoints";
 
 function TabButton({
   label,
@@ -434,6 +434,7 @@ export default function ComercialPage() {
           <div className="flex gap-1 mb-6">
             <SubTabButton label="Scripts" active={scriptSubTab === "scripts"} onClick={() => setScriptSubTab("scripts")} />
             <SubTabButton label="FUPs" active={scriptSubTab === "fups"} onClick={() => setScriptSubTab("fups")} />
+            <SubTabButton label="Keypoints" active={scriptSubTab === "keypoints"} onClick={() => setScriptSubTab("keypoints")} />
           </div>
           {scriptSubTab === "scripts" && (
             <DocumentsPanel
@@ -451,6 +452,15 @@ export default function ComercialPage() {
               newLabel="Novo FUP"
               emptyTitle="Nenhum FUP ainda"
               emptyDesc="Crie o primeiro guia de follow-up para o time."
+            />
+          )}
+          {scriptSubTab === "keypoints" && (
+            <DocumentsPanel
+              key="keypoints"
+              apiPath="/api/keypoints"
+              newLabel="Novo Keypoint"
+              emptyTitle="Nenhum keypoint ainda"
+              emptyDesc="Crie o primeiro keypoint de qualificação para o time."
             />
           )}
         </div>
