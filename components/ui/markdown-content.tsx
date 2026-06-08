@@ -134,12 +134,21 @@ export function MarkdownContent({ content, className }: { content: string; class
         i++;
       }
       nodes.push(
-        <ul key={`list-${startIdx}`} className="my-2 pl-4 space-y-1">
-          {items.map((item, idx) => (
-            <li key={idx} className="text-sm text-gray-dark leading-relaxed list-disc ml-2">
-              {renderInline(item)}
-            </li>
-          ))}
+        <ul key={`list-${startIdx}`} className="my-2 pl-2 space-y-1.5">
+          {items.map((item, idx) => {
+            const isCritical = item.includes("⚠️");
+            return isCritical ? (
+              <li key={idx} className="list-none -ml-2">
+                <span className="inline-flex items-center gap-2 bg-accent/25 border border-accent/60 rounded-md px-3 py-1.5 text-sm font-semibold text-foreground w-full">
+                  {renderInline(item)}
+                </span>
+              </li>
+            ) : (
+              <li key={idx} className="text-sm text-gray-dark leading-relaxed list-disc ml-4">
+                {renderInline(item)}
+              </li>
+            );
+          })}
         </ul>
       );
       continue;
