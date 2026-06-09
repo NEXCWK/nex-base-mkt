@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { User, ChevronDown, ChevronUp, Pencil } from "lucide-react";
+import { User, ChevronDown, ChevronUp, Pencil, Camera, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,6 +36,103 @@ const EMPTY_FORM: ProfileFormData = {
   sports: "",
   photoUrl: "",
 };
+
+function resizeImage(file: File, maxPx = 480, quality = 0.85): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxPx || height > maxPx) {
+        const ratio = Math.min(maxPx / width, maxPx / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.src = url;
+  });
+}
+
+function PhotoUpload({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [processing, setProcessing] = useState(false);
+
+  async function handleFile(file: File) {
+    if (!file.type.startsWith("image/")) return;
+    setProcessing(true);
+    try {
+      const dataUrl = await resizeImage(file);
+      onChange(dataUrl);
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-4">
+      <div
+        onClick={() => inputRef.current?.click()}
+        className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-dashed border-gray-medium cursor-pointer hover:border-black transition-colors group shrink-0"
+      >
+        {value ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={value} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-light">
+            <User size={24} className="text-muted-foreground" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          {processing ? (
+            <Loader2 size={16} className="text-white animate-spin" />
+          ) : (
+            <Camera size={16} className="text-white" />
+          )}
+        </div>
+      </div>
+      <div>
+        <p className="text-xs font-medium text-gray-dark mb-1">Foto de perfil</p>
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="text-xs text-muted-foreground hover:text-black underline underline-offset-2 transition-colors"
+        >
+          {value ? "Trocar foto" : "Enviar foto"}
+        </button>
+        {value && (
+          <>
+            <span className="text-xs text-muted-foreground mx-1.5">·</span>
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className="text-xs text-red-500 hover:text-red-600 underline underline-offset-2 transition-colors"
+            >
+              Remover
+            </button>
+          </>
+        )}
+        <p className="text-[11px] text-muted-foreground mt-1">JPG, PNG ou WEBP</p>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
 
 export default function NossoTimePage() {
   const { data: session } = useSession();
@@ -348,13 +445,7 @@ export default function NossoTimePage() {
             placeholder="Ex: Musica, Viagens, Fotografia"
           />
 
-          <Input
-            label="URL da foto (opcional)"
-            value={form.photoUrl}
-            onChange={(e) => setField("photoUrl", e.target.value)}
-            placeholder="https://..."
-            type="url"
-          />
+          <PhotoUpload value={form.photoUrl} onChange={(v) => setField("photoUrl", v)} />
 
           {saveError && (
             <p className="text-xs text-red-500">{saveError}</p>
