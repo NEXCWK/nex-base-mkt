@@ -25,12 +25,12 @@ const navItems = [
   { href: "/", label: "Tela Principal", icon: Home },
   { href: "/sobre-o-nex", label: "Sobre o Nex", icon: Star },
   { href: "/nosso-time", label: "Nosso Time", icon: Users },
-  { href: "/playbooks", label: "Playbooks da Area", icon: BookOpen },
-  { href: "/estrategias", label: "Estrategias", icon: Target },
+  { href: "/playbooks", label: "Playbooks da Área", icon: BookOpen },
+  { href: "/estrategias", label: "Estratégias", icon: Target },
   { href: "/comercial", label: "Comercial", icon: Briefcase },
-  { href: "/comunicacao-design", label: "Comunicacao e Design", icon: Palette },
+  { href: "/comunicacao-design", label: "Comunicação e Design", icon: Palette },
   { href: "/marketing", label: "Marketing", icon: Megaphone },
-  { href: "/portfolio", label: "Portfolio de Produtos", icon: Building },
+  { href: "/portfolio", label: "Portfólio de Produtos", icon: Building },
   { href: "/propostas", label: "Modelo de Propostas", icon: FileText },
   { href: "/reports", label: "Reports Comerciais", icon: BarChart2 },
   { href: "/treinamento", label: "Treinamento", icon: GraduationCap },
@@ -99,7 +99,7 @@ export function Sidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-foreground truncate">
-              {session?.user?.name || "Usuario"}
+              {session?.user?.name || "Usuário"}
             </p>
             <p className="text-[10px] text-muted-foreground truncate">
               {session?.user?.email}

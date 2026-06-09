@@ -15,6 +15,7 @@ import {
   Building,
   FileText,
   BarChart2,
+  GraduationCap,
   ChevronRight,
   Zap,
 } from "lucide-react";
@@ -33,49 +34,49 @@ const sections: Section[] = [
   {
     href: "/sobre-o-nex",
     label: "Sobre o Nex",
-    description: "Historia, missao, valores e posicionamento da marca.",
+    description: "História, missão, valores e posicionamento da marca.",
     icon: Star,
   },
   {
     href: "/nosso-time",
     label: "Nosso Time",
-    description: "Perfis, papeis e contatos da equipe de marketing e vendas.",
+    description: "Perfis, papéis e contatos da equipe de marketing e vendas.",
     icon: Users,
   },
   {
     href: "/playbooks",
-    label: "Playbooks da Area",
+    label: "Playbooks da Área",
     description: "Processos, rotinas e checklists operacionais da equipe.",
     icon: BookOpen,
   },
   {
     href: "/estrategias",
-    label: "Estrategias",
-    description: "OKRs, metas e diretrizes estrategicas do periodo.",
+    label: "Estratégias",
+    description: "OKRs, metas e diretrizes estratégicas do período.",
     icon: Target,
   },
   {
     href: "/comercial",
     label: "Comercial",
-    description: "Pipeline, scripts de vendas e gestao de leads.",
+    description: "Pipeline, scripts de vendas e gestão de leads.",
     icon: Briefcase,
   },
   {
     href: "/comunicacao-design",
-    label: "Comunicacao e Design",
-    description: "Identidade visual, templates e guia de comunicacao.",
+    label: "Comunicação e Design",
+    description: "Identidade visual, templates e guia de comunicação.",
     icon: Palette,
   },
   {
     href: "/marketing",
     label: "Marketing",
-    description: "Campanhas, calendario editorial e performance de canais.",
+    description: "Campanhas, calendário editorial e performance de canais.",
     icon: Megaphone,
   },
   {
     href: "/portfolio",
-    label: "Portfolio de Produtos",
-    description: "Planos, espacos e diferenciais do Nex Coworking.",
+    label: "Portfólio de Produtos",
+    description: "Planos, espaços e diferenciais do Nex Coworking.",
     icon: Building,
   },
   {
@@ -87,13 +88,19 @@ const sections: Section[] = [
   {
     href: "/reports",
     label: "Reports Comerciais",
-    description: "Indicadores, dashboards e historico de resultados.",
+    description: "Diário comercial do time: a fotografia de cada dia.",
     icon: BarChart2,
+  },
+  {
+    href: "/treinamento",
+    label: "Treinamento",
+    description: "Trilha de onboarding e portfólio para novos membros.",
+    icon: GraduationCap,
   },
 ];
 
 function getFirstName(fullName: string | null | undefined): string {
-  if (!fullName) return "voce";
+  if (!fullName) return "você";
   return fullName.split(" ")[0];
 }
 
@@ -119,7 +126,7 @@ export default function DashboardPage() {
         <p className="text-sm text-muted-foreground capitalize">{todayFormatted}</p>
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Zap size={13} className="text-accent" />
-          <span>Area de Marketing, Comunicacao &amp; Vendas</span>
+          <span>Área de Marketing, Comunicação &amp; Vendas</span>
         </div>
       </div>
 
@@ -129,9 +136,9 @@ export default function DashboardPage() {
           {greeting}, {firstName}!
         </h1>
         <p className="text-base text-muted-foreground max-w-2xl">
-          Bem-vindo a base de conhecimento da area de Marketing, Comunicacao e Vendas
-          do Nex Coworking. Acesse playbooks, estrategias, materiais comerciais e
-          muito mais em um so lugar.
+          Bem-vindo à base de conhecimento da área de Marketing, Comunicação e Vendas
+          do Nex Coworking. Acesse playbooks, estratégias, materiais comerciais e
+          muito mais em um só lugar.
         </p>
       </div>
 
@@ -140,7 +147,7 @@ export default function DashboardPage() {
         {/* Quick access cards */}
         <div>
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-            Acesso Rapido
+            Acesso Rápido
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {sections.map(({ href, label, description, icon: Icon }) => (

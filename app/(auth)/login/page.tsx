@@ -53,7 +53,7 @@ export default function LoginPage() {
             />
           </div>
           <p className="text-sm font-semibold text-gray-dark tracking-wide uppercase">
-            Marketing, Comunicacao &amp; Vendas
+            Marketing, Comunicação &amp; Vendas
           </p>
         </div>
 

@@ -14,13 +14,13 @@ const SECTION_ITEMS = [
     icon: Layout,
     title: "Templates e Layouts",
     description:
-      "Templates prontos para apresentacoes, documentos internos e materiais de comunicacao.",
+      "Templates prontos para apresentações, documentos internos e materiais de comunicação.",
   },
   {
     icon: Image,
     title: "Banco de Imagens",
     description:
-      "Fotos dos espacos, eventos e equipe aprovadas para uso em publicacoes e campanhas.",
+      "Fotos dos espaços, eventos e equipe aprovadas para uso em publicações e campanhas.",
   },
   {
     icon: Type,
@@ -34,9 +34,9 @@ export default function ComunicacaoDesignPage() {
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Comunicacao e Design</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Comunicação e Design</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Repositorio centralizado de ativos de design, identidade visual e materiais de comunicacao.
+          Repositório centralizado de ativos de design, identidade visual e materiais de comunicação.
         </p>
       </div>
 
@@ -62,7 +62,7 @@ export default function ComunicacaoDesignPage() {
       <div className="mb-3">
         <h2 className="text-base font-semibold">Arquivos</h2>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Carregue e gerencie os arquivos de comunicacao e design.
+          Carregue e gerencie os arquivos de comunicação e design.
         </p>
       </div>
       <FileUpload section="Comunicacao e Design" />

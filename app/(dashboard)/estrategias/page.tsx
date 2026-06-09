@@ -54,9 +54,9 @@ export default function EstrategiasPage() {
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Estrategias</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Estratégias</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Arquivos e anotacoes organizados por canal estrategico.
+          Arquivos e anotações organizados por canal estratégico.
         </p>
       </div>
 
@@ -66,7 +66,7 @@ export default function EstrategiasPage() {
 
       <div className="border border-gray-medium rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-medium bg-gray-light">
-          <h2 className="text-sm font-semibold">Anotacoes por Canal</h2>
+          <h2 className="text-sm font-semibold">Anotações por Canal</h2>
         </div>
 
         <div className="p-4">
@@ -97,7 +97,7 @@ export default function EstrategiasPage() {
             <Textarea
               value={notes[activeTag] ?? ""}
               onChange={(e) => handleNoteChange(e.target.value)}
-              placeholder={`Adicione anotacoes sobre estrategias de ${activeTag}...`}
+              placeholder={`Adicione anotações sobre estratégias de ${activeTag}...`}
               rows={6}
             />
           </div>

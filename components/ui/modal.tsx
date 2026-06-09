@@ -28,24 +28,32 @@ export function Modal({
       if (e.key === "Escape" && closable && onClose) onClose();
     };
     document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
   }, [open, closable, onClose]);
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-overlay-in"
         onClick={closable ? onClose : undefined}
       />
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className={cn(
-          "relative z-10 w-full max-w-md rounded-xl bg-white border border-gray-medium shadow-xl mx-4",
+          "relative z-10 w-full max-w-md rounded-xl bg-white border border-gray-medium shadow-xl",
+          "max-h-[88vh] flex flex-col animate-modal-in",
           className
         )}
       >
-        <div className="flex items-start justify-between p-6 pb-0">
+        <div className="flex items-start justify-between p-6 pb-0 shrink-0">
           <div>
             {title && <h2 className="text-lg font-700 leading-tight">{title}</h2>}
             {description && (
@@ -55,13 +63,14 @@ export function Modal({
           {closable && onClose && (
             <button
               onClick={onClose}
+              aria-label="Fechar"
               className="ml-4 rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors"
             >
               <X size={16} />
             </button>
           )}
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-6 overflow-y-auto">{children}</div>
       </div>
     </div>
   );

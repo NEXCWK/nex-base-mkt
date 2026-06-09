@@ -34,7 +34,7 @@ type MainTab = "arquivos" | "parceiros" | "softwares";
 const MAIN_TABS: { id: MainTab; label: string }[] = [
   { id: "arquivos", label: "Arquivos" },
   { id: "parceiros", label: "Parceiros (Outsourcing)" },
-  { id: "softwares", label: "Softwares da Area" },
+  { id: "softwares", label: "Softwares da Área" },
 ];
 
 const FILE_SECTIONS = [
@@ -330,7 +330,7 @@ function ParceirosTab() {
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
             Tem certeza que deseja remover{" "}
-            <span className="font-medium text-black">{deleteTarget?.name}</span>? Esta acao nao pode
+            <span className="font-medium text-black">{deleteTarget?.name}</span>? Esta ação não pode
             ser desfeita.
           </p>
           <div className="flex items-center justify-end gap-2">
@@ -618,7 +618,7 @@ function SoftwaresTab() {
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
             Tem certeza que deseja remover{" "}
-            <span className="font-medium text-black">{deleteTarget?.name}</span>? Esta acao nao pode
+            <span className="font-medium text-black">{deleteTarget?.name}</span>? Esta ação não pode
             ser desfeita.
           </p>
           <div className="flex items-center justify-end gap-2">
@@ -662,9 +662,9 @@ export default function PlaybooksPage() {
     <div className="p-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-black">Playbooks da Area</h1>
+        <h1 className="text-2xl font-semibold text-black">Playbooks da Área</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Arquivos, parceiros e ferramentas da area de marketing e comunicacao.
+          Arquivos, parceiros e ferramentas da área de marketing e comunicação.
         </p>
       </div>
 

@@ -76,10 +76,10 @@ export function CalendarWidget() {
           <div className="flex flex-col items-center justify-center py-6 gap-2 text-center">
             <AlertCircle size={20} className="text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              Google Calendar nao configurado
+              Google Calendar não configurado
             </p>
             <p className="text-xs text-muted-foreground">
-              Configure as variaveis de ambiente para ver seus eventos.
+              Configure as variáveis de ambiente para ver seus eventos.
             </p>
           </div>
         )}
@@ -87,7 +87,7 @@ export function CalendarWidget() {
         {state === "success" && events.length === 0 && (
           <div className="flex flex-col items-center justify-center py-6 gap-2 text-center">
             <Calendar size={20} className="text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Nenhum evento proximo</p>
+            <p className="text-sm text-muted-foreground">Nenhum evento próximo</p>
           </div>
         )}
 

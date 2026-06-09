@@ -227,7 +227,7 @@ export default function NossoTimePage() {
         <div>
           <h1 className="text-2xl font-semibold text-black">Nosso Time</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Conheca as pessoas que fazem parte do time Nex.
+            Conheça as pessoas que fazem parte do time Nex.
           </p>
         </div>
         {sessionEmail && (
@@ -399,7 +399,7 @@ export default function NossoTimePage() {
               placeholder="Seu nome"
             />
             <Input
-              label="Cargo / Funcao"
+              label="Cargo / Função"
               value={form.role}
               onChange={(e) => setField("role", e.target.value)}
               placeholder="Ex: Designer"
@@ -410,7 +410,7 @@ export default function NossoTimePage() {
             label="Bio"
             value={form.bio}
             onChange={(e) => setField("bio", e.target.value)}
-            placeholder="Conte um pouco sobre voce..."
+            placeholder="Conte um pouco sobre você..."
             rows={3}
           />
 
@@ -418,7 +418,7 @@ export default function NossoTimePage() {
             label="Curiosidades"
             value={form.curiosities}
             onChange={(e) => setField("curiosities", e.target.value)}
-            placeholder="Algo interessante sobre voce..."
+            placeholder="Algo interessante sobre você..."
             rows={2}
           />
 
