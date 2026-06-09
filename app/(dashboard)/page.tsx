@@ -30,72 +30,92 @@ interface Section {
   icon: React.ElementType;
 }
 
-const sections: Section[] = [
+const sectionGroups: { label: string; sections: Section[] }[] = [
   {
-    href: "/sobre-o-nex",
-    label: "Sobre o Nex",
-    description: "História, missão, valores e posicionamento da marca.",
-    icon: Star,
+    label: "Institucional",
+    sections: [
+      {
+        href: "/sobre-o-nex",
+        label: "Sobre o Nex",
+        description: "História, missão, valores e posicionamento da marca.",
+        icon: Star,
+      },
+      {
+        href: "/nosso-time",
+        label: "Nosso Time",
+        description: "Perfis, papéis e contatos da equipe de marketing e vendas.",
+        icon: Users,
+      },
+    ],
   },
   {
-    href: "/nosso-time",
-    label: "Nosso Time",
-    description: "Perfis, papéis e contatos da equipe de marketing e vendas.",
-    icon: Users,
+    label: "Operação",
+    sections: [
+      {
+        href: "/playbooks",
+        label: "Playbooks da Área",
+        description: "Processos, rotinas e checklists operacionais da equipe.",
+        icon: BookOpen,
+      },
+      {
+        href: "/estrategias",
+        label: "Estratégias",
+        description: "OKRs, metas e diretrizes estratégicas do período.",
+        icon: Target,
+      },
+      {
+        href: "/comercial",
+        label: "Comercial",
+        description: "Pipeline, scripts de vendas e gestão de leads.",
+        icon: Briefcase,
+      },
+      {
+        href: "/comunicacao-design",
+        label: "Comunicação e Design",
+        description: "Identidade visual, templates e guia de comunicação.",
+        icon: Palette,
+      },
+      {
+        href: "/marketing",
+        label: "Marketing",
+        description: "Campanhas, calendário editorial e performance de canais.",
+        icon: Megaphone,
+      },
+    ],
   },
   {
-    href: "/playbooks",
-    label: "Playbooks da Área",
-    description: "Processos, rotinas e checklists operacionais da equipe.",
-    icon: BookOpen,
+    label: "Materiais",
+    sections: [
+      {
+        href: "/portfolio",
+        label: "Portfólio de Produtos",
+        description: "Planos, espaços e diferenciais do Nex Coworking.",
+        icon: Building,
+      },
+      {
+        href: "/propostas",
+        label: "Modelo de Propostas",
+        description: "Templates e guias para criar propostas comerciais.",
+        icon: FileText,
+      },
+    ],
   },
   {
-    href: "/estrategias",
-    label: "Estratégias",
-    description: "OKRs, metas e diretrizes estratégicas do período.",
-    icon: Target,
-  },
-  {
-    href: "/comercial",
-    label: "Comercial",
-    description: "Pipeline, scripts de vendas e gestão de leads.",
-    icon: Briefcase,
-  },
-  {
-    href: "/comunicacao-design",
-    label: "Comunicação e Design",
-    description: "Identidade visual, templates e guia de comunicação.",
-    icon: Palette,
-  },
-  {
-    href: "/marketing",
-    label: "Marketing",
-    description: "Campanhas, calendário editorial e performance de canais.",
-    icon: Megaphone,
-  },
-  {
-    href: "/portfolio",
-    label: "Portfólio de Produtos",
-    description: "Planos, espaços e diferenciais do Nex Coworking.",
-    icon: Building,
-  },
-  {
-    href: "/propostas",
-    label: "Modelo de Propostas",
-    description: "Templates e guias para criar propostas comerciais.",
-    icon: FileText,
-  },
-  {
-    href: "/reports",
-    label: "Reports Comerciais",
-    description: "Diário comercial do time: a fotografia de cada dia.",
-    icon: BarChart2,
-  },
-  {
-    href: "/treinamento",
-    label: "Treinamento",
-    description: "Trilha de onboarding e portfólio para novos membros.",
-    icon: GraduationCap,
+    label: "Acompanhamento",
+    sections: [
+      {
+        href: "/reports",
+        label: "Reports Comerciais",
+        description: "Diário comercial do time: a fotografia de cada dia.",
+        icon: BarChart2,
+      },
+      {
+        href: "/treinamento",
+        label: "Treinamento",
+        description: "Trilha de onboarding e portfólio para novos membros.",
+        icon: GraduationCap,
+      },
+    ],
   },
 ];
 
@@ -132,7 +152,7 @@ export default function DashboardPage() {
 
       {/* Hero / Welcome */}
       <div className="mb-10">
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight mb-1">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight mb-1">
           {greeting}, {firstName}!
         </h1>
         <p className="text-base text-muted-foreground max-w-2xl">
@@ -144,46 +164,50 @@ export default function DashboardPage() {
 
       {/* Main grid: sections + calendar */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_288px] gap-8 items-start">
-        {/* Quick access cards */}
-        <div>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-            Acesso Rápido
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {sections.map(({ href, label, description, icon: Icon }) => (
-              <Link key={href} href={href} className="group block">
-                <Card
-                  className={cn(
-                    "h-full cursor-pointer border-gray-medium",
-                    "group-hover:border-gray-dark group-hover:shadow-sm transition-all"
-                  )}
-                >
-                  <CardContent className="p-4 flex items-start gap-3">
-                    <div className="shrink-0 w-8 h-8 rounded-md bg-gray-light border border-gray-medium flex items-center justify-center group-hover:bg-accent group-hover:border-accent transition-colors">
-                      <Icon
-                        size={15}
-                        className="text-muted-foreground group-hover:text-black transition-colors"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium text-foreground leading-tight">
-                          {label}
-                        </p>
-                        <ChevronRight
-                          size={13}
-                          className="shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 leading-snug line-clamp-2">
-                        {description}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+        {/* Quick access cards, grouped */}
+        <div className="space-y-8">
+          {sectionGroups.map((group) => (
+            <div key={group.label}>
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                {group.label}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {group.sections.map(({ href, label, description, icon: Icon }) => (
+                  <Link key={href} href={href} className="group block">
+                    <Card
+                      className={cn(
+                        "h-full cursor-pointer border-gray-medium",
+                        "group-hover:border-gray-dark group-hover:shadow-sm transition-all"
+                      )}
+                    >
+                      <CardContent className="p-4 flex items-start gap-3">
+                        <div className="shrink-0 w-8 h-8 rounded-md bg-gray-light border border-gray-medium flex items-center justify-center group-hover:bg-accent group-hover:border-accent transition-colors">
+                          <Icon
+                            size={15}
+                            className="text-muted-foreground group-hover:text-black transition-colors"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-medium text-foreground leading-tight">
+                              {label}
+                            </p>
+                            <ChevronRight
+                              size={13}
+                              className="shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-snug line-clamp-2">
+                            {description}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Calendar widget */}

@@ -21,19 +21,45 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const navItems = [
-  { href: "/", label: "Tela Principal", icon: Home },
-  { href: "/sobre-o-nex", label: "Sobre o Nex", icon: Star },
-  { href: "/nosso-time", label: "Nosso Time", icon: Users },
-  { href: "/playbooks", label: "Playbooks da Área", icon: BookOpen },
-  { href: "/estrategias", label: "Estratégias", icon: Target },
-  { href: "/comercial", label: "Comercial", icon: Briefcase },
-  { href: "/comunicacao-design", label: "Comunicação e Design", icon: Palette },
-  { href: "/marketing", label: "Marketing", icon: Megaphone },
-  { href: "/portfolio", label: "Portfólio de Produtos", icon: Building },
-  { href: "/propostas", label: "Modelo de Propostas", icon: FileText },
-  { href: "/reports", label: "Reports Comerciais", icon: BarChart2 },
-  { href: "/treinamento", label: "Treinamento", icon: GraduationCap },
+const navGroups: {
+  label: string | null;
+  items: { href: string; label: string; icon: React.ElementType }[];
+}[] = [
+  {
+    label: null,
+    items: [{ href: "/", label: "Tela Principal", icon: Home }],
+  },
+  {
+    label: "Institucional",
+    items: [
+      { href: "/sobre-o-nex", label: "Sobre o Nex", icon: Star },
+      { href: "/nosso-time", label: "Nosso Time", icon: Users },
+    ],
+  },
+  {
+    label: "Operação",
+    items: [
+      { href: "/playbooks", label: "Playbooks da Área", icon: BookOpen },
+      { href: "/estrategias", label: "Estratégias", icon: Target },
+      { href: "/comercial", label: "Comercial", icon: Briefcase },
+      { href: "/comunicacao-design", label: "Comunicação e Design", icon: Palette },
+      { href: "/marketing", label: "Marketing", icon: Megaphone },
+    ],
+  },
+  {
+    label: "Materiais",
+    items: [
+      { href: "/portfolio", label: "Portfólio de Produtos", icon: Building },
+      { href: "/propostas", label: "Modelo de Propostas", icon: FileText },
+    ],
+  },
+  {
+    label: "Acompanhamento",
+    items: [
+      { href: "/reports", label: "Reports Comerciais", icon: BarChart2 },
+      { href: "/treinamento", label: "Treinamento", icon: GraduationCap },
+    ],
+  },
 ];
 
 export function Sidebar() {
@@ -62,31 +88,40 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-3 scrollbar-hide">
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || (href !== "/" && pathname.startsWith(href));
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-3 mx-2 px-3 py-2 rounded-md text-sm transition-colors group",
-                active
-                  ? "bg-gray-light text-foreground font-semibold"
-                  : "text-muted-foreground hover:bg-gray-light hover:text-foreground"
-              )}
-            >
-              <Icon
-                size={15}
-                className={cn(
-                  "shrink-0",
-                  active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
-                )}
-              />
-              <span className="flex-1 truncate">{label}</span>
-              {active && <ChevronRight size={12} className="shrink-0 text-muted-foreground" />}
-            </Link>
-          );
-        })}
+        {navGroups.map((group, gi) => (
+          <div key={group.label ?? gi} className={cn(gi > 0 && "mt-4")}>
+            {group.label && (
+              <p className="px-5 mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                {group.label}
+              </p>
+            )}
+            {group.items.map(({ href, label, icon: Icon }) => {
+              const active = pathname === href || (href !== "/" && pathname.startsWith(href));
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    "flex items-center gap-3 mx-2 px-3 py-2 rounded-md text-sm transition-colors group",
+                    active
+                      ? "bg-gray-light text-foreground font-semibold"
+                      : "text-muted-foreground hover:bg-gray-light hover:text-foreground"
+                  )}
+                >
+                  <Icon
+                    size={15}
+                    className={cn(
+                      "shrink-0",
+                      active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                    )}
+                  />
+                  <span className="flex-1 truncate">{label}</span>
+                  {active && <ChevronRight size={12} className="shrink-0 text-muted-foreground" />}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       {/* User footer */}

@@ -1,7 +1,8 @@
 "use client";
 import { useState, useRef } from "react";
-import { Upload, File, ExternalLink, Trash2, Loader2 } from "lucide-react";
+import { Upload, File, ExternalLink, Trash2, Loader2, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 
 interface DriveFile {
@@ -19,6 +20,8 @@ interface FileUploadProps {
   category?: string;
   label?: string;
 }
+
+const ACCEPTED = ".pdf,.docx,.pptx,.png,.jpg,.jpeg,.mp4";
 
 function formatSize(bytes?: string): string {
   if (!bytes) return "";
@@ -38,7 +41,11 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [fetched, setFetched] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<DriveFile | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dragDepth = useRef(0);
 
   async function fetchFiles() {
     setLoading(true);
@@ -56,9 +63,7 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
     }
   }
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function uploadFile(file: File) {
     setUploading(true);
     setError("");
     try {
@@ -80,29 +85,53 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
     }
   }
 
-  async function handleDelete(fileId: string) {
-    if (!confirm("Remover este arquivo?")) return;
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(file);
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    dragDepth.current = 0;
+    setDragging(false);
+    if (uploading) return;
+    const file = e.dataTransfer.files?.[0];
+    if (file) uploadFile(file);
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
       const res = await fetch("/api/drive", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileId }),
+        body: JSON.stringify({ fileId: deleteTarget.id }),
       });
       if (!res.ok) throw new Error("Erro ao remover");
-      setFiles((f) => f.filter((x) => x.id !== fileId));
+      setFiles((f) => f.filter((x) => x.id !== deleteTarget.id));
+      setDeleteTarget(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao remover");
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
     }
   }
 
   if (!fetched) {
     return (
-      <div className="border border-gray-medium rounded-lg p-6 text-center">
-        {label && <h3 className="font-600 mb-3">{label}</h3>}
+      <div className="border border-gray-medium rounded-lg p-8 text-center bg-white">
+        <FolderOpen size={24} className="mx-auto mb-3 text-muted-foreground opacity-50" />
+        {label && <h3 className="font-600 text-sm mb-1">{label}</h3>}
+        <p className="text-xs text-muted-foreground mb-4">
+          Os arquivos ficam no Google Drive da equipe.
+        </p>
         <Button variant="outline" size="sm" onClick={fetchFiles} disabled={loading}>
           {loading ? <Loader2 size={14} className="animate-spin" /> : null}
           Carregar arquivos
         </Button>
+        {error && <p className="mt-3 text-xs text-red-500">{error}</p>}
       </div>
     );
   }
@@ -110,8 +139,11 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
   return (
     <div className="border border-gray-medium rounded-lg overflow-hidden">
       {label && (
-        <div className="px-4 py-3 border-b border-gray-medium bg-gray-light">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-medium bg-gray-light">
           <h3 className="font-600 text-sm">{label}</h3>
+          <span className="text-xs text-muted-foreground">
+            {files.length} {files.length === 1 ? "arquivo" : "arquivos"}
+          </span>
         </div>
       )}
 
@@ -119,10 +151,25 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
       <div className="p-4 border-b border-gray-medium">
         <div
           className={cn(
-            "border-2 border-dashed border-gray-medium rounded-lg p-6 text-center cursor-pointer hover:border-black transition-colors",
+            "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
+            dragging
+              ? "border-black bg-gray-light"
+              : "border-gray-medium hover:border-black",
             uploading && "opacity-50 cursor-not-allowed"
           )}
           onClick={() => !uploading && inputRef.current?.click()}
+          onDragEnter={(e) => {
+            e.preventDefault();
+            dragDepth.current++;
+            setDragging(true);
+          }}
+          onDragOver={(e) => e.preventDefault()}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            dragDepth.current--;
+            if (dragDepth.current <= 0) setDragging(false);
+          }}
+          onDrop={handleDrop}
         >
           {uploading ? (
             <Loader2 size={20} className="animate-spin mx-auto mb-2 text-muted-foreground" />
@@ -130,7 +177,11 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
             <Upload size={20} className="mx-auto mb-2 text-muted-foreground" />
           )}
           <p className="text-sm text-muted-foreground">
-            {uploading ? "Enviando..." : "Clique para selecionar ou arraste um arquivo"}
+            {uploading
+              ? "Enviando..."
+              : dragging
+                ? "Solte o arquivo aqui"
+                : "Clique para selecionar ou arraste um arquivo"}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             PDF, DOCX, PPTX, PNG, JPG, MP4
@@ -139,8 +190,8 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
             ref={inputRef}
             type="file"
             className="hidden"
-            accept=".pdf,.docx,.pptx,.png,.jpg,.jpeg,.mp4"
-            onChange={handleUpload}
+            accept={ACCEPTED}
+            onChange={handleInputChange}
             disabled={uploading}
           />
         </div>
@@ -175,7 +226,7 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
                 <ExternalLink size={14} />
               </a>
               <button
-                onClick={() => handleDelete(f.id)}
+                onClick={() => setDeleteTarget(f)}
                 className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
                 title="Remover"
               >
@@ -185,6 +236,29 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
           </div>
         ))}
       </div>
+
+      {/* Delete confirmation */}
+      <Modal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Remover arquivo"
+        description={`Tem certeza que deseja remover "${deleteTarget?.name}"? Esta ação não pode ser desfeita.`}
+      >
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" size="sm" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+            Cancelar
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="bg-red-500 text-white hover:bg-red-600"
+          >
+            {deleting && <Loader2 size={13} className="animate-spin" />}
+            Remover
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

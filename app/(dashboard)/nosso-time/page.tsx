@@ -225,7 +225,7 @@ export default function NossoTimePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-black">Nosso Time</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Nosso Time</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Conheça as pessoas que fazem parte do time Nex.
           </p>

@@ -313,7 +313,7 @@ function DocumentsPanel({ apiPath, newLabel, emptyTitle, emptyDesc }: DocumentsP
             onChange={(e) => setFormContent(e.target.value)}
             placeholder="# Título&#10;&#10;Conteúdo do documento..."
             rows={16}
-            className="font-mono text-sm leading-relaxed"
+            className="text-sm leading-relaxed"
           />
           {formError && <p className="text-xs text-red-500">{formError}</p>}
           <div className="flex justify-end gap-2 pt-2">

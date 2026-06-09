@@ -72,6 +72,11 @@
     font-family: 'ProximaNova', system-ui, Arial, sans-serif;
     font-weight: 700;
   }
+
+  button, input, textarea, select,
+  pre, code, kbd, samp {
+    font-family: 'ProximaNova', system-ui, Arial, sans-serif;
+  }
 }
 
 @layer utilities {

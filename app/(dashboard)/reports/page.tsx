@@ -138,7 +138,7 @@ export default function ReportsPage() {
             <BookOpen size={17} />
           </div>
           <div>
-            <h1 className="text-2xl font-700">Report Diário</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Report Diário</h1>
             <p className="text-sm text-muted-foreground mt-0.5 capitalize">
               {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </p>

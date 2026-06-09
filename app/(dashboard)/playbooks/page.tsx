@@ -662,7 +662,7 @@ export default function PlaybooksPage() {
     <div className="p-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-black">Playbooks da Área</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Playbooks da Área</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Arquivos, parceiros e ferramentas da área de marketing e comunicação.
         </p>

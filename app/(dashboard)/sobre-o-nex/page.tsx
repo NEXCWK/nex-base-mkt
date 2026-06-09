@@ -22,7 +22,7 @@ export default function SobreONexPage() {
     <div className="p-8 max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-black">Sobre o Nex</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Sobre o Nex</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Materiais institucionais e de identidade da empresa.
         </p>

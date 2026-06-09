@@ -86,7 +86,7 @@ export default function TreinamentoPage() {
             <GraduationCap size={17} />
           </div>
           <div>
-            <h1 className="text-2xl font-700">Treinamento</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Treinamento</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
               Trilha de onboarding para novos membros do time Nex
             </p>
