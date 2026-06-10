@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/options";
-import fs from "fs";
-import path from "path";
-
-const TEAM_FILE = path.join(process.cwd(), "data/team.json");
-
-function readTeam() {
-  return JSON.parse(fs.readFileSync(TEAM_FILE, "utf-8"));
-}
-
-function writeTeam(data: unknown[]) {
-  fs.writeFileSync(TEAM_FILE, JSON.stringify(data, null, 2));
-}
+import { readFile, writeFile } from "@/lib/data-store";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  return NextResponse.json(readTeam());
+  return NextResponse.json(readFile("team"));
 }
 
 export async function PUT(req: NextRequest) {
@@ -29,8 +18,8 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json();
-  const team = readTeam();
-  const idx = team.findIndex((m: { email: string }) => m.email === session.user!.email);
+  const team = readFile("team") as { email: string }[];
+  const idx = team.findIndex((m) => m.email === session.user!.email);
 
   const member = {
     email: session.user.email,
@@ -51,6 +40,6 @@ export async function PUT(req: NextRequest) {
     team.push(member);
   }
 
-  writeTeam(team);
+  writeFile("team", team);
   return NextResponse.json(member);
 }

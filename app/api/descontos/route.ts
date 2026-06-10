@@ -1,30 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/options";
-import fs from "fs";
-import path from "path";
-
-const FILE = path.join(process.cwd(), "data/descontos.json");
-
-function read() {
-  return JSON.parse(fs.readFileSync(FILE, "utf-8"));
-}
-
-function write(data: unknown[]) {
-  fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
-}
+import { readFile, writeFile } from "@/lib/data-store";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return NextResponse.json(read());
+  return NextResponse.json(readFile("descontos"));
 }
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json();
-  const items = read();
+  const items = readFile("descontos");
   const item = {
     id: Date.now().toString(),
     name: body.name || "Nova Diretriz",
@@ -34,7 +23,7 @@ export async function POST(req: NextRequest) {
     updatedAt: new Date().toISOString(),
   };
   items.push(item);
-  write(items);
+  writeFile("descontos", items);
   return NextResponse.json(item, { status: 201 });
 }
 
@@ -42,11 +31,11 @@ export async function PUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json();
-  const items = read();
-  const idx = items.findIndex((s: { id: string }) => s.id === body.id);
+  const items = readFile("descontos") as { id: string }[];
+  const idx = items.findIndex((s) => s.id === body.id);
   if (idx === -1) return NextResponse.json({ error: "Not found" }, { status: 404 });
   items[idx] = { ...items[idx], ...body, updatedAt: new Date().toISOString() };
-  write(items);
+  writeFile("descontos", items);
   return NextResponse.json(items[idx]);
 }
 
@@ -54,6 +43,6 @@ export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await req.json();
-  write(read().filter((s: { id: string }) => s.id !== id));
+  writeFile("descontos", (readFile("descontos") as { id: string }[]).filter((s) => s.id !== id));
   return NextResponse.json({ ok: true });
 }

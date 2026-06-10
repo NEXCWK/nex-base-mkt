@@ -1,37 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/options";
-import fs from "fs";
-import path from "path";
-
-const SCRIPTS_FILE = path.join(process.cwd(), "data/scripts.json");
-
-function readScripts() {
-  return JSON.parse(fs.readFileSync(SCRIPTS_FILE, "utf-8"));
-}
-
-function writeScripts(data: unknown[]) {
-  fs.writeFileSync(SCRIPTS_FILE, JSON.stringify(data, null, 2));
-}
+import { readFile, writeFile } from "@/lib/data-store";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  return NextResponse.json(readScripts());
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  return NextResponse.json(readFile("scripts"));
 }
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json();
-  const scripts = readScripts();
-
-  const newScript = {
+  const items = readFile("scripts");
+  const item = {
     id: Date.now().toString(),
     name: body.name || "Novo Script",
     content: body.content || "",
@@ -39,38 +22,27 @@ export async function POST(req: NextRequest) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-
-  scripts.push(newScript);
-  writeScripts(scripts);
-  return NextResponse.json(newScript, { status: 201 });
+  items.push(item);
+  writeFile("scripts", items);
+  return NextResponse.json(item, { status: 201 });
 }
 
 export async function PUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json();
-  const scripts = readScripts();
-  const idx = scripts.findIndex((s: { id: string }) => s.id === body.id);
-  if (idx === -1) {
-    return NextResponse.json({ error: "Script not found" }, { status: 404 });
-  }
-
-  scripts[idx] = { ...scripts[idx], ...body, updatedAt: new Date().toISOString() };
-  writeScripts(scripts);
-  return NextResponse.json(scripts[idx]);
+  const items = readFile("scripts") as { id: string }[];
+  const idx = items.findIndex((s) => s.id === body.id);
+  if (idx === -1) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  items[idx] = { ...items[idx], ...body, updatedAt: new Date().toISOString() };
+  writeFile("scripts", items);
+  return NextResponse.json(items[idx]);
 }
 
 export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await req.json();
-  const scripts = readScripts().filter((s: { id: string }) => s.id !== id);
-  writeScripts(scripts);
+  writeFile("scripts", (readFile("scripts") as { id: string }[]).filter((s) => s.id !== id));
   return NextResponse.json({ ok: true });
 }

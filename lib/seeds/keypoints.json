@@ -1,0 +1,18 @@
+[
+  {
+    "id": "seed-kp-01",
+    "name": "Escritórios Mobiliados",
+    "content": "*Aplicável a: Escritório Privativo · Mesa Fixa · Nex House*\n\n- Nome da empresa ou profissional\n- Segmento de atuação\n- Número de colaboradores\n- Capacidade de sala pretendida\n- Data ou urgência de início\n- Necessidade de revezamento entre os membros do time\n- Budget disponível\n- ⚠️ O lead é o decisor?",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "seed-kp-02",
+    "name": "Eventos, Reunião e Diárias Avulsas",
+    "content": "*Aplicável a: Eventos · Salas de Reunião · Diárias Avulsas*\n\n- Nome da empresa ou profissional\n- Segmento de atuação\n- Perfil do evento\n- Número de participantes\n- Data pretendida\n- Budget disponível",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  }
+]
