@@ -4,7 +4,7 @@ import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "Nex | Marketing, Comunicação & Vendas",
-  description: "Base de conhecimento da área de Marketing, Comunicação e Vendas do Nex Coworking",
+  description: "Base de conhecimento da área de Marketing, Comunicação & Vendas do Nex Coworking",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

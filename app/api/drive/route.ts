@@ -18,8 +18,9 @@ export async function GET(req: NextRequest) {
     const files = await listDriveFiles(section);
     return NextResponse.json(files);
   } catch (err) {
-    console.error("Drive list error:", err);
-    return NextResponse.json({ error: "Erro ao listar arquivos do Drive." }, { status: 500 });
+    const msg = err instanceof Error ? err.message : "Erro ao listar arquivos do Drive.";
+    console.error("Drive list error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 

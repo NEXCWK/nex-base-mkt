@@ -81,7 +81,7 @@ export function Sidebar() {
           />
           <div className="h-4 w-px bg-gray-medium" />
           <span className="text-[11px] font-600 text-muted-foreground leading-tight">
-            Mkt & Vendas
+            Mkt, Com & Ven
           </span>
         </Link>
       </div>

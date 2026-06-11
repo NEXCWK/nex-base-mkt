@@ -53,7 +53,10 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
     try {
       const sec = category ? `${section}/${category}` : section;
       const res = await fetch(`/api/drive?section=${encodeURIComponent(sec)}`);
-      if (!res.ok) throw new Error("Erro ao carregar arquivos");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Erro ao carregar arquivos");
+      }
       setFiles(await res.json());
       setFetched(true);
     } catch (e) {

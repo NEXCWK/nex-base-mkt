@@ -146,7 +146,7 @@ export default function DashboardPage() {
         <p className="text-sm text-muted-foreground capitalize">{todayFormatted}</p>
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Zap size={13} className="text-accent" />
-          <span>Área de Marketing, Comunicação &amp; Vendas</span>
+          <span>Área de Mkt, Com &amp; Ven</span>
         </div>
       </div>
 
@@ -156,7 +156,7 @@ export default function DashboardPage() {
           {greeting}, {firstName}!
         </h1>
         <p className="text-base text-muted-foreground max-w-2xl">
-          Bem-vindo à base de conhecimento da área de Marketing, Comunicação e Vendas
+          Bem-vindo à base de conhecimento da área de Marketing, Comunicação &amp; Vendas
           do Nex Coworking. Acesse playbooks, estratégias, materiais comerciais e
           muito mais em um só lugar.
         </p>
