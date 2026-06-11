@@ -1,34 +1,76 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/options";
-import { uploadFileToDrive } from "@/lib/drive";
+import fs from "fs";
+import path from "path";
+
+const UPLOADS_DIR = path.join(process.cwd(), "data", "uploads");
+
+function sectionDir(section: string) {
+  // Sanitize section path so it can't escape the uploads dir
+  const safe = section.replace(/\.\./g, "").replace(/[^a-zA-Z0-9áéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ _/-]/g, "_");
+  return path.join(UPLOADS_DIR, safe);
+}
+
+function readMeta(dir: string): FileMeta[] {
+  const metaPath = path.join(dir, "_meta.json");
+  if (!fs.existsSync(metaPath)) return [];
+  try { return JSON.parse(fs.readFileSync(metaPath, "utf-8")); } catch { return []; }
+}
+
+function writeMeta(dir: string, meta: FileMeta[]) {
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "_meta.json"), JSON.stringify(meta, null, 2));
+}
+
+interface FileMeta {
+  id: string;
+  name: string;
+  storedName: string;
+  size: number;
+  mimeType: string;
+  uploadedBy: string;
+  uploadedAt: string;
+}
+
+function safeName(name: string) {
+  return name.replace(/[^a-zA-Z0-9áéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ._-]/g, "_");
+}
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
   const section = formData.get("section") as string | null;
   const category = formData.get("category") as string | null;
 
-  if (!file || !section) {
-    return NextResponse.json({ error: "Missing file or section" }, { status: 400 });
-  }
+  if (!file || !section) return NextResponse.json({ error: "Missing file or section" }, { status: 400 });
+
+  const sectionPath = category ? `${section}/${category}` : section;
+  const dir = sectionDir(sectionPath);
+  fs.mkdirSync(dir, { recursive: true });
+
+  const id = Date.now().toString();
+  const storedName = `${id}_${safeName(file.name)}`;
+  const filePath = path.join(dir, storedName);
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const folderName = category ? `${section}/${category}` : section;
+  fs.writeFileSync(filePath, buffer);
 
-  try {
-    const result = await uploadFileToDrive(buffer, file.name, file.type, folderName);
-    return NextResponse.json(result);
-  } catch (err) {
-    console.error("Drive upload error:", err);
-    return NextResponse.json(
-      { error: "Falha no upload para o Google Drive. Verifique as credenciais." },
-      { status: 500 }
-    );
-  }
+  const meta = readMeta(dir);
+  const entry: FileMeta = {
+    id,
+    name: file.name,
+    storedName,
+    size: buffer.length,
+    mimeType: file.type,
+    uploadedBy: session.user.email ?? "",
+    uploadedAt: new Date().toISOString(),
+  };
+  meta.push(entry);
+  writeMeta(dir, meta);
+
+  return NextResponse.json(entry, { status: 201 });
 }

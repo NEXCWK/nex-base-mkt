@@ -1,18 +1,18 @@
 "use client";
 import { useState, useRef } from "react";
-import { Upload, File, ExternalLink, Trash2, Loader2, FolderOpen } from "lucide-react";
+import { Upload, File, Download, Trash2, Loader2, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 
-interface DriveFile {
+interface LocalFile {
   id: string;
   name: string;
+  storedName: string;
+  size: number;
   mimeType: string;
-  webViewLink: string;
-  webContentLink: string;
-  createdTime: string;
-  size?: string;
+  uploadedBy: string;
+  uploadedAt: string;
 }
 
 interface FileUploadProps {
@@ -23,12 +23,10 @@ interface FileUploadProps {
 
 const ACCEPTED = ".pdf,.docx,.pptx,.png,.jpg,.jpeg,.mp4";
 
-function formatSize(bytes?: string): string {
-  if (!bytes) return "";
-  const n = parseInt(bytes);
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-  return `${(n / 1024 / 1024).toFixed(1)} MB`;
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
 function formatDate(iso: string): string {
@@ -36,27 +34,25 @@ function formatDate(iso: string): string {
 }
 
 export function FileUpload({ section, category, label }: FileUploadProps) {
-  const [files, setFiles] = useState<DriveFile[]>([]);
+  const [files, setFiles] = useState<LocalFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [fetched, setFetched] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<DriveFile | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<LocalFile | null>(null);
   const [deleting, setDeleting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dragDepth = useRef(0);
+
+  const sectionPath = category ? `${section}/${category}` : section;
 
   async function fetchFiles() {
     setLoading(true);
     setError("");
     try {
-      const sec = category ? `${section}/${category}` : section;
-      const res = await fetch(`/api/drive?section=${encodeURIComponent(sec)}`);
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Erro ao carregar arquivos");
-      }
+      const res = await fetch(`/api/drive?section=${encodeURIComponent(sectionPath)}`);
+      if (!res.ok) throw new Error("Erro ao carregar arquivos");
       setFiles(await res.json());
       setFetched(true);
     } catch (e) {
@@ -79,7 +75,8 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
         const data = await res.json();
         throw new Error(data.error || "Falha no upload");
       }
-      await fetchFiles();
+      const newFile: LocalFile = await res.json();
+      setFiles((prev) => [newFile, ...prev]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro no upload");
     } finally {
@@ -109,7 +106,7 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
       const res = await fetch("/api/drive", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileId: deleteTarget.id }),
+        body: JSON.stringify({ fileId: deleteTarget.id, section: sectionPath }),
       });
       if (!res.ok) throw new Error("Erro ao remover");
       setFiles((f) => f.filter((x) => x.id !== deleteTarget.id));
@@ -122,13 +119,17 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
     }
   }
 
+  function fileUrl(f: LocalFile) {
+    return `/api/files?section=${encodeURIComponent(sectionPath)}&id=${f.id}&storedName=${encodeURIComponent(f.storedName)}`;
+  }
+
   if (!fetched) {
     return (
       <div className="border border-gray-medium rounded-lg p-8 text-center bg-white">
         <FolderOpen size={24} className="mx-auto mb-3 text-muted-foreground opacity-50" />
         {label && <h3 className="font-600 text-sm mb-1">{label}</h3>}
         <p className="text-xs text-muted-foreground mb-4">
-          Os arquivos ficam no Google Drive da equipe.
+          Clique para carregar os arquivos desta seção.
         </p>
         <Button variant="outline" size="sm" onClick={fetchFiles} disabled={loading}>
           {loading ? <Loader2 size={14} className="animate-spin" /> : null}
@@ -155,23 +156,13 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
         <div
           className={cn(
             "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
-            dragging
-              ? "border-black bg-gray-light"
-              : "border-gray-medium hover:border-black",
+            dragging ? "border-black bg-gray-light" : "border-gray-medium hover:border-black",
             uploading && "opacity-50 cursor-not-allowed"
           )}
           onClick={() => !uploading && inputRef.current?.click()}
-          onDragEnter={(e) => {
-            e.preventDefault();
-            dragDepth.current++;
-            setDragging(true);
-          }}
+          onDragEnter={(e) => { e.preventDefault(); dragDepth.current++; setDragging(true); }}
           onDragOver={(e) => e.preventDefault()}
-          onDragLeave={(e) => {
-            e.preventDefault();
-            dragDepth.current--;
-            if (dragDepth.current <= 0) setDragging(false);
-          }}
+          onDragLeave={(e) => { e.preventDefault(); dragDepth.current--; if (dragDepth.current <= 0) setDragging(false); }}
           onDrop={handleDrop}
         >
           {uploading ? (
@@ -180,15 +171,9 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
             <Upload size={20} className="mx-auto mb-2 text-muted-foreground" />
           )}
           <p className="text-sm text-muted-foreground">
-            {uploading
-              ? "Enviando..."
-              : dragging
-                ? "Solte o arquivo aqui"
-                : "Clique para selecionar ou arraste um arquivo"}
+            {uploading ? "Enviando..." : dragging ? "Solte o arquivo aqui" : "Clique para selecionar ou arraste um arquivo"}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            PDF, DOCX, PPTX, PNG, JPG, MP4
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, PPTX, PNG, JPG, MP4</p>
           <input
             ref={inputRef}
             type="file"
@@ -214,19 +199,18 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{f.name}</p>
               <p className="text-xs text-muted-foreground">
-                {formatDate(f.createdTime)}
-                {f.size ? ` · ${formatSize(f.size)}` : ""}
+                {formatDate(f.uploadedAt)} · {formatSize(f.size)}
               </p>
             </div>
             <div className="flex items-center gap-1 shrink-0">
               <a
-                href={f.webViewLink}
+                href={fileUrl(f)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white transition-colors"
-                title="Abrir no Drive"
+                title="Abrir arquivo"
               >
-                <ExternalLink size={14} />
+                <Download size={14} />
               </a>
               <button
                 onClick={() => setDeleteTarget(f)}
