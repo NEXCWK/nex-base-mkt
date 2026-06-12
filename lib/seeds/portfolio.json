@@ -1,0 +1,292 @@
+[
+  {
+    "id": "sec-mobiliados",
+    "number": "01",
+    "title": "Escritórios mobiliados",
+    "unit": "both",
+    "items": [
+      {
+        "id": "i-privativo",
+        "type": "product",
+        "variant": "accent",
+        "label": "Escritório Privativo · Ambas as unidades",
+        "title": "Escritório privativo",
+        "desc": "Sala mobiliada, endereço comercial e infraestrutura pronta. Contrato direto com o Nex, sem fiador, sem obra, sem manutenção.",
+        "price": "1.300",
+        "priceUnit": "– 1.500 / posição",
+        "priceAlt": "Ticket médio por posição de trabalho",
+        "info": [
+          "Contrato a partir de 6 meses",
+          "Multa rescisória: 30% do saldo remanescente",
+          "Pré-pago · Boleto ou Pix"
+        ]
+      },
+      {
+        "id": "i-mesa-fixa",
+        "type": "product",
+        "variant": "default",
+        "label": "Mesa Fixa · Exclusivo Francisco Rocha",
+        "title": "Mesa fixa de trabalho",
+        "desc": "Mesa reservada com acesso 24h. Você chega e já está no seu lugar, sem reservar todo dia.",
+        "price": "799",
+        "priceUnit": "/ mês",
+        "info": [
+          "Renovação mensal automática",
+          "Cancelamento: aviso prévio de 30 dias",
+          "Pré-pago · Boleto ou Pix"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec-nexhouse",
+    "number": "02",
+    "title": "Assinatura Nex House",
+    "unit": "cpe",
+    "intro": "Disponível exclusivamente na unidade Casa de Pedra. Assinatura mensal ou anual com acesso ao espaço, café da manhã, Wi-Fi e salas de reunião por reserva.",
+    "items": [
+      {
+        "id": "i-atrium",
+        "type": "product",
+        "variant": "dark",
+        "label": "Plano Atrium",
+        "title": "Acesso ilimitado",
+        "desc": "Entrada livre todos os dias úteis, dentro do horário comercial. Sem limite de uso mensal.",
+        "price": "890",
+        "priceUnit": "/mês",
+        "priceAlt": "Anual: R$ 712/mês · R$ 8.544 à vista",
+        "badge": "20% de desconto no anual"
+      },
+      {
+        "id": "i-gallery",
+        "type": "product",
+        "variant": "default",
+        "label": "Plano Gallery",
+        "title": "10 acessos por mês",
+        "desc": "Dez entradas por mês. Para quem não vai todo dia, mas quer ter um plano fixo.",
+        "price": "640",
+        "priceUnit": "/mês",
+        "priceAlt": "Anual: R$ 512/mês · R$ 6.144 à vista",
+        "badge": "20% de desconto no anual"
+      },
+      {
+        "id": "i-daypass",
+        "type": "banner",
+        "full": true,
+        "label": "Day Pass · Casa de Pedra",
+        "title": "Diária avulsa",
+        "desc": "Uma entrada no Nex House, sem precisar de assinatura.",
+        "price": "130",
+        "priceUnit": "por dia"
+      }
+    ]
+  },
+  {
+    "id": "sec-salas",
+    "number": "03",
+    "title": "Salas de reunião & diárias",
+    "items": [
+      {
+        "id": "i-salas-fco",
+        "type": "rooms",
+        "label": "Salas de reunião · Francisco Rocha",
+        "title": "Unidade FCO",
+        "price": "99",
+        "priceUnit": "/ hora",
+        "priceNote": "Sala R3: R$ 120,00/hora",
+        "rooms": [
+          { "name": "R1", "cap": "8 pos." },
+          { "name": "R2", "cap": "6 pos." },
+          { "name": "R3", "cap": "12 pos. · R$ 120", "highlight": true },
+          { "name": "R4", "cap": "4 pos." },
+          { "name": "C1", "cap": "3 pos." },
+          { "name": "C2", "cap": "5 pos." }
+        ]
+      },
+      {
+        "id": "i-salas-cpe",
+        "type": "rooms",
+        "label": "Salas de reunião · Nex House CPE",
+        "title": "Unidade Nex House",
+        "price": "110",
+        "priceUnit": "/ hora",
+        "rooms": [
+          { "name": "R1", "cap": "4 pos." },
+          { "name": "R2", "cap": "8 pos." },
+          { "name": "R3", "cap": "6 pos." }
+        ]
+      },
+      {
+        "id": "i-head-pacotes",
+        "type": "heading",
+        "text": "Pacotes de 10 horas",
+        "divider": true
+      },
+      {
+        "id": "i-pkg-nexhouse",
+        "type": "pricetable",
+        "tableTitle": "Nex House",
+        "rows": [
+          ["Visitante", "R$ 799,00"],
+          ["Contrato", "R$ 679,00"]
+        ]
+      },
+      {
+        "id": "i-pkg-fco",
+        "type": "pricetable",
+        "tableTitle": "Francisco Rocha",
+        "rows": [
+          ["Visitante", "R$ 669,00"],
+          ["Contrato", "R$ 569,00"]
+        ]
+      },
+      {
+        "id": "i-diaria",
+        "type": "product",
+        "variant": "default",
+        "label": "Diária de trabalho · Exclusivo FCO",
+        "title": "Diária de trabalho",
+        "desc": "Um dia de trabalho no Francisco Rocha. Sem assinatura.",
+        "price": "99",
+        "priceUnit": "/ dia"
+      },
+      {
+        "id": "i-pkg-diarias",
+        "type": "pricetable",
+        "tableTitle": "Pacote de diárias · FCO — 10 unidades",
+        "rows": [
+          ["Visitante", "R$ 693,00"],
+          ["Contrato", "R$ 589,00"]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec-eventos",
+    "number": "04",
+    "title": "Eventos corporativos",
+    "unit": "both",
+    "intro": "Auditório para offsites, treinamentos e reuniões de equipe. Reserva por período (até 4h) ou diária de 10h.",
+    "items": [
+      {
+        "id": "i-aud-periodo",
+        "type": "product",
+        "variant": "default",
+        "label": "Auditório · Período",
+        "title": "Até 4 horas",
+        "price": "910"
+      },
+      {
+        "id": "i-aud-diaria",
+        "type": "product",
+        "variant": "accent",
+        "label": "Auditório · Diária",
+        "title": "Diária de 10 horas",
+        "price": "1.640"
+      }
+    ]
+  },
+  {
+    "id": "sec-virtual",
+    "number": "05",
+    "title": "Escritório virtual",
+    "intro": "Endereço comercial ou fiscal para uso em CNPJ, cartão de visita, correspondência e site. Sem custo de escritório físico.",
+    "items": [
+      {
+        "id": "i-fiscal",
+        "type": "infotable",
+        "label": "Endereço Fiscal · Exclusivo Francisco Rocha",
+        "title": "Endereço fiscal",
+        "desc": "Endereço para registro de CNPJ e alvará. Disponível somente na unidade Francisco Rocha.",
+        "tableTitle": "Modalidades",
+        "rows": [
+          ["Mensal", "R$ 169,00"],
+          ["Semestral · R$ 116,50/mês", "R$ 699,00"],
+          ["Anual à vista · R$ 99,92/mês", "R$ 1.199,00"],
+          ["Anual parcelado", "R$ 1.349,00"]
+        ]
+      },
+      {
+        "id": "i-comercial",
+        "type": "infotable",
+        "label": "Endereço Comercial · Ambas as unidades",
+        "title": "Endereço comercial",
+        "desc": "Endereço para correspondência, cartão de visita e site. Disponível nas duas unidades.",
+        "tableTitle": "Modalidades",
+        "rows": [
+          ["Mensal", "R$ 112,00"],
+          ["Semestral · R$ 77,50/mês", "R$ 465,00"],
+          ["Anual à vista · R$ 66,58/mês", "R$ 799,00"],
+          ["Anual parcelado", "R$ 1.038,00"]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec-conteudo",
+    "number": "06",
+    "title": "Produção de conteúdo",
+    "unit": "both",
+    "items": [
+      {
+        "id": "i-foto",
+        "type": "banner",
+        "label": "Foto",
+        "title": "Sessão fotográfica",
+        "desc": "Fotos no espaço Nex. Consulte disponibilidade de data.",
+        "priceLabel": "a partir de",
+        "price": "150"
+      },
+      {
+        "id": "i-video",
+        "type": "banner",
+        "label": "Vídeo",
+        "title": "Sessão de filmagem",
+        "desc": "Filmagem no espaço Nex. Consulte disponibilidade de data.",
+        "priceLabel": "a partir de",
+        "price": "150"
+      }
+    ]
+  },
+  {
+    "id": "sec-unidades",
+    "number": "↓",
+    "title": "Serviços por unidade",
+    "items": [
+      {
+        "id": "i-unit-fco",
+        "type": "unit",
+        "tag": "FCO",
+        "tagVariant": "fco",
+        "name": "Francisco Rocha",
+        "addr": "Rua Francisco Rocha, 1285, Batel, Curitiba",
+        "services": [
+          "Escritório Privativo",
+          "Mesa Fixa de Trabalho",
+          "Salas de Reunião — R1 (8), R2 (6), R3 (12), R4 (4), C1 (3), C2 (5) · R$ 99/h / R3 R$ 120/h",
+          "Diária de Trabalho — R$ 99/dia",
+          "Eventos / Auditório",
+          "Escritório Virtual — Endereço Fiscal e Comercial",
+          "Produção de conteúdo (foto e vídeo)"
+        ]
+      },
+      {
+        "id": "i-unit-cpe",
+        "type": "unit",
+        "tag": "CPE",
+        "tagVariant": "cpe",
+        "name": "Casa de Pedra — Nex House",
+        "addr": "Al. Presidente Taunay, 130, Batel, Curitiba",
+        "services": [
+          "Escritório Privativo",
+          "Assinatura Nex House — Atrium & Gallery",
+          "Day Pass — R$ 130/dia",
+          "Salas de Reunião — R1 (4), R2 (8), R3 (6) · R$ 110/h",
+          "Eventos / Auditório",
+          "Escritório Virtual — Endereço Comercial",
+          "Produção de conteúdo (foto e vídeo)"
+        ]
+      }
+    ]
+  }
+]

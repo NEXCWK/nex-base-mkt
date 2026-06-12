@@ -14,8 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import {
-  MODULES, PORTFOLIO, TOTAL_TASKS,
-  type TrainingModule, type TaskType, type ProductCategory,
+  MODULES, TOTAL_TASKS,
+  type TrainingModule, type TaskType,
 } from "@/lib/training/data";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -72,7 +72,6 @@ const TYPE_META: Record<TaskType, { label: string; icon: React.ElementType; colo
 
 export default function TreinamentoPage() {
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState<"trilha" | "portfolio">("trilha");
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [trainees, setTrainees] = useState<Trainee[]>([]);
   const [activeTraineeId, setActiveTraineeId] = useState<string | null>(null);
@@ -184,61 +183,40 @@ export default function TreinamentoPage() {
           </div>
         </div>
 
-        {/* Sub-tab + trainee controls */}
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex gap-1 bg-gray-light p-1 rounded-lg w-fit">
-            {(["trilha", "portfolio"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => { setActiveTab(t); setActiveModule(null); }}
-                className={cn(
-                  "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
-                  activeTab === t
-                    ? "bg-white text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
+        {/* Trainee controls */}
+        <div className="flex items-center justify-end gap-2 flex-wrap">
+          {trainees.length > 0 && (
+            <div className="relative">
+              <Users size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <select
+                value={activeTraineeId ?? ""}
+                onChange={(e) => { setActiveTraineeId(e.target.value); setActiveModule(null); }}
+                className="pl-7 pr-3 h-9 rounded-md border border-gray-medium text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black max-w-[200px]"
               >
-                {t === "trilha" ? "Trilha" : "Portfólio de Produtos"}
-              </button>
-            ))}
-          </div>
-
-          {activeTab === "trilha" && (
-            <div className="flex items-center gap-2">
-              {trainees.length > 0 && (
-                <div className="relative">
-                  <Users size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                  <select
-                    value={activeTraineeId ?? ""}
-                    onChange={(e) => { setActiveTraineeId(e.target.value); setActiveModule(null); }}
-                    className="pl-7 pr-3 h-9 rounded-md border border-gray-medium text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black max-w-[200px]"
-                  >
-                    {trainees.map((t) => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              {activeTrainee && trainees.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDeleteTarget(activeTrainee)}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                  title="Remover este treinamento"
-                >
-                  <Trash2 size={14} />
-                </Button>
-              )}
-              <Button variant="accent" size="sm" onClick={() => setNewOpen(true)}>
-                <UserPlus size={14} />
-                Novo treinamento
-              </Button>
+                {trainees.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
             </div>
           )}
+          {activeTrainee && trainees.length > 1 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDeleteTarget(activeTrainee)}
+              className="text-red-500 hover:text-red-600 hover:bg-red-50"
+              title="Remover este treinamento"
+            >
+              <Trash2 size={14} />
+            </Button>
+          )}
+          <Button variant="accent" size="sm" onClick={() => setNewOpen(true)}>
+            <UserPlus size={14} />
+            Novo treinamento
+          </Button>
         </div>
 
-        {activeTab === "trilha" && activeTrainee && (
+        {activeTrainee && (
           <p className="text-xs text-muted-foreground mt-2">
             Treinando <span className="font-600 text-foreground">{activeTrainee.name}</span>
             {" · "}iniciado em {format(parseISO(activeTrainee.startedAt), "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
@@ -292,8 +270,7 @@ export default function TreinamentoPage() {
       </Modal>
 
       {/* ── TRILHA ── */}
-      {activeTab === "trilha" && (
-        <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Module mini-sidebar */}
           <div className="w-52 shrink-0 border-r border-gray-medium bg-white flex flex-col overflow-y-auto scrollbar-hide px-3 py-3 gap-1 ml-8">
             <button
@@ -390,14 +367,6 @@ export default function TreinamentoPage() {
             )}
           </div>
         </div>
-      )}
-
-      {/* ── PORTFÓLIO ── */}
-      {activeTab === "portfolio" && (
-        <div className="flex-1 overflow-y-auto px-8 py-6">
-          <Portfolio />
-        </div>
-      )}
     </div>
   );
 }
@@ -603,73 +572,3 @@ function ModuleDetail({
   );
 }
 
-// ─── Portfolio ────────────────────────────────────────────────────────────────
-
-function Portfolio() {
-  return (
-    <div>
-      <div className="mb-6">
-        <p className="text-xs font-600 text-muted-foreground uppercase tracking-wider">
-          Portfólio de Produtos
-        </p>
-        <p className="text-sm text-muted-foreground mt-1">
-          Referência dos produtos e serviços oferecidos pelo Nex — somente leitura.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {PORTFOLIO.map((cat) => (
-          <ProductCategoryCard key={cat.id} category={cat} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ProductCategoryCard({ category: cat }: { category: ProductCategory }) {
-  return (
-    <div className="bg-white border border-gray-medium rounded-xl p-5">
-      <p className="text-xs font-700 text-muted-foreground uppercase tracking-wider mb-3">
-        {cat.title}
-      </p>
-
-      {/* Regular items */}
-      {cat.items && (
-        <ul className="flex flex-col gap-2">
-          {cat.items.map((item) => (
-            <li key={item.name} className="flex items-start gap-2">
-              <div className="w-1 h-1 rounded-full bg-muted-foreground mt-2 shrink-0" />
-              <div>
-                <p className="text-sm font-500">{item.name}</p>
-                {item.detail && (
-                  <p className="text-xs text-muted-foreground mt-0.5">{item.detail}</p>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* Meeting rooms: units side by side */}
-      {cat.units && (
-        <div className="flex gap-4">
-          {cat.units.map((unit) => (
-            <div key={unit.name} className="flex-1">
-              <p className="text-xs font-600 text-muted-foreground mb-2 leading-snug">{unit.name}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {unit.items.map((room) => (
-                  <span
-                    key={room}
-                    className="text-xs font-600 bg-gray-light border border-gray-medium rounded-md px-2 py-1"
-                  >
-                    {room}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
