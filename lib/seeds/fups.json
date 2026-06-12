@@ -1,8 +1,80 @@
 [
   {
-    "id": "seed-fup-jornada",
-    "name": "Jornada de FUP & SLA de Atendimento",
-    "content": "# Boas Práticas\n\nAntes de iniciar qualquer jornada de FUP, é importante ter em mente as diretrizes que tornam o processo mais efetivo e menos intrusivo para o lead.\n\n- Procure realizar atendimentos e FUPs dos seus funis específicos. Assim, a linguagem e as informações ficam mais precisas.\n- Evite continuar o FUP que outro colaborador do Nex já iniciou. Desse modo, a conversa fica mais pessoal e menos confusa para o lead. Caso seja necessário, contextualize o cliente.\n- Utilize frases curtas e não intrusivas.\n- A prioridade de contato é sempre pelo WhatsApp. E-mail e ligação ficam reservados para quando o WhatsApp não for possível ou quando o cliente indicar preferência por esses meios.\n- Sempre inicie o FUP com uma saudação e finalize com outra.\n- Sempre registre o FUP. Utilize o RD CRM para registrar os FUPs e atualizar as colunas para melhor organização.\n\n*Atenção: caso o lead não responda a um dos FUPs ou sinalize negativa direta, devemos dar o lead como perdido e interromper o processo de FUP.*\n\n---\n\n# Etapas de FUP\n\nA jornada de FUP é composta por seis etapas sequenciais, além de casos especiais. Cada etapa tem um objetivo claro, prazo definido e exemplo de mensagem.\n\n---\n\n## 01 — Primeiro Contato\n\n**Objetivo:** Realizar uma primeira aproximação com o lead e entender qual a melhor forma de ajudá-lo.\n**Número de vezes:** Uma vez.\n**Meio de preferência:** WhatsApp.\n**Prazo:** Em até 24 horas após a conversão do lead.\n**Contexto:** Follow realizado quando o lead converte de modo espontâneo em nossas automações.\n\n### Exemplo de mensagem\n\n*\"Olá Larissa, boa tarde! Sou a Nauane, do time de vendas do Nex. Prazer em conhecê-la! Vi em nosso sistema que você se interessou no Escritório Virtual. Conseguiu dar uma olhada na nossa apresentação, enviada no seu e-mail? Se tiver alguma dúvida ou precisar de esclarecimentos, estou à disposição!\"*\n\n---\n\n## 02 — Tentativa de Primeiro Contato\n\n**Objetivo:** Realizar uma primeira aproximação com o lead e entender qual a melhor forma de ajudá-lo.\n**Número de vezes:** Uma vez.\n**Meio de preferência:** WhatsApp.\n**Prazo:** Entre 24h e 48h após a primeira tentativa de contato.\n**Contexto:** Follow realizado somente quando não conseguimos contato direto com o lead na primeira tentativa.\n\n### Exemplo de mensagem\n\n*\"Olá Larissa, boa tarde! Como vai? Tentei contato ontem, mas sem sucesso. Vi que você se interessou no Escritório Virtual. Caso tenha alguma dúvida, estou à disposição!\"*\n\n---\n\n## 03 — Agendamento de Visita\n\n**Objetivo:** Entender se nossas soluções fizeram sentido e mirar no agendamento da visita.\n**Número de vezes:** Uma vez.\n**Meio de preferência:** WhatsApp.\n**Prazo:** Até 24 horas após o envio das informações.\n**Contexto:** Follow realizado após o envio das informações ao lead.\n\n### Exemplo de mensagem\n\n*\"Olá Larissa, bom dia! Tudo bem? Conseguiu analisar as informações que enviamos? Faz sentido para você? Qualquer dúvida, basta sinalizar!\"*\n\n---\n\n## 04 — Envio de Proposta\n\n**Objetivo:** Enviar a proposta ao lead de maneira clara e objetiva.\n**Número de vezes:** Uma vez.\n**Meio de preferência:** WhatsApp.\n**Prazo:** Até 12 horas após o envio das informações.\n**Contexto:** Follow realizado após o envio das informações e/ou agendamento de visita.\n\n### Exemplo de mensagem\n\n*\"Olá Larissa, bom dia! Tudo bem? Em anexo, segue nossa proposta para o Auditório nos dias 25 e 26/11. Dúvidas, estamos à disposição. Esperamos ter você aqui conosco!\"*\n\n---\n\n## 05 — Pós-Proposta e Contratação\n\n**Objetivo:** Entender se os valores e condições apresentados fazem sentido e se há possibilidade real de efetivação da contratação.\n**Número de vezes:** Uma vez.\n**Meio de preferência:** WhatsApp.\n**Prazo:** 24 horas após o envio da proposta.\n**Contexto:** Follow realizado após o envio de proposta para o lead.\n\n### Exemplo de mensagem\n\n*\"Olá Larissa, boa tarde! Como vai? Entrando em contato para entender se nossa proposta, com valores e condições, fez sentido para você. Se tiver alguma dúvida ou desejar formalizar a contratação, basta me mandar uma mensagem. Abraços!\"*\n\n---\n\n## 06 — Finalização / Negativa\n\n**Objetivo:** Finalizar o atendimento ao lead de maneira rápida e clara, fazendo-o entender que estamos à disposição para novas demandas.\n**Número de vezes:** Uma vez.\n**Meio de preferência:** WhatsApp.\n**Prazo:** Até 12 horas após a segunda tentativa de contato sem retorno.\n**Contexto:** Follow realizado após toda a jornada do lead, quando este indicar negativa ou não responder.\n\n### Exemplo de mensagem\n\n*\"Olá Larissa, bom dia! Tudo bem? Acredito que nossa proposta não fez sentido para você dessa vez. Estou encerrando o atendimento por enquanto, mas sempre que precisar, pode contar conosco! Abraços e seguimos à disposição.\"*\n\n---\n\n# Casos Especiais\n\n## Cupons de Desconto e Ações Comerciais\n\n**Objetivo:** Comunicar ao lead um benefício ou desconto especial no produto de interesse, de modo a oferecer uma vantagem e facilitar a negociação.\n**Número de vezes:** Combinado previamente no lançamento da ação.\n**Meio de preferência:** WhatsApp.\n**Prazo:** Combinado previamente no lançamento da ação.\n\n### Exemplo de mensagem\n\n*\"Olá Larissa, boa tarde! Como vai? Recentemente você se interessou no Escritório Virtual, e por isso estamos em contato para comunicar que temos um desconto especial de 10% na contratação de qualquer uma das nossas opções, até o dia 30/04!\"*\n\n## Data Combinada com o Lead\n\nEventualmente, o lead indicará uma data específica para retorno que foge dos prazos pré-estabelecidos de FUP. Nesses casos, devemos programar a nova data do FUP dentro do RD CRM e adicionar essa informação no campo de observações do lead, tornando claro também em qual etapa ele se encontra.\n\n---\n\n# SLA de Atendimento\n\nO SLA de Atendimento é essencial para garantir retorno ao lead dentro de um prazo hábil para a resolução de sua demanda. Em termos gerais, primeiros e novos atendimentos devem ser realizados em até 24 horas.\n\n| ESTÁGIO | PRAZO MÁXIMO |\n| --- | --- |\n| MQL | 24 horas |\n| Em Tentativa | 48 horas |\n| Em Qualificação | Até 72 horas |\n| SQL | Até 72 horas |",
+    "id": "fup-boas-praticas",
+    "name": "Boas Práticas de FUP",
+    "content": "# Boas Práticas de FUP\n\nAntes de iniciar qualquer jornada de FUP, tenha em mente as diretrizes que tornam o processo mais efetivo e menos intrusivo para o lead.\n\n- **Procure realizar atendimentos e FUPs dos seus funis específicos.** Assim, a linguagem e informações tornam-se mais precisas.\n- **Evite continuar o FUP que outro colaborador do Nex já iniciou.** Desse modo, a conversa fica mais pessoal e menos confusa para o lead. Caso seja necessário, contextualize o cliente: *\"Olá! Larissa aqui. A Nauane não poderá atender pois seu expediente encerrou, e para agilizar seu atendimento, eu darei continuidade!\"*\n- **Frases curtas e não intrusivas.**\n- **Prioridade de contato sempre por WhatsApp.** E-mail e ligação somente na impossibilidade do envio do WhatsApp ou caso o cliente indique que prefere estes meios.\n- **Sempre inicie o FUP com uma saudação e finalize com outra.** *\"Olá, tudo bem?\" / \"Estou à disposição, até mais!\"*\n- **Sempre registre o FUP.** Utilize o RD CRM para registrar os FUPs e atualize as colunas para uma melhor organização.\n\n---\n\n## Etapas da Jornada\n\n1. Primeiro Contato\n2. Tentativa de Primeiro Contato\n3. Agendamento de Visita\n4. Envio de Proposta\n5. Pós-Proposta & Contratação\n6. Finalização de Atendimento / Negativa\n\n> **Atenção:** caso o lead não responda a um dos FUPs ou sinalize negativa direta, devemos dar o lead como perdido e interromper o processo de FUP.",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "fup-1-primeiro-contato",
+    "name": "FUP 1 — Primeiro Contato",
+    "content": "# FUP 1 — Primeiro Contato\n\nFollow realizado quando o lead converte de modo espontâneo em nossas automações.\n\n| Campo | Detalhe |\n|---|---|\n| **Objetivo** | Realizar uma primeira aproximação com o lead e entender qual a melhor forma de ajudá-lo |\n| **Número de vezes** | 1 vez |\n| **Meio de preferência** | WhatsApp |\n| **Prazo** | Em até 24 horas após a conversão do lead |\n\n---\n\n## Exemplo de mensagem\n\n> *\"Olá Larissa, boa tarde! Sou a Nauane, do time de vendas do Nex. Prazer em conhecê-la! Vi em nosso sistema que você se interessou em nosso produto de Escritório Virtual. Conseguiu dar uma olhada em nossa apresentação, enviada em seu e-mail? Se tiver alguma dúvida ou precise de esclarecimentos, estou à disposição!\"*",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "fup-2-tentativa-primeiro-contato",
+    "name": "FUP 2 — Tentativa de Primeiro Contato",
+    "content": "# FUP 2 — Tentativa de Primeiro Contato\n\nFollow realizado somente quando não conseguimos contato direto com o lead na primeira tentativa.\n\n| Campo | Detalhe |\n|---|---|\n| **Objetivo** | Realizar uma primeira aproximação com o lead e entender qual a melhor forma de ajudá-lo |\n| **Número de vezes** | 1 vez |\n| **Meio de preferência** | WhatsApp |\n| **Prazo** | Entre 24h e 48h após a primeira tentativa de contato |\n\n---\n\n## Exemplo de mensagem\n\n> *\"Olá Larissa, boa tarde! Como vai? Tentei contato contigo ontem, mas sem sucesso. Vi que você se interessou em nosso Escritório Virtual. Caso tenha alguma dúvida, estou à disposição!\"*",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "fup-3-agendamento-visita",
+    "name": "FUP 3 — Agendamento de Visita",
+    "content": "# FUP 3 — Agendamento de Visita\n\nFollow realizado após o envio das informações ao lead.\n\n| Campo | Detalhe |\n|---|---|\n| **Objetivo** | Entender se nossas soluções fizeram sentido e mirar no agendamento da visita |\n| **Número de vezes** | 1 vez |\n| **Meio de preferência** | WhatsApp |\n| **Prazo** | Até 24 horas após o envio das informações |\n\n---\n\n## Exemplo de mensagem\n\n> *\"Olá Larissa, bom dia! Tudo bem? Conseguiu analisar as informações que enviamos? Faz sentido para você? Qualquer dúvida ou esclarecimentos, basta sinalizar!\"*",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "fup-4-envio-proposta",
+    "name": "FUP 4 — Envio de Proposta",
+    "content": "# FUP 4 — Envio de Proposta\n\nFollow realizado após o envio das informações ao lead e/ou agendamento de visita.\n\n| Campo | Detalhe |\n|---|---|\n| **Objetivo** | Enviar a proposta ao lead de maneira clara e objetiva |\n| **Número de vezes** | 1 vez |\n| **Meio de preferência** | WhatsApp |\n| **Prazo** | Até 12 horas após o envio das informações |\n\n---\n\n## Exemplo de mensagem\n\n> *\"Olá Larissa, bom dia! Tudo bem? Em anexo, segue nossa proposta de nosso Auditório para os dias 25 e 26/11. Dúvidas, estamos à disposição. Esperamos ter você aqui conosco!\"*",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "fup-5-pos-proposta",
+    "name": "FUP 5 — Pós-Proposta & Contratação",
+    "content": "# FUP 5 — Pós-Proposta & Contratação\n\nFollow realizado após o envio de proposta para o lead.\n\n| Campo | Detalhe |\n|---|---|\n| **Objetivo** | Entender se os valores e condições apresentados fazem sentido e se há possibilidade real de efetivação da contratação |\n| **Número de vezes** | 1 vez |\n| **Meio de preferência** | WhatsApp |\n| **Prazo** | 24 horas após o envio da proposta |\n\n---\n\n## Exemplo de mensagem\n\n> *\"Olá Larissa, boa tarde! Como vai? Entrando em contato contigo para entender se nossa proposta com valores e condições fizeram sentido para você. Se tiver alguma dúvida ou se deseja formalizar a contratação, basta me mandar uma mensagem. Abraços!\"*",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "fup-6-finalizacao-negativa",
+    "name": "FUP 6 — Finalização / Negativa",
+    "content": "# FUP 6 — Finalização / Negativa\n\nFollow realizado após toda a jornada do lead, quando este indicar negativa ou não responder.\n\n| Campo | Detalhe |\n|---|---|\n| **Objetivo** | Finalizar o atendimento ao lead de maneira rápida e clara, fazendo-o entender que estamos à disposição para novas demandas |\n| **Número de vezes** | 1 vez |\n| **Meio de preferência** | WhatsApp |\n| **Prazo** | Até 12 horas após a segunda tentativa de contato sem retorno |\n\n---\n\n## Exemplo de mensagem\n\n> *\"Olá Larissa, bom dia! Tudo bem? Acredito que nossa proposta não fez muito sentido para você dessa vez. Estou encerrando seu atendimento por enquanto, mas sempre que precisar, conte conosco! Abraços e seguimos à disposição.\"*",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "fup-casos-especiais",
+    "name": "Casos Especiais",
+    "content": "# Casos Especiais\n\n## Cupons de Desconto e Ações Comerciais\n\nEventualmente, disponibilizamos cupons de descontos e ações comerciais especiais para um produto em específico.\n\n| Campo | Detalhe |\n|---|---|\n| **Objetivo** | Comunicar ao lead um benefício e/ou desconto especial no produto de interesse, facilitando a negociação |\n| **Número de vezes** | Combinado previamente no lançamento da ação |\n| **Meio de preferência** | WhatsApp |\n| **Prazo** | Combinado previamente no lançamento da ação |\n\n**Exemplo de mensagem:**\n\n> *\"Olá Larissa, boa tarde! Como vai? Recentemente você se interessou em nosso produto de Escritório Virtual, e por isso, entramos em contato para comunicar que estamos com um desconto especial de 10% na contratação de qualquer uma de nossas opções, até o dia 30/04!\"*\n\n---\n\n## Data Combinada com o Lead\n\nEventualmente, o lead indicará uma data específica para retorno que foge de nossos prazos pré-estabelecidos de FUP.\n\nNesses casos:\n- Programe a nova data do FUP dentro do RD CRM\n- Adicione essa informação no campo de observações do lead\n- Deixe claro em qual etapa da jornada o lead se encontra",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "fup-cadencia-retorno",
+    "name": "Cadência de FUPs de Retorno",
+    "content": "# Cadência de FUPs de Retorno\n\nApós o cliente levantar a mão / entrar em contato, envie as principais informações do plano. Em caso de ausência de retorno em qualquer uma das etapas posteriores, siga a cadência abaixo:\n\n| Timing | Ação | Canal |\n|--------|------|-------|\n| Um dia após | FUP 1 — *\"Deu certo analisar as informações/proposta enviadas?\"* | Canal de negociação |\n| Dois dias depois | FUP 2 — *\"Restou dúvidas ou avanço?\"* | Canal de negociação |\n| Um dia depois | FUP Pré-Despedida — *\"Não queremos ser inconvenientes nem insistentes\"* | Canal de negociação |\n| Final do dia ou dia seguinte | FUP Despedida / Encerramento de Conversa | Canal de negociação |\n\n**Jornada completa de FUP de resgate: 4 a 5 dias.**\n\n> **Em casos de Escritório Privativo e Mesa Fixa, adicionar LIGAÇÃO em toda tentativa de FUP de resgate.**\n\n---\n\n## Regras de Reincidência\n\n- Em caso de **resposta** do lead em algum dos FUPs de retorno: continuar a negociação normalmente.\n- Em caso de **reincidência de ausência** de respostas: aplicar novamente o ciclo de FUPs de retorno, com exceção do FUP Pré-Despedida.",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "fup-sla-atendimento",
+    "name": "SLA de Atendimento",
+    "content": "# SLA de Atendimento\n\nO SLA de Atendimento é essencial para garantir retorno ao lead dentro de um prazo hábil para a resolução de sua demanda. Em termos gerais, primeiros e novos atendimentos devem ser realizados em até 24 horas.\n\n| Estágio no CRM | Prazo Máximo |\n|---|---|\n| MQL | 24 horas |\n| Em Tentativa | 48 horas |\n| Em Qualificação | Até 72 horas |\n| SQL | Até 72 horas |\n\n---\n\n> Mantenha sempre o RD CRM atualizado com o estágio correto do lead para que o SLA possa ser monitorado pela equipe.",
     "createdBy": "sistema",
     "createdAt": "2026-01-01T00:00:00.000Z",
     "updatedAt": "2026-01-01T00:00:00.000Z"
