@@ -41,7 +41,7 @@ const navGroups: {
     items: [
       { href: "/playbooks", label: "Playbooks da Área", icon: BookOpen },
       { href: "/estrategias", label: "Estratégias", icon: Target },
-      { href: "/comercial", label: "Comercial", icon: Briefcase },
+      { href: "/comercial", label: "Vendas", icon: Briefcase },
       { href: "/comunicacao-design", label: "Comunicação e Design", icon: Palette },
       { href: "/marketing", label: "Marketing", icon: Megaphone },
     ],

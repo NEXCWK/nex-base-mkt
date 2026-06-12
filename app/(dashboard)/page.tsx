@@ -65,7 +65,7 @@ const sectionGroups: { label: string; sections: Section[] }[] = [
       },
       {
         href: "/comercial",
-        label: "Comercial",
+        label: "Vendas",
         description: "Pipeline, scripts de vendas e gestão de leads.",
         icon: Briefcase,
       },

@@ -39,9 +39,8 @@ const MAIN_TABS: { id: MainTab; label: string }[] = [
 
 const FILE_SECTIONS = [
   { id: "marketing", label: "Marketing" },
-  { id: "comercial", label: "Comercial" },
+  { id: "vendas", label: "Vendas" },
   { id: "comunicacao", label: "Comunicacao" },
-  { id: "design", label: "Design" },
 ] as const;
 
 // ─── Empty forms ────────────────────────────────────────────────────────────

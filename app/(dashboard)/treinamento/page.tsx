@@ -5,9 +5,14 @@ import {
   GraduationCap, CheckCircle2, Circle, ChevronRight, ChevronLeft,
   BookOpen, Users, MapPin, Calendar, FileText, Package,
   Megaphone, Code2, Settings, GitBranch, CheckCheck, LayoutGrid,
+  UserPlus, Trash2,
 } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Modal } from "@/components/ui/modal";
 import {
   MODULES, PORTFOLIO, TOTAL_TASKS,
   type TrainingModule, type TaskType, type ProductCategory,
@@ -16,6 +21,29 @@ import {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 type Progress = Record<string, boolean>;
+
+interface Trainee {
+  id: string;
+  name: string;
+  startedAt: string;
+  progress: Progress;
+}
+
+const TRAINEES_KEY = "nex_trainings";
+
+function loadTrainees(): Trainee[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(TRAINEES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveTrainees(list: Trainee[]) {
+  try { localStorage.setItem(TRAINEES_KEY, JSON.stringify(list)); } catch { /* ignore */ }
+}
 
 function getModuleTasks(mod: TrainingModule) {
   return mod.groups.flatMap((g) => g.tasks);
@@ -46,29 +74,92 @@ export default function TreinamentoPage() {
   const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState<"trilha" | "portfolio">("trilha");
   const [activeModule, setActiveModule] = useState<string | null>(null);
-  const [progress, setProgress] = useState<Progress>({});
+  const [trainees, setTrainees] = useState<Trainee[]>([]);
+  const [activeTraineeId, setActiveTraineeId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
-  const storageKey = `nex_training_${session?.user?.email ?? "anon"}`;
+  // New / delete trainee modals
+  const [newOpen, setNewOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<Trainee | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) setProgress(JSON.parse(raw));
-    } catch { /* ignore */ }
-  }, [storageKey]);
+    let list = loadTrainees();
+
+    // Migração: se houver progresso antigo no formato individual, vira o primeiro trainee
+    if (list.length === 0) {
+      try {
+        const legacy = localStorage.getItem(`nex_training_${session?.user?.email ?? "anon"}`);
+        const legacyProgress = legacy ? JSON.parse(legacy) : {};
+        const hasLegacy = Object.values(legacyProgress as Progress).some(Boolean);
+        list = [{
+          id: Date.now().toString(),
+          name: hasLegacy ? (session?.user?.name ?? "Meu treinamento") : "Primeiro treinamento",
+          startedAt: new Date().toISOString(),
+          progress: hasLegacy ? legacyProgress : {},
+        }];
+        saveTrainees(list);
+      } catch {
+        list = [{ id: Date.now().toString(), name: "Primeiro treinamento", startedAt: new Date().toISOString(), progress: {} }];
+        saveTrainees(list);
+      }
+    }
+    setTrainees(list);
+    setActiveTraineeId(list[0]?.id ?? null);
+  }, [session?.user?.email, session?.user?.name]);
+
+  const activeTrainee = trainees.find((t) => t.id === activeTraineeId) ?? null;
+  const progress = activeTrainee?.progress ?? {};
+
+  const persist = useCallback((list: Trainee[]) => {
+    setTrainees(list);
+    saveTrainees(list);
+  }, []);
 
   const toggleTask = useCallback(
     (taskId: string) => {
-      setProgress((prev) => {
-        const next = { ...prev, [taskId]: !prev[taskId] };
-        try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* ignore */ }
+      if (!activeTraineeId) return;
+      setTrainees((prev) => {
+        const next = prev.map((t) =>
+          t.id === activeTraineeId
+            ? { ...t, progress: { ...t.progress, [taskId]: !t.progress[taskId] } }
+            : t
+        );
+        saveTrainees(next);
         return next;
       });
     },
-    [storageKey]
+    [activeTraineeId]
   );
+
+  function createTrainee() {
+    const name = newName.trim();
+    if (!name) return;
+    const t: Trainee = {
+      id: Date.now().toString(),
+      name,
+      startedAt: new Date().toISOString(),
+      progress: {},
+    };
+    const next = [...trainees, t];
+    persist(next);
+    setActiveTraineeId(t.id);
+    setActiveModule(null);
+    setNewName("");
+    setNewOpen(false);
+  }
+
+  function removeTrainee() {
+    if (!deleteTarget) return;
+    const next = trainees.filter((t) => t.id !== deleteTarget.id);
+    persist(next);
+    if (activeTraineeId === deleteTarget.id) {
+      setActiveTraineeId(next[0]?.id ?? null);
+      setActiveModule(null);
+    }
+    setDeleteTarget(null);
+  }
 
   const totalDone = Object.values(progress).filter(Boolean).length;
   const globalPct = TOTAL_TASKS ? (totalDone / TOTAL_TASKS) * 100 : 0;
@@ -93,24 +184,112 @@ export default function TreinamentoPage() {
           </div>
         </div>
 
-        {/* Sub-tab */}
-        <div className="flex gap-1 bg-gray-light p-1 rounded-lg w-fit">
-          {(["trilha", "portfolio"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => { setActiveTab(t); setActiveModule(null); }}
-              className={cn(
-                "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
-                activeTab === t
-                  ? "bg-white text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+        {/* Sub-tab + trainee controls */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex gap-1 bg-gray-light p-1 rounded-lg w-fit">
+            {(["trilha", "portfolio"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => { setActiveTab(t); setActiveModule(null); }}
+                className={cn(
+                  "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
+                  activeTab === t
+                    ? "bg-white text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {t === "trilha" ? "Trilha" : "Portfólio de Produtos"}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === "trilha" && (
+            <div className="flex items-center gap-2">
+              {trainees.length > 0 && (
+                <div className="relative">
+                  <Users size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <select
+                    value={activeTraineeId ?? ""}
+                    onChange={(e) => { setActiveTraineeId(e.target.value); setActiveModule(null); }}
+                    className="pl-7 pr-3 h-9 rounded-md border border-gray-medium text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black max-w-[200px]"
+                  >
+                    {trainees.map((t) => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
               )}
-            >
-              {t === "trilha" ? "Trilha" : "Portfólio de Produtos"}
-            </button>
-          ))}
+              {activeTrainee && trainees.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDeleteTarget(activeTrainee)}
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                  title="Remover este treinamento"
+                >
+                  <Trash2 size={14} />
+                </Button>
+              )}
+              <Button variant="accent" size="sm" onClick={() => setNewOpen(true)}>
+                <UserPlus size={14} />
+                Novo treinamento
+              </Button>
+            </div>
+          )}
         </div>
+
+        {activeTab === "trilha" && activeTrainee && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Treinando <span className="font-600 text-foreground">{activeTrainee.name}</span>
+            {" · "}iniciado em {format(parseISO(activeTrainee.startedAt), "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
+          </p>
+        )}
       </div>
+
+      {/* New trainee modal */}
+      <Modal
+        open={newOpen}
+        onClose={() => { setNewOpen(false); setNewName(""); }}
+        title="Iniciar novo treinamento"
+        description="Comece uma nova trilha do zero para um novo membro do time."
+      >
+        <div className="flex flex-col gap-4">
+          <Input
+            label="Nome do novo membro"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") createTrainee(); }}
+            placeholder="Ex: João Silva"
+            autoFocus
+          />
+          <div className="flex justify-end gap-2 pt-1">
+            <Button variant="outline" size="sm" onClick={() => { setNewOpen(false); setNewName(""); }}>
+              Cancelar
+            </Button>
+            <Button variant="accent" size="sm" onClick={createTrainee} disabled={!newName.trim()}>
+              <UserPlus size={14} />
+              Iniciar trilha
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete trainee modal */}
+      <Modal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Remover treinamento"
+        description={`Tem certeza que deseja remover a trilha de "${deleteTarget?.name}"? Todo o progresso será perdido.`}
+      >
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" size="sm" onClick={() => setDeleteTarget(null)}>
+            Cancelar
+          </Button>
+          <Button size="sm" onClick={removeTrainee} className="bg-red-500 text-white hover:bg-red-600">
+            Remover
+          </Button>
+        </div>
+      </Modal>
 
       {/* ── TRILHA ── */}
       {activeTab === "trilha" && (

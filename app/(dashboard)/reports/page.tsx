@@ -4,10 +4,16 @@ import { useSession } from "next-auth/react";
 import {
   BookOpen, Plus, ChevronDown, ChevronUp, Filter,
   ThumbsUp, AlertCircle, FileText, Loader2, CheckCircle2, Clock,
+  TrendingUp, TrendingDown, Users, BarChart3,
 } from "lucide-react";
-import { format, parseISO, isToday, isYesterday } from "date-fns";
+import { format, parseISO, isToday, isYesterday, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import {
+  ResponsiveContainer, AreaChart, Area, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+} from "recharts";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +28,9 @@ interface Report {
   date: string;
   timestamp: string;
   feeling: string;
+  leads: number;
+  newSales: number;
+  churns: number;
   compliments: string;
   complaints: string;
   notes: string;
@@ -35,7 +44,15 @@ const FEELINGS = [
   { value: "pessimo", label: "Péssimo", color: "#ef4444" },
 ];
 
-const EMPTY_FORM = { feeling: "bom", notes: "", compliments: "", complaints: "" };
+const EMPTY_FORM = {
+  feeling: "bom",
+  leads: "",
+  newSales: "",
+  churns: "",
+  notes: "",
+  compliments: "",
+  complaints: "",
+};
 
 function feelingInfo(val: string) {
   return FEELINGS.find((f) => f.value === val) ?? FEELINGS[1];
@@ -54,7 +71,7 @@ export default function ReportsPage() {
   const { data: session } = useSession();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"hoje" | "historico">("hoje");
+  const [tab, setTab] = useState<"hoje" | "indicadores" | "historico">("hoje");
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -163,7 +180,7 @@ export default function ReportsPage() {
 
       {/* Tab nav */}
       <div className="flex gap-1 bg-gray-light p-1 rounded-lg w-fit mb-6">
-        {([["hoje", "Hoje"], ["historico", "Histórico"]] as const).map(([key, label]) => (
+        {([["hoje", "Hoje"], ["indicadores", "Indicadores"], ["historico", "Histórico"]] as const).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -224,6 +241,11 @@ export default function ReportsPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* ── INDICADORES ── */}
+      {tab === "indicadores" && (
+        <KpiDashboard reports={reports} loading={loading} />
       )}
 
       {/* ── HISTÓRICO ── */}
@@ -357,6 +379,24 @@ function ReportCard({ report: r, compact = false }: { report: Report; compact?: 
         </div>
       </div>
 
+      {/* KPIs */}
+      {(r.leads > 0 || r.newSales > 0 || r.churns > 0) && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className="inline-flex items-center gap-1.5 text-xs font-600 bg-gray-light border border-gray-medium rounded-md px-2.5 py-1">
+            <Users size={12} className="text-blue-500" />
+            {r.leads} {r.leads === 1 ? "lead" : "leads"}
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-xs font-600 bg-gray-light border border-gray-medium rounded-md px-2.5 py-1">
+            <TrendingUp size={12} className="text-green-500" />
+            {r.newSales} {r.newSales === 1 ? "venda" : "vendas"}
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-xs font-600 bg-gray-light border border-gray-medium rounded-md px-2.5 py-1">
+            <TrendingDown size={12} className="text-red-500" />
+            {r.churns} {r.churns === 1 ? "churn" : "churns"}
+          </span>
+        </div>
+      )}
+
       {/* Content */}
       <div className="flex flex-col gap-3">
         {r.notes && (
@@ -431,6 +471,40 @@ function DailyReportForm({
         </div>
       </div>
 
+      {/* KPIs do dia */}
+      <div>
+        <p className="text-sm font-medium text-gray-dark mb-2">Indicadores do dia</p>
+        <div className="grid grid-cols-3 gap-3">
+          <Input
+            label="Leads / Procura"
+            type="number"
+            min={0}
+            inputMode="numeric"
+            placeholder="0"
+            value={form.leads}
+            onChange={set("leads")}
+          />
+          <Input
+            label="Novas vendas"
+            type="number"
+            min={0}
+            inputMode="numeric"
+            placeholder="0"
+            value={form.newSales}
+            onChange={set("newSales")}
+          />
+          <Input
+            label="Churns"
+            type="number"
+            min={0}
+            inputMode="numeric"
+            placeholder="0"
+            value={form.churns}
+            onChange={set("churns")}
+          />
+        </div>
+      </div>
+
       {/* Main narrative */}
       <Textarea
         label="Como foi o dia? *"
@@ -471,5 +545,212 @@ function DailyReportForm({
         </Button>
       </div>
     </form>
+  );
+}
+
+// ─── KPI Dashboard ──────────────────────────────────────────────────────────────
+
+function StatCard({
+  label, value, delta, icon: Icon, accent,
+}: {
+  label: string;
+  value: number | string;
+  delta?: string;
+  icon: React.ElementType;
+  accent: string;
+}) {
+  return (
+    <div className="bg-white border border-gray-medium rounded-xl p-4">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-600 text-muted-foreground uppercase tracking-wide">{label}</p>
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: accent + "1a" }}>
+          <Icon size={14} style={{ color: accent }} />
+        </div>
+      </div>
+      <p className="text-2xl font-700 tracking-tight">{value}</p>
+      {delta && <p className="text-xs text-muted-foreground mt-0.5">{delta}</p>}
+    </div>
+  );
+}
+
+function KpiDashboard({ reports, loading }: { reports: Report[]; loading: boolean }) {
+  const [range, setRange] = useState<7 | 30 | 90>(30);
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 text-muted-foreground text-sm py-10">
+        <Loader2 size={15} className="animate-spin" /> Carregando indicadores...
+      </div>
+    );
+  }
+
+  if (reports.length === 0) {
+    return (
+      <div className="text-center py-16 border border-dashed border-gray-medium rounded-xl">
+        <BarChart3 size={28} className="mx-auto mb-3 text-muted-foreground opacity-40" />
+        <p className="text-sm font-medium text-muted-foreground mb-1">
+          Ainda não há dados para indicadores.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Os gráficos aparecem conforme o time envia os reports diários.
+        </p>
+      </div>
+    );
+  }
+
+  const cutoff = format(subDays(new Date(), range - 1), "yyyy-MM-dd");
+  const inRange = reports.filter((r) => r.date >= cutoff);
+
+  // Totais
+  const totalLeads = inRange.reduce((s, r) => s + (r.leads || 0), 0);
+  const totalSales = inRange.reduce((s, r) => s + (r.newSales || 0), 0);
+  const totalChurns = inRange.reduce((s, r) => s + (r.churns || 0), 0);
+  const netGrowth = totalSales - totalChurns;
+  const conversion = totalLeads > 0 ? Math.round((totalSales / totalLeads) * 100) : 0;
+
+  // Série temporal por dia
+  const byDate: Record<string, { leads: number; sales: number; churns: number }> = {};
+  for (let i = range - 1; i >= 0; i--) {
+    const d = format(subDays(new Date(), i), "yyyy-MM-dd");
+    byDate[d] = { leads: 0, sales: 0, churns: 0 };
+  }
+  inRange.forEach((r) => {
+    if (!byDate[r.date]) byDate[r.date] = { leads: 0, sales: 0, churns: 0 };
+    byDate[r.date].leads += r.leads || 0;
+    byDate[r.date].sales += r.newSales || 0;
+    byDate[r.date].churns += r.churns || 0;
+  });
+  const series = Object.entries(byDate).map(([date, v]) => ({
+    date,
+    label: format(parseISO(date), "dd/MM"),
+    Leads: v.leads,
+    Vendas: v.sales,
+    Churns: v.churns,
+  }));
+
+  // Distribuição de feeling
+  const feelingCounts = FEELINGS.map((f) => ({
+    label: f.label,
+    color: f.color,
+    value: inRange.filter((r) => r.feeling === f.value).length,
+  }));
+
+  // Ranking por membro
+  const byMember: Record<string, { name: string; sales: number; leads: number }> = {};
+  inRange.forEach((r) => {
+    const key = r.userName || r.userEmail;
+    if (!byMember[key]) byMember[key] = { name: key, sales: 0, leads: 0 };
+    byMember[key].sales += r.newSales || 0;
+    byMember[key].leads += r.leads || 0;
+  });
+  const ranking = Object.values(byMember).sort((a, b) => b.sales - a.sales).slice(0, 6);
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Range selector */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Consolidado dos últimos {range} dias · {inRange.length} {inRange.length === 1 ? "report" : "reports"}
+        </p>
+        <div className="flex gap-1 bg-gray-light p-1 rounded-lg">
+          {([7, 30, 90] as const).map((r) => (
+            <button
+              key={r}
+              onClick={() => setRange(r)}
+              className={cn(
+                "px-3 py-1 rounded-md text-xs font-medium transition-colors",
+                range === r ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {r} dias
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard label="Leads / Procura" value={totalLeads} icon={Users} accent="#3b82f6" />
+        <StatCard label="Novas vendas" value={totalSales} delta={`Conversão ${conversion}%`} icon={TrendingUp} accent="#22c55e" />
+        <StatCard label="Churns" value={totalChurns} icon={TrendingDown} accent="#ef4444" />
+        <StatCard
+          label="Crescimento líquido"
+          value={netGrowth > 0 ? `+${netGrowth}` : netGrowth}
+          delta="vendas − churns"
+          icon={BarChart3}
+          accent="#000000"
+        />
+      </div>
+
+      {/* Leads / Vendas / Churns ao longo do tempo */}
+      <div className="bg-white border border-gray-medium rounded-xl p-5">
+        <p className="text-sm font-600 mb-4">Leads, vendas e churns por dia</p>
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={series} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="gLeads" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gSales" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#ebebea" vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#6b6b68" }} interval="preserveStartEnd" tickLine={false} axisLine={{ stroke: "#ebebea" }} />
+              <YAxis tick={{ fontSize: 11, fill: "#6b6b68" }} tickLine={false} axisLine={false} allowDecimals={false} />
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #ebebea" }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Area type="monotone" dataKey="Leads" stroke="#3b82f6" strokeWidth={2} fill="url(#gLeads)" />
+              <Area type="monotone" dataKey="Vendas" stroke="#22c55e" strokeWidth={2} fill="url(#gSales)" />
+              <Area type="monotone" dataKey="Churns" stroke="#ef4444" strokeWidth={2} fillOpacity={0} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Ranking por membro */}
+        <div className="bg-white border border-gray-medium rounded-xl p-5">
+          <p className="text-sm font-600 mb-4">Vendas por membro</p>
+          {ranking.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-8 text-center">Sem dados no período.</p>
+          ) : (
+            <div className="h-56 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={ranking} layout="vertical" margin={{ top: 0, right: 12, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ebebea" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: "#6b6b68" }} tickLine={false} axisLine={false} allowDecimals={false} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#2c2c2a" }} width={90} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #ebebea" }} cursor={{ fill: "#f7f7f6" }} />
+                  <Bar dataKey="sales" name="Vendas" fill="#000000" radius={[0, 4, 4, 0]} barSize={18} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+
+        {/* Feeling do time */}
+        <div className="bg-white border border-gray-medium rounded-xl p-5">
+          <p className="text-sm font-600 mb-4">Clima do time</p>
+          <div className="flex flex-col gap-3 pt-2">
+            {feelingCounts.map((f) => {
+              const max = Math.max(...feelingCounts.map((x) => x.value), 1);
+              return (
+                <div key={f.label} className="flex items-center gap-3">
+                  <span className="text-xs font-600 w-16 shrink-0" style={{ color: f.color }}>{f.label}</span>
+                  <div className="flex-1 h-3 bg-gray-light rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${(f.value / max) * 100}%`, backgroundColor: f.color }} />
+                  </div>
+                  <span className="text-xs text-muted-foreground w-6 text-right">{f.value}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

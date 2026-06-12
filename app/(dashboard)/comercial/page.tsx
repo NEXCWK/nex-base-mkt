@@ -414,7 +414,7 @@ export default function ComercialPage() {
   return (
     <div className="p-8 max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Comercial</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Vendas</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Arquivos, scripts e diretrizes comerciais para o time de vendas.
         </p>

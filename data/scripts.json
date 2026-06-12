@@ -2,7 +2,7 @@
   {
     "id": "script-premissas",
     "name": "Premissas Básicas",
-    "content": "O atendimento consultivo é a base de tudo. Antes de iniciar qualquer conversa, tenha em mente:\n\n- Apresente-se no início de todo e qualquer atendimento.\n- Realize sempre o atendimento consultivo.\n- Atente-se à concordância verbal, acentuação, coesão e coerência do texto.\n- Evite respostas curtas e ríspidas.\n- Cuide do tom de voz em toda interação.\n- Transmita sempre intenção de prestatividade e colaboração.\n- Utilize os materiais comerciais (infográficos e imagens) sempre após a explicação escrita de um produto, para reforçar o que foi explicado.\n- Procure sempre se referir ao lead pelo nome.\n- Ao final das explicações, devolva a conversa ao lead com uma pergunta.\n\n*Consulte nosso material de Tom de Voz para transmitir o Nex em cada atendimento.*",
+    "content": "Esse é o script comercial do Nex! O objetivo desse material é guiar a equipe de Marketing & Vendas na realização de um excelente atendimento com a entrega de informações precisas sobre nossas soluções.\n\n## Premissas Básicas\n\n- Apresente-se no início de todo e qualquer atendimento.\n- Realize sempre o atendimento consultivo.\n- Atente-se à concordância verbal, acentuação, coesão e coerência, entre outros.\n- Evite respostas curtas e ríspidas.\n- Atente-se ao seu tom de voz.\n- Transmita sempre a intenção de prestatividade e colaboratividade.\n- Utilize os materiais comerciais, como infográficos e imagens, sempre após a explicação escrita de um produto, para reforçar o que foi explicado previamente.\n- Procure sempre se referir ao lead pelo nome.\n- Ao final das explicações, devolva a réplica ao lead com uma pergunta.\n\n*Acesse nosso material de Tom de Voz para transmitir o Nex em cada atendimento.*",
     "createdBy": "sistema",
     "createdAt": "2026-01-01T00:00:00.000Z",
     "updatedAt": "2026-01-01T00:00:00.000Z"
@@ -10,7 +10,7 @@
   {
     "id": "script-inicio",
     "name": "Início do Atendimento",
-    "content": "Sempre inicie o atendimento com uma saudação natural:\n\n*\"Olá\"*, *\"Boa tarde\"*, *\"Oi, como vai?\"*\n\nEm seguida, apresente-se:\n\n*\"Felipe do Nex aqui!\"*\n\nMostre ao lead que você está ali para direcioná-lo na melhor solução:\n\n*\"Em que posso ajudar?\"*\n\n### Exemplo de abertura\n\n*\"Olá, bom dia! Tudo bem? Felipe do Nex aqui! Em que posso ajudar, Ana?\"*",
+    "content": "**Sempre inicie o atendimento com uma saudação natural:**\n\n*\"Olá\" / \"Boa tarde\" / \"Oi, como vai?\"*\n\n**Não esqueça de se apresentar:**\n\n*\"Felipe do Nex aqui!\"*\n\n**Mostre ao lead que você está ali para direcioná-lo na melhor solução de sua necessidade:**\n\n*\"Em que posso ajudar?\"*\n\n### Exemplo\n\n*\"Olá, bom dia! Tudo bem? Felipe do Nex aqui! Em que posso ajudar, Ana?\"*",
     "createdBy": "sistema",
     "createdAt": "2026-01-01T00:00:00.000Z",
     "updatedAt": "2026-01-01T00:00:00.000Z"
@@ -18,7 +18,7 @@
   {
     "id": "script-desenvolvimento",
     "name": "Desenvolvimento do Atendimento",
-    "content": "Tenha em mente o atendimento consultivo e parta da premissa de que o lead pode não ter clareza sobre sua necessidade ou sobre como nossas soluções podem ajudá-lo.\n\nConfirme a dor do lead e convide-o a contar um pouco mais sobre o que precisa:\n\n*\"Ah, maravilha! E você precisa do espaço de trabalho para todos os dias da semana ou somente para dias esporádicos?\"*\n\n*\"Show! E você usará a sala de reunião para uma reunião, de fato, ou a ideia é um dia de trabalho com sua equipe?\"*\n\nCom o entendimento da necessidade do cliente, estamos aptos a indicar a melhor solução:\n\n*\"Ótimo! Pelo que me contou, a nossa solução mais indicada são os Escritórios Privativos!\"*\n\nNesse momento, envie as informações sobre o produto.",
+    "content": "Tenha em mente o atendimento consultivo e parta da premissa de que o lead não possui o entendimento sobre sua necessidade e como nossas soluções podem ajudá-lo.\n\n**Sempre confirme a dor do lead e faça-o contar um pouco mais sobre o que precisa:**\n\n*\"Ah, maravilha! E você precisa do espaço de trabalho para todos os dias da semana ou somente para dias esporádicos de trabalho?\"*\n\n*\"Show! E você usará a sala de reunião para uma reunião, de fato, ou a ideia é um dia de trabalho com sua equipe?\"*\n\n**A partir desse ponto, com o entendimento da necessidade do cliente, estamos aptos a indicar a melhor solução:**\n\n*\"Ótimo! Pelo que me contou, a nossa solução mais indicada são nossos Escritórios Privativos!\"*\n\nNesse momento, devemos enviar as informações sobre o produto.",
     "createdBy": "sistema",
     "createdAt": "2026-01-01T00:00:00.000Z",
     "updatedAt": "2026-01-01T00:00:00.000Z"
@@ -26,15 +26,135 @@
   {
     "id": "script-finalizacao",
     "name": "Finalização do Atendimento",
-    "content": "Passe todas as informações sobre o produto de maneira clara e objetiva.\n\nAo final da explicação, sempre deixe uma pergunta ao cliente — as chances de retorno são maiores:\n\n*\"Fez sentido para você, Ana?\"*\n\n### Réplica positiva\n\nCom a confirmação do lead, o objetivo passa a ser o agendamento da visita ou a conversão:\n\n*\"Vamos marcar uma visita com nossa Head de Operações para você conhecer o espaço?\"*\n\n*\"Posso já deixar agendadas essas horas para você?\"*\n\n*\"Realizando a adesão agora pela manhã, consigo enviar os documentos ainda essa tarde!\"*\n\n### Réplica negativa\n\nEm caso de objeção, ofereça outras soluções mais adequadas:\n\n*\"Ah, entendo! Como solução mais econômica, temos as Mesas Fixas em área compartilhada, a partir de R$ 749,00/mês. Posso enviar mais informações?\"*\n\n### Encerramento\n\nAo final de todo atendimento, lembre que um lead perdido hoje pode ser o novo negócio de amanhã. Deixe sempre as portas abertas:\n\n*\"Uma pena não conseguirmos te atender, Ana! De todo modo, estamos sempre à disposição para o que você precisar. Até uma melhor oportunidade!\"*",
+    "content": "Passe todas as informações sobre o produto de maneira clara e objetiva.\n\n**Ao final da explicação, sempre deixe uma pergunta para o cliente. Assim, as chances de retorno são maiores:**\n\n*\"Fez sentido para você, Ana?\"*\n\n### Réplica positiva\n\nCom a réplica positiva do lead, nosso objetivo passa a ser o agendamento da visita ou a conversão:\n\n*\"Vamos marcar uma visita com nossa Head de Operações para você conhecer o espaço?\"*\n\n*\"Posso já deixar agendada essas horas para você?\"*\n\n*\"Realizando a adesão agora pela manhã, consigo lhe enviar os documentos ainda essa tarde!\"*\n\n### Réplica negativa\n\nEm caso de réplica negativa, nosso objetivo passa a ser o oferecimento de outras soluções mais adequadas para o lead:\n\n*\"Ah sim, entendo, claro! Veja, como solução mais econômica, nós temos as nossas Mesas Fixas em área compartilhada, a partir de R$ 799,00/mês. Posso enviar mais informações?\"*\n\n### Encerramento\n\nAo final de todo e qualquer atendimento, deixe sempre as portas abertas:\n\n*\"Uma pena não conseguirmos te atender, Ana! De todo modo, estamos sempre à disposição para o que você precisar! Até uma melhor oportunidade!\"*",
     "createdBy": "sistema",
     "createdAt": "2026-01-01T00:00:00.000Z",
     "updatedAt": "2026-01-01T00:00:00.000Z"
   },
   {
-    "id": "script-perguntas-chave",
-    "name": "Perguntas-Chave por Produto",
-    "content": "## Escritório Privativo e Mesa Fixa\n\n- Produto de interesse\n- Budget disponível\n- Urgência de início\n\n## Eventos e Reuniões\n\n- Data e disponibilidade\n- Horário (período, diária, dentro ou fora do horário comercial)\n- Formato do evento (plenária, espinha de peixe, mesa redonda, etc.)\n- Detalhes gerais da experiência desejada\n- Budget disponível",
+    "id": "script-perguntas",
+    "name": "Perguntas Importantes por Produto",
+    "content": "## Escritório Privativo e Mesa Fixa\n\n- Produto de interesse\n- Budget\n- Urgência\n\n## Eventos e Reunião\n\n- Data — Disponibilidade\n- Horário | Período, Diária, dentro ou fora de horário comercial\n- Formato do evento (plenária, espinha de peixe, mesa redonda, etc.)\n- Detalhes gerais da experiência do evento\n- Budget",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-texto-oque-e-nex",
+    "name": "Texto: O que é o Nex?",
+    "content": "**O que é o Nex? O que vocês oferecem?**\n\nSomos um coworking, um espaço que oferece soluções para escritórios e rotina de trabalho.\n\nTemos salas mobiliadas e mesas compartilhadas em formato fixo ou flexível, além de salas de reunião, espaços para eventos & gravações e mais. Estamos localizados em duas unidades no Batel, em Curitiba.",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-texto-horario",
+    "name": "Texto: Horário de Funcionamento",
+    "content": "Nosso horário de atendimento é de **segunda a sexta-feira, das 08:00 às 19:00h**.\n\nAos sábados, domingos e feriados não abrimos normalmente, mas para demandas de mais de 4 horas de utilização de espaço para reuniões ou eventos e com reserva prévia, conseguimos atender. Neste período, uma tabela de valores especial é praticada com cerca de **20% de valor adicional**.",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-texto-privativo",
+    "name": "Texto: Escritório Privativo",
+    "content": "O nosso plano de Escritório Privativo garante uma *sala privativa totalmente mobiliada*, com total privacidade, para você e seu time.\n\n**Benefícios:**\n\n- Salas mobiliadas com mesas, cadeiras e armário\n- Acesso 24/7 via biometria\n- Acesso livre aos nossos ambientes comuns (espaços para reuniões informais, áreas de convivência, cozinha e deck)\n- Endereço para divulgação comercial e recebimento de correspondência\n- 100 impressões A4 em P&B por mês\n- 2 horas em sala de reunião gratuitas\n- Acesso a todos os eventos de networking produzidos pelo Nex\n- 30% de desconto em toda a nossa tabela de serviços\n- Gestão de facilities, limpeza, amenities e eventos para networking\n\n**Unidades:** Francisco Rocha e Casa de Pedra\n\n**Valor:** a partir de R$ 1.300,00 por posição (de acordo com o número de posições)",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-texto-mesa-fixa",
+    "name": "Texto: Mesa Fixa",
+    "content": "Com o nosso plano de Mesa Fixa você garante uma estação de trabalho em nossa área compartilhada, com toda a comodidade e networking.\n\n**Benefícios:**\n\n- Mesa fixa e dedicada para você deixar seus pertences e equipamentos\n- Acesso 24/7 via biometria\n- Acesso a nossas áreas de uso comum, espaços de convivência e descompressão\n- Acesso aos nossos espaços gratuitos de quick meetings e cabines telefônicas\n- Endereço para uso comercial e gestão de correspondências\n- Acesso a todos os eventos de networking produzidos pelo Nex\n- 30% de desconto em toda a nossa tabela de serviços\n- Gestão de facilities, limpeza, amenities e eventos para networking\n\n**Localização:** Rua Francisco Rocha, 198 — Batel\n\n**Valor de tabela mensal:** R$ 799,00 por posição de trabalho",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-texto-ev-fiscal",
+    "name": "Texto: Escritório Virtual — Endereço Fiscal",
+    "content": "Nosso plano de Escritório Virtual - Endereço Fiscal é o mais completo da cidade, com o *melhor custo-benefício!*\n\n**Benefícios:**\n\n- Endereço Fiscal\n- Endereço Comercial\n- Gestão de Correspondência\n- Tabela diferenciada de valores em serviços Nex Coworking\n- Hora em sala de reunião ou diária gratuita cortesia na adesão\n- Suporte via Extranet, e-mail ou WhatsApp/Tel\n\nEnviamos toda a documentação necessária para o cadastro de seu domicílio fiscal em **até 24h** após a confirmação do pagamento! Estamos há mais de 10 anos no mercado.\n\n**Valores:**\n\n| Modalidade | Valor |\n| --- | --- |\n| Mensal | R$ 169,00/mês (cartão recorrente) |\n| Semestral | R$ 699,00 único ≈ R$ 116,50/mês |\n| Anual | R$ 1.199,00 único ≈ R$ 99,99/mês |\n\n**Unidades:** Francisco Rocha e Casa de Pedra",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-texto-diaria-mesa",
+    "name": "Texto: Diária Avulsa — Mesa Compartilhada",
+    "content": "**Incluso:**\n\n- Mesa dedicada e exclusiva\n- Período das 08h às 19h, segunda à sexta-feira\n- Wi-fi de alta velocidade\n- Acesso a áreas comuns de convivência e descompressão\n- Facilities & Amenities (café, água e chá)\n\n**Valor:** R$ 99,00/diária por pessoa\n\n**Pacotes:**\n\n- 10 diárias: R$ 693,00 *(30% de desconto)*\n- 5 diárias: R$ 420,75 *(15% de desconto)*",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-texto-auditorio",
+    "name": "Texto: Auditório",
+    "content": "Espaço inspirador com estrutura completa para eventos corporativos de todos os tipos: workshops, palestras, grandes reuniões, confraternizações, entre outros.\n\n**Capacidade:** até 45 pessoas (formato plenária)\n\n**Incluso:**\n\n- Telão e projetor com passador de slides\n- Mesas e cadeiras\n- Quadro para giz\n- Cabo HDMI, VGA, entre outros\n- Água, chá e café\n- Banheiros próximos\n- Wi-fi e ar condicionado\n\n**Valores:**\n\n| Período | Valor |\n| --- | --- |\n| Período (até 4h) | R$ 910,00 |\n| Diária (até 11h) | R$ 1.640,00 |\n\n*Para período noturno, finais de semana e feriados, confira a tabela especial.*",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-texto-diaria-privativo",
+    "name": "Texto: Diária Avulsa — Escritório Privativo",
+    "content": "**Incluso:**\n\n- Escritório privativo mobiliado, dedicado e exclusivo\n- Período das 08h às 19h\n- Wi-fi de alta velocidade\n- Acesso a áreas comuns de convivência e descompressão\n- Facilities & Amenities (café, água e chá)\n\n**Valor:** a partir de R$ 270,00 (de acordo com a capacidade da sala)",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-texto-objecao-fiscal",
+    "name": "Texto: Objeção — Indicação Fiscal",
+    "content": "*[nome], infelizmente não conseguimos enviar a indicação fiscal por normativa de nosso setor financeiro. Posso adiantar para você que a recusa de utilização de nosso CNPJ acontece muito raramente, e quando ocorre, realizamos a devolução do seu dinheiro.*\n\n*Atualmente, temos mais de 400 clientes em nossa base dentro dos mais variados CNAEs e atuações.*\n\n*[Se o CNAE do cliente já constar na base:] Inclusive, pesquisei em nossa base o seu CNAE e já temos clientes que possuem domicílio fiscal conosco nessa atuação!*",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-texto-ev-spe",
+    "name": "Texto: Escritório Virtual — SPE",
+    "content": "Negociação diferenciada para **CNPJs SPE** no produto de Escritório Virtual.\n\n**Valores:**\n\n| Modalidade | De | Por | Equivalente/mês |\n| --- | --- | --- | --- |\n| Semestral | R$ 625,00 | R$ 469,50 | R$ 78,00 |\n| Anual | R$ 1.070,00 | R$ 849,00 | R$ 71,00 |\n\n⚠️ **Importante:** para aproveitar as condições SPE, é necessário possuir um contrato de Endereço Fiscal para o CNPJ matriz.",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-texto-ev-contabilizei",
+    "name": "Texto: Escritório Virtual — Contabilizei",
+    "content": "Somos o Nex, o maior coworking do Paraná, com mais de 10 anos de atuação. Possuímos uma parceria com a Contabilizei para contratação de Escritório Virtual - Endereço Fiscal com condições diferenciadas.\n\n**Como funciona:**\n\n1. Você deve estar em processo de abertura de empresa (CNPJ) via Contabilizei\n2. A contratação é realizada online na página oficial da parceria\n3. O time Nex entrará em contato para efetivar a contratação, confirmar o pagamento e enviar os documentos para cadastro do domicílio fiscal\n\n⚠️ **Importante:** após a contratação, você possui até 7 dias para realizar o cancelamento e ser ressarcido do valor pago.",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-texto-gravacoes",
+    "name": "Texto: Gravações, Fotografias e Produções",
+    "content": "Realize sua sessão de fotos e/ou gravações em nossos espaços!\n\nNossos prédios unem arquitetura histórica com conceitos modernos, sofisticados e elegantes. Layout ajustável conforme necessidade.\n\n**Valores:**\n\n- Hora de sessão de fotografia: a partir de R$ 200,00\n- Hora de sessão de vídeo: a partir de R$ 250,00\n\n### Briefing para Orçamento de Produções\n\n- Dia e Hora\n- Perfil da utilização (comercial, filmes, reels, etc.)\n- Tamanho da equipe de fotografia/gravação\n- Equipamentos utilizados\n- É gravadora/produtora?",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-texto-eventos-cdp",
+    "name": "Texto: Eventos — Casa de Pedra",
+    "content": "Eventos culturais, entretenimento, artes, feiras e confraternizações em nossa unidade mais charmosa.\n\n**Espaços disponíveis:**\n\n| Espaço | Ideal para | Capacidade |\n| --- | --- | --- |\n| Foyer para Eventos | Lançamentos, coquetéis, exposições, happy hours | Até 80 pessoas |\n| Área Compartilhada | Workshops, palestras, reuniões, encontros de time | Até 30 pessoas |\n| Jardim | Feiras, eventos culturais, atividades ao ar livre | Até 200 pessoas |\n\n⚠️ **Importante:** é necessária a realização de visita técnica prévia ao espaço, com acompanhamento de nosso time, para detalhamento de briefing e operação.\n\n### Foyer / Área Compartilhada\n\n| Período | Valor |\n| --- | --- |\n| Período (até 4h) | R$ 1.135,00 |\n| Diária (até 11h) | R$ 1.860,00 |\n\n*Disponível somente no período noturno (dias de semana), feriados e finais de semana.*\n\n### Jardim para Eventos\n\n- Diária (até 11h): a partir de R$ 1.860,00 *(orçamento varia conforme briefing)*\n\n**Processo de Contratação:**\n\n1. **Curadoria:** avaliamos se seu evento está alinhado com os formatos de utilização, regras gerais e aspectos de branding.\n2. **Visita Técnica:** visita com acompanhamento do time para detalhamento de briefing, aspectos técnicos e ajustes.\n3. **Finalização de Orçamento:** envio do orçamento para aprovação.",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-texto-produtora",
+    "name": "Texto: Produtora Audiovisual (BLOCO)",
+    "content": "*Produtora Audiovisual | Nex - BLOCO*\n\nA BLOCO é uma produtora audiovisual de origem artística especializada na produção de podcasts, videocasts, lives, vídeo aulas, entre outros, criada pelo Nex.\n\nAcompanhamos o desenvolvimento do seu projeto com orientação técnica em todas as etapas: da concepção artística e conceitual até a edição final.\n\n**Produções disponíveis:**\n\n- Podcasts & Videocasts (full com edição / express sem edição)\n- Lives\n- Infoprodutos, vídeoaulas, cursos e treinamentos\n- Formatos em 15, 30, 45 e 60 minutos ou mais\n- Produções In Company e Projetos Personalizados\n\n**Modelos de contratação:**\n\n- **Avulso:** contrate uma produção e realize a gravação em até 30 dias.\n- **Recorrência Mensal:** contrate uma ou mais produções dentro do mês e aproveite descontos progressivos.\n\n### Videocast Full\n\nMaterial 100% tratado e editado, entregue em 4K. A partir de **R$ 1.250,00** (avulso), com descontos progressivos na recorrência.\n\n### Podcast & Videocast Express\n\nMaterial bruto em HD (PGM), ideal para quem possui time de edição interno. A partir de **R$ 960,00** (avulso).\n\n⚠️ *Importante:* não realizamos a locação de hora avulsa para utilização de infraestrutura do estúdio.",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "script-fup-sem-resposta",
+    "name": "FUP: Atendimento Sem Resposta",
+    "content": "*Oi [nome], tudo bem com você? Felipe do Time Nex aqui.*\n\n*Nos últimos dias, tenho tentado contato para retomarmos nosso papo.*\n\n*Para não ser inconveniente e nem mesmo insistente, gostaria de entender se ainda faz sentido conversarmos ou avançarmos na negociação.*\n\n*Será um prazer auxiliar você a encontrar uma solução para seu problema, mas se agora não for o momento, podemos retomar em outra oportunidade! :)*\n\n*Você consegue me dar um retorno?*",
     "createdBy": "sistema",
     "createdAt": "2026-01-01T00:00:00.000Z",
     "updatedAt": "2026-01-01T00:00:00.000Z"
