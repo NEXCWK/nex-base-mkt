@@ -170,7 +170,7 @@ export default function TreinamentoPage() {
   return (
     <div className="flex flex-col h-full">
       {/* ── Page header ── */}
-      <div className="px-8 pt-8 pb-5">
+      <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-5">
         <div className="flex items-center gap-3 mb-5">
           <div className="w-9 h-9 bg-gray-light rounded-lg flex items-center justify-center shrink-0">
             <GraduationCap size={17} />
@@ -272,7 +272,7 @@ export default function TreinamentoPage() {
       {/* ── TRILHA ── */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Module mini-sidebar */}
-          <div className="w-52 shrink-0 border-r border-gray-medium bg-white flex flex-col overflow-y-auto scrollbar-hide px-3 py-3 gap-1 ml-8">
+          <div className="hidden md:flex w-52 shrink-0 border-r border-gray-medium bg-white flex-col overflow-y-auto scrollbar-hide px-3 py-3 gap-1 ml-8">
             <button
               onClick={() => setActiveModule(null)}
               className={cn(
@@ -326,7 +326,7 @@ export default function TreinamentoPage() {
           </div>
 
           {/* Main content */}
-          <div className="flex-1 overflow-y-auto px-8 py-6">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6">
             {/* Global progress bar */}
             <div className="mb-6 p-4 bg-white border border-gray-medium rounded-xl">
               <div className="flex items-center justify-between mb-2">

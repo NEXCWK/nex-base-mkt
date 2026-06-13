@@ -554,7 +554,7 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-8 py-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
       {/* Header */}
       <header className="pb-6 border-b border-gray-medium">
         <div className="flex items-start justify-between gap-4">

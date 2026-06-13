@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Upload, File, Download, Trash2, Loader2, Eye, X,
   FileText, Image as ImageIcon, Film, FileArchive,
@@ -24,7 +24,7 @@ interface FileUploadProps {
   label?: string;
 }
 
-const ACCEPTED = ".pdf,.docx,.pptx,.png,.jpg,.jpeg,.mp4";
+const ACCEPTED = ".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg,.webp,.mp4";
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -56,16 +56,31 @@ function isViewable(mimeType: string) {
 function FileViewer({
   file,
   url,
+  downloadUrl,
   onClose,
 }: {
   file: LocalFile;
   url: string;
+  downloadUrl: string;
   onClose: () => void;
 }) {
+  // Fecha com ESC
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/60 backdrop-blur-sm animate-overlay-in">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-3 bg-white border-b border-gray-medium shrink-0">
+      <div className="flex items-center justify-between px-4 sm:px-5 py-3 bg-white border-b border-gray-medium shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <File size={16} className="shrink-0 text-muted-foreground" />
           <div className="min-w-0">
@@ -75,8 +90,7 @@ function FileViewer({
         </div>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <a
-            href={url}
-            download={file.name}
+            href={downloadUrl}
             className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-gray-medium hover:bg-gray-light transition-colors"
           >
             <Download size={13} /> Download
@@ -84,36 +98,42 @@ function FileViewer({
           <button
             onClick={onClose}
             className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors"
-            title="Fechar"
+            title="Fechar (Esc)"
+            aria-label="Fechar visualização"
           >
             <X size={18} />
           </button>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto flex items-start justify-center p-4">
+      {/* Content — clique fora fecha */}
+      <div
+        className="flex-1 overflow-auto flex items-start justify-center p-4"
+        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      >
         {file.mimeType === "application/pdf" && (
           <iframe
             src={url}
             className="w-full max-w-4xl rounded-lg shadow-xl bg-white"
-            style={{ minHeight: "calc(100vh - 110px)" }}
+            style={{ minHeight: "calc(100dvh - 110px)" }}
             title={file.name}
           />
         )}
         {file.mimeType.startsWith("image/") && (
+          // eslint-disable-next-line @next/next/no-img-element -- conteúdo dinâmico autenticado servido pela API
           <img
             src={url}
             alt={file.name}
-            className="max-w-full max-h-[calc(100vh-110px)] rounded-lg shadow-xl object-contain"
+            className="max-w-full max-h-[calc(100dvh-110px)] rounded-lg shadow-xl object-contain"
           />
         )}
         {file.mimeType.startsWith("video/") && (
           <video
             src={url}
             controls
+            autoPlay
             className="w-full max-w-4xl rounded-lg shadow-xl bg-black"
-            style={{ maxHeight: "calc(100vh - 110px)" }}
+            style={{ maxHeight: "calc(100dvh - 110px)" }}
           />
         )}
         {!isViewable(file.mimeType) && (
@@ -122,8 +142,7 @@ function FileViewer({
             <p className="text-sm font-medium">Visualização não disponível para este formato</p>
             <p className="text-xs text-muted-foreground mb-2">{file.name}</p>
             <a
-              href={url}
-              download={file.name}
+              href={downloadUrl}
               className="flex items-center gap-2 px-4 py-2 rounded-md bg-black text-white text-sm font-medium hover:bg-gray-dark transition-colors"
             >
               <Download size={14} /> Fazer download
@@ -140,7 +159,7 @@ function FileViewer({
 export function FileUpload({ section, category, label }: FileUploadProps) {
   const [files, setFiles] = useState<LocalFile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+  const [uploadQueue, setUploadQueue] = useState(0);
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<LocalFile | null>(null);
@@ -150,50 +169,62 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
   const dragDepth = useRef(0);
 
   const sectionPath = category ? `${section}/${category}` : section;
+  const uploading = uploadQueue > 0;
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       setLoading(true);
       setError("");
       try {
         const res = await fetch(`/api/drive?section=${encodeURIComponent(sectionPath)}`);
         if (!res.ok) throw new Error("Erro ao carregar arquivos");
-        setFiles(await res.json());
+        const data = await res.json();
+        if (!cancelled) setFiles(data);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Erro desconhecido");
+        if (!cancelled) setError(e instanceof Error ? e.message : "Erro desconhecido");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => { cancelled = true; };
   }, [sectionPath]);
 
-  async function uploadFile(file: File) {
-    setUploading(true);
-    setError("");
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("section", section);
-      if (category) fd.append("category", category);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Falha no upload");
-      }
-      const newFile: LocalFile = await res.json();
-      setFiles((prev) => [newFile, ...prev]);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro no upload");
-    } finally {
-      setUploading(false);
-      if (inputRef.current) inputRef.current.value = "";
+  const uploadOne = useCallback(async (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("section", section);
+    if (category) fd.append("category", category);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || `Falha no upload de "${file.name}"`);
     }
+    const newFile: LocalFile = await res.json();
+    setFiles((prev) => [newFile, ...prev]);
+  }, [section, category]);
+
+  async function uploadMany(list: FileList | File[]) {
+    const items = Array.from(list);
+    if (items.length === 0) return;
+    setError("");
+    setUploadQueue(items.length);
+    const errors: string[] = [];
+    for (const f of items) {
+      try {
+        await uploadOne(f);
+      } catch (e) {
+        errors.push(e instanceof Error ? e.message : `Erro em "${f.name}"`);
+      } finally {
+        setUploadQueue((q) => Math.max(0, q - 1));
+      }
+    }
+    if (errors.length > 0) setError(errors.join(" · "));
+    if (inputRef.current) inputRef.current.value = "";
   }
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) uploadFile(file);
+    if (e.target.files) uploadMany(e.target.files);
   }
 
   function handleDrop(e: React.DragEvent) {
@@ -201,8 +232,7 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
     dragDepth.current = 0;
     setDragging(false);
     if (uploading) return;
-    const file = e.dataTransfer.files?.[0];
-    if (file) uploadFile(file);
+    if (e.dataTransfer.files) uploadMany(e.dataTransfer.files);
   }
 
   async function handleDelete() {
@@ -225,8 +255,8 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
     }
   }
 
-  function fileUrl(f: LocalFile) {
-    return `/api/files?section=${encodeURIComponent(sectionPath)}&id=${f.id}&storedName=${encodeURIComponent(f.storedName)}`;
+  function fileUrl(f: LocalFile, download = false) {
+    return `/api/files?section=${encodeURIComponent(sectionPath)}&id=${f.id}&storedName=${encodeURIComponent(f.storedName)}${download ? "&download=1" : ""}`;
   }
 
   return (
@@ -263,12 +293,17 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
               <Upload size={18} className="mx-auto mb-2 text-muted-foreground" />
             )}
             <p className="text-sm text-muted-foreground">
-              {uploading ? "Enviando..." : dragging ? "Solte o arquivo aqui" : "Clique para selecionar ou arraste um arquivo"}
+              {uploading
+                ? `Enviando${uploadQueue > 1 ? ` (${uploadQueue} restantes)` : "..."}`
+                : dragging
+                  ? "Solte os arquivos aqui"
+                  : "Clique para selecionar ou arraste arquivos"}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, PPTX, PNG, JPG, MP4</p>
+            <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, PPTX, XLSX, PNG, JPG, WEBP, MP4 · máx. 100 MB</p>
             <input
               ref={inputRef}
               type="file"
+              multiple
               className="hidden"
               accept={ACCEPTED}
               onChange={handleInputChange}
@@ -292,7 +327,6 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
           ) : (
             files.map((f) => {
               const TypeIcon = fileTypeIcon(f.mimeType);
-              const url = fileUrl(f);
               const viewable = isViewable(f.mimeType);
               return (
                 <div key={f.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-light transition-colors">
@@ -320,8 +354,7 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
                       </button>
                     )}
                     <a
-                      href={url}
-                      download={f.name}
+                      href={fileUrl(f, true)}
                       className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white transition-colors"
                       title="Fazer download"
                     >
@@ -347,6 +380,7 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
         <FileViewer
           file={previewFile}
           url={fileUrl(previewFile)}
+          downloadUrl={fileUrl(previewFile, true)}
           onClose={() => setPreviewFile(null)}
         />
       )}

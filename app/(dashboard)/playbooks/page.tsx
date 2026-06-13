@@ -40,7 +40,7 @@ const MAIN_TABS: { id: MainTab; label: string }[] = [
 const FILE_SECTIONS = [
   { id: "marketing", label: "Marketing" },
   { id: "vendas", label: "Vendas" },
-  { id: "comunicacao", label: "Comunicacao" },
+  { id: "comunicacao", label: "Comunicação" },
 ] as const;
 
 // ─── Empty forms ────────────────────────────────────────────────────────────
@@ -658,7 +658,7 @@ export default function PlaybooksPage() {
   const [activeTab, setActiveTab] = useState<MainTab>("arquivos");
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight">Playbooks da Área</h1>

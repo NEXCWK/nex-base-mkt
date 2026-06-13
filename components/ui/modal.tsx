@@ -22,6 +22,8 @@ export function Modal({
   className,
   closable = true,
 }: ModalProps) {
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+
   React.useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -29,6 +31,10 @@ export function Modal({
     };
     document.addEventListener("keydown", handleKey);
     document.body.style.overflow = "hidden";
+    // Move o foco para dentro do diálogo (primeiro campo ou o próprio contêiner)
+    const el = dialogRef.current;
+    const target = el?.querySelector<HTMLElement>("input, textarea, select, button:not([aria-label='Fechar'])");
+    (target ?? el)?.focus();
     return () => {
       document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = "";
@@ -44,6 +50,8 @@ export function Modal({
         onClick={closable ? onClose : undefined}
       />
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label={title}

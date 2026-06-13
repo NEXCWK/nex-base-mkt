@@ -37,6 +37,9 @@ function safeName(name: string) {
   return name.replace(/[^a-zA-Z0-9áéíóúâêîôûãõçÁÉÍÓÚÂÊÎÔÛÃÕÇ._-]/g, "_");
 }
 
+const MAX_SIZE = 100 * 1024 * 1024; // 100 MB
+const ALLOWED_EXT = new Set([".pdf", ".docx", ".pptx", ".xlsx", ".png", ".jpg", ".jpeg", ".webp", ".mp4"]);
+
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -48,11 +51,27 @@ export async function POST(req: NextRequest) {
 
   if (!file || !section) return NextResponse.json({ error: "Missing file or section" }, { status: 400 });
 
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json(
+      { error: `Arquivo muito grande (máx. ${MAX_SIZE / 1024 / 1024} MB).` },
+      { status: 413 }
+    );
+  }
+
+  const ext = path.extname(file.name).toLowerCase();
+  if (!ALLOWED_EXT.has(ext)) {
+    return NextResponse.json(
+      { error: `Formato não permitido (${ext || "sem extensão"}). Use PDF, DOCX, PPTX, XLSX, PNG, JPG, WEBP ou MP4.` },
+      { status: 415 }
+    );
+  }
+
   const sectionPath = category ? `${section}/${category}` : section;
   const dir = sectionDir(sectionPath);
   fs.mkdirSync(dir, { recursive: true });
 
-  const id = Date.now().toString();
+  // Sufixo aleatório evita colisão de ID em uploads quase simultâneos
+  const id = `${Date.now()}${Math.random().toString(36).slice(2, 7)}`;
   const storedName = `${id}_${safeName(file.name)}`;
   const filePath = path.join(dir, storedName);
 

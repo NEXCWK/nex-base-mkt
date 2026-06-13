@@ -201,9 +201,9 @@ function DocumentsPanel({ apiPath, newLabel, emptyTitle, emptyDesc }: DocumentsP
           </Button>
         </div>
       ) : (
-        <div className="flex gap-0 border border-gray-medium rounded-lg overflow-hidden min-h-[520px]">
+        <div className="flex flex-col sm:flex-row gap-0 border border-gray-medium rounded-lg overflow-hidden min-h-[520px]">
           {/* Left panel */}
-          <div className="w-56 shrink-0 border-r border-gray-medium bg-gray-light flex flex-col">
+          <div className="w-full sm:w-56 shrink-0 border-b sm:border-b-0 sm:border-r border-gray-medium bg-gray-light flex flex-col max-h-56 sm:max-h-none">
             <div className="p-2 border-b border-gray-medium">
               <div className="relative">
                 <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -412,7 +412,7 @@ export default function ComercialPage() {
   const [scriptSubTab, setScriptSubTab] = useState<ScriptSubTab>("scripts");
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-8 max-w-5xl mx-auto">
       <div className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight">Vendas</h1>
         <p className="mt-1 text-sm text-muted-foreground">

@@ -43,7 +43,7 @@ const sectionGroups: { label: string; sections: Section[] }[] = [
       {
         href: "/nosso-time",
         label: "Nosso Time",
-        description: "Perfis, papéis e contatos da equipe de marketing e vendas.",
+        description: "Perfis, papéis e contatos do time de Mkt, Com & Ven.",
         icon: Users,
       },
     ],
@@ -112,7 +112,7 @@ const sectionGroups: { label: string; sections: Section[] }[] = [
       {
         href: "/treinamento",
         label: "Treinamento",
-        description: "Trilha de onboarding e portfólio para novos membros.",
+        description: "Trilha de onboarding para novos membros do time.",
         icon: GraduationCap,
       },
     ],
@@ -140,7 +140,7 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto px-8 py-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
       {/* Stats bar */}
       <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-medium">
         <p className="text-sm text-muted-foreground capitalize">{todayFormatted}</p>

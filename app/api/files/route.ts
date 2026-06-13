@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
   const section = req.nextUrl.searchParams.get("section");
   const id = req.nextUrl.searchParams.get("id");
   const storedName = req.nextUrl.searchParams.get("storedName");
+  const download = req.nextUrl.searchParams.get("download") === "1";
 
   if (!section || !id || !storedName) {
     return NextResponse.json({ error: "Missing params" }, { status: 400 });
@@ -39,10 +40,14 @@ export async function GET(req: NextRequest) {
   };
   const contentType = mimeMap[ext] ?? "application/octet-stream";
 
+  const displayName = path.basename(storedName.replace(/^\d+_/, ""));
+  const disposition = download ? "attachment" : "inline";
+
   return new NextResponse(buffer, {
     headers: {
       "Content-Type": contentType,
-      "Content-Disposition": `inline; filename="${path.basename(storedName.replace(/^\d+_/, ""))}"`,
+      "Content-Length": String(buffer.length),
+      "Content-Disposition": `${disposition}; filename="${displayName}"; filename*=UTF-8''${encodeURIComponent(displayName)}`,
       "Cache-Control": "private, max-age=3600",
     },
   });
