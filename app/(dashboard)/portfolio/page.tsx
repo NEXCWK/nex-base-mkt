@@ -161,11 +161,13 @@ function PriceTableCard({ item }: { item: Item }) {
 
 function InfoTableCard({ item }: { item: Item }) {
   return (
-    <div className="bg-white border border-gray-medium rounded-xl p-6 h-full">
+    <div className="bg-white border border-gray-medium rounded-xl p-6 h-full flex flex-col">
       {item.label && <p className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground/60 mb-2">{item.label}</p>}
       {item.title && <p className="text-[17px] font-semibold mb-1.5">{item.title}</p>}
       {item.desc && <p className="text-[13px] text-muted-foreground mb-4">{item.desc}</p>}
-      <PriceTableCard item={{ ...item, label: undefined, title: undefined, desc: undefined }} />
+      <div className="flex-1 flex flex-col justify-end">
+        <PriceTableCard item={{ ...item, label: undefined, title: undefined, desc: undefined }} />
+      </div>
     </div>
   );
 }
@@ -626,7 +628,7 @@ export default function PortfolioPage() {
             {section.items.map((item, ii) => {
               const fullSpan = item.full || item.type === "heading" || item.type === "unit";
               return (
-                <div key={item.id} className={cn("relative", fullSpan && "sm:col-span-2")}>
+                <div key={item.id} className={cn("relative flex flex-col", fullSpan && "sm:col-span-2")}>
                   {editMode && (
                     <div className="absolute -top-2 -right-2 z-10 flex items-center gap-0.5 bg-white border border-gray-medium rounded-md shadow-sm">
                       <button onClick={() => moveItem(section.id, ii, -1)} disabled={ii === 0} className="p-1 hover:bg-gray-light disabled:opacity-30" title="Mover"><ChevronUp size={13} /></button>
