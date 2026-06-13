@@ -98,11 +98,11 @@ export function InstallPrompt() {
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FFD400] text-xs font-700">2</span>
-              <span>Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong> <Plus size={14} className="inline mb-0.5" />.</span>
+              <span>Role para baixo e toque em <strong>&ldquo;Adicionar à Tela de Início&rdquo;</strong> <Plus size={14} className="inline mb-0.5" />.</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FFD400] text-xs font-700">3</span>
-              <span>Toque em <strong>"Adicionar"</strong> no canto superior direito.</span>
+              <span>Toque em <strong>&ldquo;Adicionar&rdquo;</strong> no canto superior direito.</span>
             </li>
           </ol>
           <p className="mt-4 text-xs text-muted-foreground">O app aparecerá na sua tela inicial como um aplicativo nativo, sem precisar da App Store.</p>
