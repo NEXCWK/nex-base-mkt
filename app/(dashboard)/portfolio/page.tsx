@@ -223,9 +223,12 @@ function Banner({ item }: { item: Item }) {
 
 function Heading({ item }: { item: Item }) {
   return (
-    <div>
-      {item.divider && <div className="w-10 h-[3px] bg-accent rounded mb-5" />}
-      <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">{item.text}</p>
+    <div className={cn("pt-2", item.divider && "mt-4")}>
+      {item.divider && <div className="w-full h-px bg-gray-medium mb-6" />}
+      <div className="flex items-center gap-2.5">
+        <div className="w-[3px] h-5 bg-accent rounded-full shrink-0" />
+        <p className="text-sm font-bold tracking-wide uppercase text-foreground">{item.text}</p>
+      </div>
     </div>
   );
 }
