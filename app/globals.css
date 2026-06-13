@@ -102,4 +102,16 @@
   .animate-modal-in {
     animation: modal-in 0.18s ease-out;
   }
+
+  .safe-area-bottom {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  @keyframes slide-up {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .animate-slide-up {
+    animation: slide-up 0.25s ease-out;
+  }
 }
