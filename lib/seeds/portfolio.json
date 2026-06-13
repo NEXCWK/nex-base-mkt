@@ -70,22 +70,29 @@
         "badge": "20% de desconto no anual"
       },
       {
-        "id": "i-daypass",
+        "id": "i-accesspass",
         "type": "banner",
         "full": true,
-        "label": "Day Pass · Casa de Pedra",
-        "title": "Diária avulsa",
-        "desc": "Uma entrada no Nex House, sem precisar de assinatura.",
+        "label": "Access Pass · Casa de Pedra",
+        "title": "Access Pass",
+        "desc": "Uma entrada avulsa no Nex House, sem precisar de assinatura.",
         "price": "130",
         "priceUnit": "por dia"
       }
     ]
   },
   {
-    "id": "sec-salas",
+    "id": "sec-avulsos",
     "number": "03",
-    "title": "Salas de reunião & diárias",
+    "title": "Avulsos",
     "items": [
+      {
+        "id": "i-head-salas",
+        "type": "heading",
+        "text": "Salas de Reunião",
+        "divider": false,
+        "full": true
+      },
       {
         "id": "i-salas-fco",
         "type": "rooms",
@@ -120,7 +127,8 @@
         "id": "i-head-pacotes",
         "type": "heading",
         "text": "Pacotes de 10 horas",
-        "divider": true
+        "divider": true,
+        "full": true
       },
       {
         "id": "i-pkg-nexhouse",
@@ -141,10 +149,17 @@
         ]
       },
       {
+        "id": "i-head-diaria",
+        "type": "heading",
+        "text": "Diária de Trabalho",
+        "divider": true,
+        "full": true
+      },
+      {
         "id": "i-diaria",
         "type": "product",
         "variant": "default",
-        "label": "Diária de trabalho · Exclusivo FCO",
+        "label": "Diária de trabalho · Exclusivo Francisco Rocha",
         "title": "Diária de trabalho",
         "desc": "Um dia de trabalho no Francisco Rocha. Sem assinatura.",
         "price": "99",
@@ -158,16 +173,23 @@
           ["Visitante", "R$ 693,00"],
           ["Contrato", "R$ 589,00"]
         ]
-      }
-    ]
-  },
-  {
-    "id": "sec-eventos",
-    "number": "04",
-    "title": "Eventos corporativos",
-    "unit": "both",
-    "intro": "Auditório para offsites, treinamentos e reuniões de equipe. Reserva por período (até 4h) ou diária de 10h.",
-    "items": [
+      },
+      {
+        "id": "i-head-eventos",
+        "type": "heading",
+        "text": "Eventos Corporativos",
+        "divider": true,
+        "full": true
+      },
+      {
+        "id": "i-eventos-intro",
+        "type": "product",
+        "variant": "default",
+        "full": true,
+        "label": "Auditório · Ambas as unidades",
+        "title": "Auditório para eventos",
+        "desc": "Offsites, treinamentos e reuniões de equipe. Reserva por período (até 4h) ou diária de 10h."
+      },
       {
         "id": "i-aud-periodo",
         "type": "product",
@@ -188,7 +210,7 @@
   },
   {
     "id": "sec-virtual",
-    "number": "05",
+    "number": "04",
     "title": "Escritório virtual",
     "intro": "Endereço comercial ou fiscal para uso em CNPJ, cartão de visita, correspondência e site. Sem custo de escritório físico.",
     "items": [
@@ -224,7 +246,7 @@
   },
   {
     "id": "sec-conteudo",
-    "number": "06",
+    "number": "05",
     "title": "Produção de conteúdo",
     "unit": "both",
     "items": [
@@ -280,7 +302,7 @@
         "services": [
           "Escritório Privativo",
           "Assinatura Nex House — Atrium & Gallery",
-          "Day Pass — R$ 130/dia",
+          "Access Pass — R$ 130/dia",
           "Salas de Reunião — R1 (4), R2 (8), R3 (6) · R$ 110/h",
           "Eventos / Auditório",
           "Escritório Virtual — Endereço Comercial",
