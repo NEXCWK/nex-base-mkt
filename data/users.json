@@ -1,42 +1,7 @@
 [
-  {
-    "id": "1",
-    "email": "larissa@nexcoworking.com.br",
-    "name": "Larissa",
-    "password": "$2b$10$ixJ.MOpRPYn90.INcSmMou/RA7.nJf5lCWxeshP9.BFTjF3YbIBPW",
-    "firstAccess": true,
-    "role": "member"
-  },
-  {
-    "id": "2",
-    "email": "leticia@nexcoworking.com.br",
-    "name": "Leticia",
-    "password": "$2b$10$ixJ.MOpRPYn90.INcSmMou/RA7.nJf5lCWxeshP9.BFTjF3YbIBPW",
-    "firstAccess": true,
-    "role": "member"
-  },
-  {
-    "id": "3",
-    "email": "felipe@nexcoworking.com.br",
-    "name": "Felipe",
-    "password": "$2b$10$ixJ.MOpRPYn90.INcSmMou/RA7.nJf5lCWxeshP9.BFTjF3YbIBPW",
-    "firstAccess": true,
-    "role": "admin"
-  },
-  {
-    "id": "4",
-    "email": "bruna@nexcoworking.com.br",
-    "name": "Bruna",
-    "password": "$2b$10$ixJ.MOpRPYn90.INcSmMou/RA7.nJf5lCWxeshP9.BFTjF3YbIBPW",
-    "firstAccess": true,
-    "role": "member"
-  },
-  {
-    "id": "5",
-    "email": "luiza@nexcoworking.com.br",
-    "name": "Luiza",
-    "password": "$2b$10$ixJ.MOpRPYn90.INcSmMou/RA7.nJf5lCWxeshP9.BFTjF3YbIBPW",
-    "firstAccess": true,
-    "role": "member"
-  }
+  { "id": "1", "email": "larissa@nexcoworking.com.br", "name": "Larissa", "role": "member" },
+  { "id": "2", "email": "leticia@nexcoworking.com.br", "name": "Leticia", "role": "member" },
+  { "id": "3", "email": "felipe@nexcoworking.com.br", "name": "Felipe", "role": "admin" },
+  { "id": "4", "email": "bruna@nexcoworking.com.br", "name": "Bruna", "role": "member" },
+  { "id": "5", "email": "luiza@nexcoworking.com.br", "name": "Luiza", "role": "member" }
 ]
