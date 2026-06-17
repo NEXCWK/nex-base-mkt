@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import {
   BookOpen, Plus, ChevronDown, ChevronUp, Filter,
   ThumbsUp, AlertCircle, FileText, Loader2, CheckCircle2, Clock,
-  TrendingUp, TrendingDown, Users, BarChart3,
+  TrendingUp, TrendingDown, BarChart3,
 } from "lucide-react";
 import { format, parseISO, isToday, isYesterday, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -380,12 +380,8 @@ function ReportCard({ report: r, compact = false }: { report: Report; compact?: 
       </div>
 
       {/* KPIs */}
-      {(r.leads > 0 || r.newSales > 0 || r.churns > 0) && (
+      {(r.newSales > 0 || r.churns > 0) && (
         <div className="flex flex-wrap gap-2 mb-4">
-          <span className="inline-flex items-center gap-1.5 text-xs font-600 bg-gray-light border border-gray-medium rounded-md px-2.5 py-1">
-            <Users size={12} className="text-blue-500" />
-            {r.leads} {r.leads === 1 ? "lead" : "leads"}
-          </span>
           <span className="inline-flex items-center gap-1.5 text-xs font-600 bg-gray-light border border-gray-medium rounded-md px-2.5 py-1">
             <TrendingUp size={12} className="text-green-500" />
             {r.newSales} {r.newSales === 1 ? "venda" : "vendas"}
@@ -474,16 +470,7 @@ function DailyReportForm({
       {/* KPIs do dia */}
       <div>
         <p className="text-sm font-medium text-gray-dark mb-2">Indicadores do dia</p>
-        <div className="grid grid-cols-3 gap-3">
-          <Input
-            label="Leads / Procura"
-            type="number"
-            min={0}
-            inputMode="numeric"
-            placeholder="0"
-            value={form.leads}
-            onChange={set("leads")}
-          />
+        <div className="grid grid-cols-2 gap-3">
           <Input
             label="Novas vendas"
             type="number"
@@ -602,28 +589,24 @@ function KpiDashboard({ reports, loading }: { reports: Report[]; loading: boolea
   const inRange = reports.filter((r) => r.date >= cutoff);
 
   // Totais
-  const totalLeads = inRange.reduce((s, r) => s + (r.leads || 0), 0);
   const totalSales = inRange.reduce((s, r) => s + (r.newSales || 0), 0);
   const totalChurns = inRange.reduce((s, r) => s + (r.churns || 0), 0);
   const netGrowth = totalSales - totalChurns;
-  const conversion = totalLeads > 0 ? Math.round((totalSales / totalLeads) * 100) : 0;
 
   // Série temporal por dia
-  const byDate: Record<string, { leads: number; sales: number; churns: number }> = {};
+  const byDate: Record<string, { sales: number; churns: number }> = {};
   for (let i = range - 1; i >= 0; i--) {
     const d = format(subDays(new Date(), i), "yyyy-MM-dd");
-    byDate[d] = { leads: 0, sales: 0, churns: 0 };
+    byDate[d] = { sales: 0, churns: 0 };
   }
   inRange.forEach((r) => {
-    if (!byDate[r.date]) byDate[r.date] = { leads: 0, sales: 0, churns: 0 };
-    byDate[r.date].leads += r.leads || 0;
+    if (!byDate[r.date]) byDate[r.date] = { sales: 0, churns: 0 };
     byDate[r.date].sales += r.newSales || 0;
     byDate[r.date].churns += r.churns || 0;
   });
   const series = Object.entries(byDate).map(([date, v]) => ({
     date,
     label: format(parseISO(date), "dd/MM"),
-    Leads: v.leads,
     Vendas: v.sales,
     Churns: v.churns,
   }));
@@ -636,12 +619,11 @@ function KpiDashboard({ reports, loading }: { reports: Report[]; loading: boolea
   }));
 
   // Ranking por membro
-  const byMember: Record<string, { name: string; sales: number; leads: number }> = {};
+  const byMember: Record<string, { name: string; sales: number }> = {};
   inRange.forEach((r) => {
     const key = r.userName || r.userEmail;
-    if (!byMember[key]) byMember[key] = { name: key, sales: 0, leads: 0 };
+    if (!byMember[key]) byMember[key] = { name: key, sales: 0 };
     byMember[key].sales += r.newSales || 0;
-    byMember[key].leads += r.leads || 0;
   });
   const ranking = Object.values(byMember).sort((a, b) => b.sales - a.sales).slice(0, 6);
 
@@ -669,9 +651,8 @@ function KpiDashboard({ reports, loading }: { reports: Report[]; loading: boolea
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Leads / Procura" value={totalLeads} icon={Users} accent="#3b82f6" />
-        <StatCard label="Novas vendas" value={totalSales} delta={`Conversão ${conversion}%`} icon={TrendingUp} accent="#22c55e" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <StatCard label="Novas vendas" value={totalSales} icon={TrendingUp} accent="#22c55e" />
         <StatCard label="Churns" value={totalChurns} icon={TrendingDown} accent="#ef4444" />
         <StatCard
           label="Crescimento líquido"
@@ -682,17 +663,13 @@ function KpiDashboard({ reports, loading }: { reports: Report[]; loading: boolea
         />
       </div>
 
-      {/* Leads / Vendas / Churns ao longo do tempo */}
+      {/* Vendas / Churns ao longo do tempo */}
       <div className="bg-white border border-gray-medium rounded-xl p-5">
-        <p className="text-sm font-600 mb-4">Leads, vendas e churns por dia</p>
+        <p className="text-sm font-600 mb-4">Vendas e churns por dia</p>
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={series} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
               <defs>
-                <linearGradient id="gLeads" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
                 <linearGradient id="gSales" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
@@ -703,7 +680,6 @@ function KpiDashboard({ reports, loading }: { reports: Report[]; loading: boolea
               <YAxis tick={{ fontSize: 11, fill: "#6b6b68" }} tickLine={false} axisLine={false} allowDecimals={false} />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #ebebea" }} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Area type="monotone" dataKey="Leads" stroke="#3b82f6" strokeWidth={2} fill="url(#gLeads)" />
               <Area type="monotone" dataKey="Vendas" stroke="#22c55e" strokeWidth={2} fill="url(#gSales)" />
               <Area type="monotone" dataKey="Churns" stroke="#ef4444" strokeWidth={2} fillOpacity={0} />
             </AreaChart>

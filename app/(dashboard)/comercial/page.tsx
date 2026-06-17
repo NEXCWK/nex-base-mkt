@@ -357,7 +357,7 @@ function DocumentsPanel({ apiPath, newLabel, emptyTitle, emptyDesc }: DocumentsP
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 type MainTab = "arquivos" | "scripts" | "descontos";
-type ScriptSubTab = "scripts" | "fups" | "keypoints";
+type ScriptSubTab = "scripts" | "fups" | "keypoints" | "sla";
 
 function TabButton({
   label,
@@ -408,7 +408,7 @@ function SubTabButton({
 }
 
 export default function ComercialPage() {
-  const [mainTab, setMainTab] = useState<MainTab>("arquivos");
+  const [mainTab, setMainTab] = useState<MainTab>("scripts");
   const [scriptSubTab, setScriptSubTab] = useState<ScriptSubTab>("scripts");
 
   return (
@@ -431,10 +431,11 @@ export default function ComercialPage() {
 
       {mainTab === "scripts" && (
         <div>
-          <div className="flex gap-1 mb-6">
+          <div className="flex gap-1 mb-6 flex-wrap">
             <SubTabButton label="Scripts" active={scriptSubTab === "scripts"} onClick={() => setScriptSubTab("scripts")} />
             <SubTabButton label="FUPs" active={scriptSubTab === "fups"} onClick={() => setScriptSubTab("fups")} />
             <SubTabButton label="Keypoints" active={scriptSubTab === "keypoints"} onClick={() => setScriptSubTab("keypoints")} />
+            <SubTabButton label="SLA de Atendimento" active={scriptSubTab === "sla"} onClick={() => setScriptSubTab("sla")} />
           </div>
           {scriptSubTab === "scripts" && (
             <DocumentsPanel
@@ -461,6 +462,15 @@ export default function ComercialPage() {
               newLabel="Novo Keypoint"
               emptyTitle="Nenhum keypoint ainda"
               emptyDesc="Crie o primeiro keypoint de qualificação para o time."
+            />
+          )}
+          {scriptSubTab === "sla" && (
+            <DocumentsPanel
+              key="sla"
+              apiPath="/api/sla"
+              newLabel="Novo SLA"
+              emptyTitle="Nenhum SLA ainda"
+              emptyDesc="Crie o primeiro SLA de atendimento para o time."
             />
           )}
         </div>

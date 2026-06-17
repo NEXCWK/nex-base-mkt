@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Menu,
   X,
+  FolderOpen,
 } from "lucide-react";
 
 const navGroups: {
@@ -54,6 +55,7 @@ const navGroups: {
     items: [
       { href: "/portfolio", label: "Portfólio de Produtos", icon: Building },
       { href: "/propostas", label: "Modelo de Propostas", icon: FileText },
+      { href: "/contratos", label: "Contratos", icon: FolderOpen },
     ],
   },
   {

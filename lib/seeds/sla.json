@@ -1,0 +1,10 @@
+[
+  {
+    "id": "sla-atendimento",
+    "name": "SLA de Atendimento",
+    "content": "# SLA de Atendimento\n\nO SLA de Atendimento é essencial para garantir retorno ao lead dentro de um prazo hábil para a resolução de sua demanda. Em termos gerais, primeiros e novos atendimentos devem ser realizados em até 24 horas.\n\n| Estágio no CRM | Prazo Máximo |\n|---|---|\n| MQL | 24 horas |\n| Em Tentativa | 48 horas |\n| Em Qualificação | Até 72 horas |\n| SQL | Até 72 horas |\n\n---\n\n> Mantenha sempre o RD CRM atualizado com o estágio correto do lead para que o SLA possa ser monitorado pela equipe.",
+    "createdBy": "sistema",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  }
+]

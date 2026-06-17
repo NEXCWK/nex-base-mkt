@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { User, ChevronDown, ChevronUp, Pencil, Camera, Loader2 } from "lucide-react";
+import { User, ChevronDown, ChevronUp, Pencil, Camera, Loader2, Plus, Trash2, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +10,191 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
+
+interface Partner {
+  id: string;
+  name: string;
+  category: string;
+  bio: string;
+  website: string;
+  photoUrl: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const EMPTY_PARTNER = { name: "", category: "", bio: "", website: "", photoUrl: "" };
+
+function ParceirosTab() {
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Partner | null>(null);
+  const [form, setForm] = useState(EMPTY_PARTNER);
+  const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Partner | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const fetchPartners = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/parceiros");
+      if (res.ok) setPartners(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchPartners(); }, [fetchPartners]);
+
+  function openCreate() {
+    setEditTarget(null);
+    setForm(EMPTY_PARTNER);
+    setModalOpen(true);
+  }
+
+  function openEdit(p: Partner) {
+    setEditTarget(p);
+    setForm({ name: p.name, category: p.category, bio: p.bio, website: p.website, photoUrl: p.photoUrl });
+    setModalOpen(true);
+  }
+
+  async function handleSave() {
+    if (!form.name.trim()) return;
+    setSaving(true);
+    try {
+      if (editTarget) {
+        const res = await fetch("/api/parceiros", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editTarget.id, ...form }),
+        });
+        if (res.ok) {
+          const updated: Partner = await res.json();
+          setPartners((p) => p.map((x) => (x.id === updated.id ? updated : x)));
+        }
+      } else {
+        const res = await fetch("/api/parceiros", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        if (res.ok) {
+          const created: Partner = await res.json();
+          setPartners((p) => [...p, created]);
+        }
+      }
+      setModalOpen(false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await fetch("/api/parceiros", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: deleteTarget.id }),
+      });
+      setPartners((p) => p.filter((x) => x.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <p className="text-sm text-muted-foreground">{partners.length} {partners.length === 1 ? "parceiro" : "parceiros"} cadastrados</p>
+        <Button variant="default" size="sm" onClick={openCreate}>
+          <Plus size={14} /> Adicionar parceiro
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-20 text-muted-foreground">
+          <Loader2 size={18} className="animate-spin mr-2" /><span className="text-sm">Carregando...</span>
+        </div>
+      ) : partners.length === 0 ? (
+        <div className="border border-dashed border-gray-medium rounded-xl p-16 text-center">
+          <User size={32} className="mx-auto mb-3 text-muted-foreground opacity-40" />
+          <p className="text-sm font-medium text-gray-dark mb-1">Nenhum parceiro cadastrado ainda</p>
+          <p className="text-xs text-muted-foreground mb-5">Cadastre os fornecedores e parceiros da área.</p>
+          <Button variant="outline" size="sm" onClick={openCreate}><Plus size={14} /> Adicionar parceiro</Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {partners.map((p) => (
+            <Card key={p.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="h-32 bg-gray-light flex items-center justify-center overflow-hidden">
+                  {p.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.photoUrl} alt={p.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-gray-medium flex items-center justify-center">
+                      <User size={28} className="text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-sm text-black truncate">{p.name}</h3>
+                      {p.category && <Badge variant="muted" className="mt-1">{p.category}</Badge>}
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <button onClick={() => openEdit(p)} className="p-1 rounded-md text-muted-foreground hover:text-black hover:bg-gray-light transition-colors" title="Editar"><Pencil size={13} /></button>
+                      <button onClick={() => setDeleteTarget(p)} className="p-1 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors" title="Excluir"><Trash2 size={13} /></button>
+                    </div>
+                  </div>
+                  {p.bio && <p className="text-xs text-muted-foreground leading-relaxed mt-2 line-clamp-3">{p.bio}</p>}
+                  {p.website && (
+                    <a href={p.website.startsWith("http") ? p.website : `https://${p.website}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-2 text-xs text-black hover:underline">
+                      <Globe size={11} />{p.website.replace(/^https?:\/\//, "")}
+                    </a>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editTarget ? "Editar parceiro" : "Adicionar parceiro"} className="max-w-lg">
+        <div className="flex flex-col gap-4">
+          <PhotoUpload value={form.photoUrl} onChange={(v) => setForm((f) => ({ ...f, photoUrl: v }))} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Nome *" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Nome do parceiro" autoFocus />
+            <Input label="Categoria / Área" value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} placeholder="Ex: Design, Mídia…" />
+          </div>
+          <Textarea label="Mini bio" value={form.bio} onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))} placeholder="Breve descrição do parceiro e dos serviços oferecidos…" rows={3} />
+          <Input label="Site / Link" value={form.website} onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))} placeholder="https://…" />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setModalOpen(false)} disabled={saving}>Cancelar</Button>
+            <Button variant="default" size="sm" onClick={handleSave} disabled={saving || !form.name.trim()}>
+              {saving && <Loader2 size={13} className="animate-spin" />}
+              {editTarget ? "Salvar alterações" : "Adicionar"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Excluir parceiro" description={`Remover "${deleteTarget?.name}"? Esta ação não pode ser desfeita.`}>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" size="sm" onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancelar</Button>
+          <Button size="sm" onClick={handleDelete} disabled={deleting} className="bg-red-500 text-white hover:bg-red-600">
+            {deleting && <Loader2 size={13} className="animate-spin" />}
+            Excluir
+          </Button>
+        </div>
+      </Modal>
+    </div>
+  );
+}
 
 interface TeamMember {
   email: string;
@@ -137,6 +322,7 @@ function PhotoUpload({ value, onChange }: { value: string; onChange: (v: string)
 export default function NossoTimePage() {
   const { data: session } = useSession();
   const sessionEmail = session?.user?.email ?? "";
+  const [activeTab, setActiveTab] = useState<"time" | "parceiros">("time");
 
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -223,14 +409,14 @@ export default function NossoTimePage() {
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Nosso Time</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Conheça as pessoas que fazem parte do time Nex.
+            Conheça as pessoas e parceiros da área.
           </p>
         </div>
-        {sessionEmail && (
+        {sessionEmail && activeTab === "time" && (
           <Button variant="accent" size="sm" onClick={openEditModal}>
             <Pencil size={14} />
             Editar meu perfil
@@ -238,6 +424,27 @@ export default function NossoTimePage() {
         )}
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-gray-medium mb-8">
+        {([["time", "Time"], ["parceiros", "Parceiros da Área"]] as const).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className={cn(
+              "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
+              activeTab === key
+                ? "border-black text-black"
+                : "border-transparent text-muted-foreground hover:text-black"
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "parceiros" && <ParceirosTab />}
+
+      {activeTab === "time" && <>
       {/* States */}
       {loading && (
         <div className="flex items-center justify-center py-20">
@@ -478,6 +685,7 @@ export default function NossoTimePage() {
           </div>
         </div>
       </Modal>
+      </>}
     </div>
   );
 }

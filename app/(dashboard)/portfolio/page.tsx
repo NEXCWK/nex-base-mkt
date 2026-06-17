@@ -667,6 +667,23 @@ export default function PortfolioPage() {
         Preços e condições podem mudar. Consulte disponibilidade. · Nex Coworking · Curitiba
       </p>
 
+      {/* Tabela de preços completa */}
+      <div className="border border-gray-medium rounded-xl p-5 bg-gray-light mb-6">
+        <p className="text-sm font-semibold mb-1">Tabela completa de preços</p>
+        <p className="text-sm text-muted-foreground mb-3">
+          Para acessar a tabela com os valores de todos os serviços, acesse o link abaixo e logue com o Gmail Nex.
+        </p>
+        <a
+          href="https://nex-precificacao-estoque-2026.lovable.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-black hover:underline underline-offset-2"
+        >
+          Acessar tabela de precificação
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+      </div>
+
       {/* Materiais (upload) */}
       <div className="pt-2">
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Materiais e apresentações</h2>
