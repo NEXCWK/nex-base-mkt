@@ -24,17 +24,45 @@ const SEED_USERS: User[] = [
   { id: "5", email: "luiza@nexcoworking.com.br", name: "Luiza", password: INITIAL_HASH, firstAccess: true, role: "member" },
 ];
 
-export function readUsers(): User[] {
+// In-memory cache survives within a process (persists password changes across
+// requests until the container restarts). USERS_JSON env var provides the
+// initial state that survives across Railway redeploys.
+let memoryCache: User[] | null = null;
+
+function loadInitialUsers(): User[] {
+  // 1. Try USERS_JSON env var (set via Railway dashboard — survives redeploys)
+  if (process.env.USERS_JSON) {
+    try {
+      return JSON.parse(process.env.USERS_JSON) as User[];
+    } catch {
+      console.error("[auth] USERS_JSON env var is invalid JSON");
+    }
+  }
+  // 2. Try data/users.json file
   try {
     const raw = fs.readFileSync(USERS_FILE, "utf-8");
-    return JSON.parse(raw);
+    return JSON.parse(raw) as User[];
   } catch {
     return SEED_USERS;
   }
 }
 
+export function readUsers(): User[] {
+  if (!memoryCache) {
+    memoryCache = loadInitialUsers();
+  }
+  return memoryCache;
+}
+
 function writeUsers(users: User[]): void {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+  // Update in-memory cache immediately (keeps changes alive within this process)
+  memoryCache = users;
+  // Also persist to file (best-effort; helps if Railway keeps the same container)
+  try {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+  } catch {
+    // File write may fail in read-only deployments; memory cache is the fallback
+  }
 }
 
 export function findUserByEmail(email: string): User | undefined {
@@ -62,4 +90,9 @@ export async function updatePassword(
   users[idx].password = hashed;
   users[idx].firstAccess = false;
   writeUsers(users);
+}
+
+/** Returns the current users list as a JSON string for copying to USERS_JSON env var. */
+export function exportUsersJson(): string {
+  return JSON.stringify(readUsers(), null, 2);
 }
