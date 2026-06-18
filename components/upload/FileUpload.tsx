@@ -64,7 +64,6 @@ function FileViewer({
   downloadUrl: string;
   onClose: () => void;
 }) {
-  // Fecha com ESC
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -106,7 +105,6 @@ function FileViewer({
         </div>
       </div>
 
-      {/* Content — clique fora fecha */}
       <div
         className="flex-1 overflow-auto flex items-start justify-center p-4"
         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
@@ -120,7 +118,7 @@ function FileViewer({
           />
         )}
         {file.mimeType.startsWith("image/") && (
-          // eslint-disable-next-line @next/next/no-img-element -- conteúdo dinâmico autenticado servido pela API
+          // eslint-disable-next-line @next/next/no-img-element -- dynamic authenticated content served by API
           <img
             src={url}
             alt={file.name}
@@ -261,93 +259,98 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
 
   return (
     <>
-      <div className="border border-gray-medium rounded-lg overflow-hidden">
-        {label && (
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-medium bg-gray-light">
-            <h3 className="font-600 text-sm">{label}</h3>
-            {!loading && (
-              <span className="text-xs text-muted-foreground">
-                {files.length} {files.length === 1 ? "arquivo" : "arquivos"}
-              </span>
-            )}
+      <div
+        className={cn(
+          "relative border border-gray-medium rounded-xl overflow-hidden bg-white",
+          dragging && "ring-2 ring-black ring-offset-1"
+        )}
+        onDragEnter={(e) => { e.preventDefault(); dragDepth.current++; setDragging(true); }}
+        onDragOver={(e) => e.preventDefault()}
+        onDragLeave={(e) => { e.preventDefault(); dragDepth.current--; if (dragDepth.current <= 0) setDragging(false); }}
+        onDrop={handleDrop}
+      >
+        {/* Drag overlay */}
+        {dragging && (
+          <div className="absolute inset-0 z-10 bg-white/95 border-2 border-dashed border-black rounded-xl flex flex-col items-center justify-center gap-2 pointer-events-none">
+            <Upload size={22} className="text-gray-dark" />
+            <p className="text-sm font-medium text-foreground">Solte os arquivos aqui</p>
           </div>
         )}
 
-        {/* Upload area */}
-        <div className="p-4 border-b border-gray-medium">
-          <div
-            className={cn(
-              "border-2 border-dashed rounded-lg p-5 text-center cursor-pointer transition-colors",
-              dragging ? "border-black bg-gray-light" : "border-gray-medium hover:border-black",
-              uploading && "opacity-50 cursor-not-allowed"
-            )}
+        {/* Header */}
+        <div className="flex items-center gap-2 px-4 py-3 bg-gray-light/50 border-b border-gray-medium">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1 truncate">
+            {label ?? "Arquivos"}
+          </span>
+          {!loading && (
+            <span className="text-xs text-muted-foreground shrink-0">
+              {files.length} {files.length === 1 ? "arquivo" : "arquivos"}
+            </span>
+          )}
+          <button
             onClick={() => !uploading && inputRef.current?.click()}
-            onDragEnter={(e) => { e.preventDefault(); dragDepth.current++; setDragging(true); }}
-            onDragOver={(e) => e.preventDefault()}
-            onDragLeave={(e) => { e.preventDefault(); dragDepth.current--; if (dragDepth.current <= 0) setDragging(false); }}
-            onDrop={handleDrop}
+            disabled={uploading}
+            className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-md border border-gray-medium bg-white hover:bg-gray-light transition-colors disabled:opacity-50 shrink-0 ml-1"
           >
-            {uploading ? (
-              <Loader2 size={18} className="animate-spin mx-auto mb-2 text-muted-foreground" />
-            ) : (
-              <Upload size={18} className="mx-auto mb-2 text-muted-foreground" />
-            )}
-            <p className="text-sm text-muted-foreground">
-              {uploading
-                ? `Enviando${uploadQueue > 1 ? ` (${uploadQueue} restantes)` : "..."}`
-                : dragging
-                  ? "Solte os arquivos aqui"
-                  : "Clique para selecionar ou arraste arquivos"}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, PPTX, XLSX, PNG, JPG, WEBP, MP4 · máx. 100 MB</p>
-            <input
-              ref={inputRef}
-              type="file"
-              multiple
-              className="hidden"
-              accept={ACCEPTED}
-              onChange={handleInputChange}
-              disabled={uploading}
-            />
-          </div>
-          {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
+            {uploading
+              ? <Loader2 size={11} className="animate-spin" />
+              : <Upload size={11} />}
+            {uploading ? `Enviando (${uploadQueue})…` : "Adicionar"}
+          </button>
+          <input
+            ref={inputRef}
+            type="file"
+            multiple
+            className="hidden"
+            accept={ACCEPTED}
+            onChange={handleInputChange}
+            disabled={uploading}
+          />
         </div>
 
         {/* File list */}
-        <div className="divide-y divide-gray-medium">
-          {loading ? (
-            <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
-              <Loader2 size={16} className="animate-spin" />
-              <span className="text-sm">Carregando arquivos…</span>
-            </div>
-          ) : files.length === 0 ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">
-              Nenhum arquivo ainda.
-            </div>
-          ) : (
-            files.map((f) => {
+        {loading ? (
+          <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground">
+            <Loader2 size={15} className="animate-spin" />
+            <span className="text-sm">Carregando…</span>
+          </div>
+        ) : files.length === 0 ? (
+          <div className="py-10 text-center">
+            <p className="text-sm text-muted-foreground">Nenhum arquivo ainda.</p>
+            <p className="text-xs text-muted-foreground mt-1 opacity-70">
+              Clique em &ldquo;Adicionar&rdquo; ou arraste arquivos aqui.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-medium">
+            {files.map((f) => {
               const TypeIcon = fileTypeIcon(f.mimeType);
               const viewable = isViewable(f.mimeType);
               return (
-                <div key={f.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-light transition-colors">
-                  <TypeIcon size={16} className="shrink-0 text-muted-foreground" />
+                <div key={f.id} className="flex items-center gap-4 px-4 py-4 hover:bg-gray-light/40 transition-colors">
+                  {/* Icon */}
+                  <div className="w-10 h-10 rounded-lg bg-gray-light border border-gray-medium flex items-center justify-center shrink-0">
+                    <TypeIcon size={18} className="text-gray-dark" />
+                  </div>
+                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <button
-                      className="text-sm font-medium truncate block w-full text-left hover:underline"
+                      className="text-sm font-semibold text-foreground truncate block w-full text-left hover:underline underline-offset-2"
                       onClick={() => setPreviewFile(f)}
                       title="Visualizar"
                     >
                       {f.name}
                     </button>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {formatDate(f.uploadedAt)} · {formatSize(f.size)}
                     </p>
                   </div>
+                  {/* Actions */}
                   <div className="flex items-center gap-1 shrink-0">
                     {viewable && (
                       <button
                         onClick={() => setPreviewFile(f)}
-                        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white transition-colors"
+                        className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors"
                         title="Visualizar"
                       >
                         <Eye size={14} />
@@ -355,14 +358,14 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
                     )}
                     <a
                       href={fileUrl(f, true)}
-                      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-white transition-colors"
-                      title="Fazer download"
+                      className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors"
+                      title="Download"
                     >
                       <Download size={14} />
                     </a>
                     <button
                       onClick={() => setDeleteTarget(f)}
-                      className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
+                      className="p-2 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
                       title="Remover"
                     >
                       <Trash2 size={14} />
@@ -370,9 +373,11 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
                   </div>
                 </div>
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
+        )}
+
+        {error && <p className="px-4 pb-3 text-xs text-red-500">{error}</p>}
       </div>
 
       {/* File viewer */}

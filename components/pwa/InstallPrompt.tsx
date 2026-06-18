@@ -27,6 +27,8 @@ function isInStandaloneMode(): boolean {
   );
 }
 
+const DISMISSED_KEY = "pwa-banner-dismissed";
+
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [platform, setPlatform] = useState<Platform>("unknown");
@@ -40,17 +42,16 @@ export function InstallPrompt() {
     const p = detectPlatform();
     setPlatform(p);
 
-    const dismissed = sessionStorage.getItem("pwa-banner-dismissed");
-    if (dismissed) return;
+    if (sessionStorage.getItem(DISMISSED_KEY)) return;
 
     if (p === "ios") {
-      // On iOS we show a manual guide immediately (no install event)
       setVisible(true);
       return;
     }
 
     const handler = (e: Event) => {
       e.preventDefault();
+      if (sessionStorage.getItem(DISMISSED_KEY)) return;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setVisible(true);
     };
@@ -61,7 +62,7 @@ export function InstallPrompt() {
 
   const dismiss = () => {
     setVisible(false);
-    sessionStorage.setItem("pwa-banner-dismissed", "1");
+    sessionStorage.setItem(DISMISSED_KEY, "1");
   };
 
   const install = async () => {
@@ -70,12 +71,8 @@ export function InstallPrompt() {
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     setInstalling(false);
-    if (outcome === "accepted") {
-      setVisible(false);
-    } else {
-      setDeferredPrompt(null);
-      setVisible(false);
-    }
+    dismiss();
+    if (outcome !== "accepted") setDeferredPrompt(null);
   };
 
   if (!visible) return null;
@@ -113,10 +110,6 @@ export function InstallPrompt() {
             Entendi
           </button>
         </div>
-        {/* Arrow pointing down */}
-        <div className="absolute bottom-[4.5rem] left-1/2 -translate-x-1/2">
-          <div className="w-4 h-4 rotate-45 bg-white shadow" />
-        </div>
       </div>
     );
   }
@@ -125,7 +118,6 @@ export function InstallPrompt() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[200] p-3 sm:p-4 safe-area-bottom animate-slide-up">
       <div className="mx-auto max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl flex items-center gap-3 p-4">
-        {/* App icon */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/icons/icon-72x72.png"
