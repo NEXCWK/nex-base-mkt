@@ -22,20 +22,6 @@ export function Modal({
   className,
   closable = true,
 }: ModalProps) {
-  const dialogRef = React.useRef<HTMLDivElement>(null);
-
-  // Move o foco ao primeiro campo apenas na abertura — efeito isolado para não
-  // disparar novamente quando onClose (arrow inline) ganhar nova referência.
-  React.useEffect(() => {
-    if (!open) return;
-    const el = dialogRef.current;
-    const target = el?.querySelector<HTMLElement>(
-      "input, textarea, select, button:not([aria-label='Fechar'])"
-    );
-    (target ?? el)?.focus();
-  }, [open]);
-
-  // Fecha com Escape
   React.useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -54,11 +40,6 @@ export function Modal({
         onClick={closable ? onClose : undefined}
       />
       <div
-        ref={dialogRef}
-        tabIndex={-1}
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
         className={cn(
           "relative z-10 w-full max-w-md rounded-xl bg-white border border-gray-medium shadow-xl mx-4",
           className
@@ -74,7 +55,6 @@ export function Modal({
           {closable && onClose && (
             <button
               onClick={onClose}
-              aria-label="Fechar"
               className="ml-4 rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors"
             >
               <X size={16} />
