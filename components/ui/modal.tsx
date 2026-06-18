@@ -24,6 +24,15 @@ export function Modal({
 }: ModalProps) {
   const dialogRef = React.useRef<HTMLDivElement>(null);
 
+  // Move o foco para o primeiro campo interativo apenas na abertura do modal
+  React.useEffect(() => {
+    if (!open) return;
+    const el = dialogRef.current;
+    const target = el?.querySelector<HTMLElement>("input, textarea, select, button:not([aria-label='Fechar'])");
+    (target ?? el)?.focus();
+  }, [open]);
+
+  // Fecha com Escape e bloqueia scroll da página enquanto aberto
   React.useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -31,10 +40,6 @@ export function Modal({
     };
     document.addEventListener("keydown", handleKey);
     document.body.style.overflow = "hidden";
-    // Move o foco para dentro do diálogo (primeiro campo ou o próprio contêiner)
-    const el = dialogRef.current;
-    const target = el?.querySelector<HTMLElement>("input, textarea, select, button:not([aria-label='Fechar'])");
-    (target ?? el)?.focus();
     return () => {
       document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = "";
