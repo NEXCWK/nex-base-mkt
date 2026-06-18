@@ -24,20 +24,27 @@ export function Modal({
 }: ModalProps) {
   const dialogRef = React.useRef<HTMLDivElement>(null);
 
+  // Auto-focus and scroll-lock: only when modal opens, never on re-renders
   React.useEffect(() => {
     if (!open) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && closable && onClose) onClose();
-    };
-    document.addEventListener("keydown", handleKey);
     document.body.style.overflow = "hidden";
-    // Move o foco para dentro do diálogo (primeiro campo ou o próprio contêiner)
     const el = dialogRef.current;
     const target = el?.querySelector<HTMLElement>("input, textarea, select, button:not([aria-label='Fechar'])");
     (target ?? el)?.focus();
     return () => {
-      document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  // Escape key: separate effect so onClose reference changes don't retrigger focus
+  React.useEffect(() => {
+    if (!open || !closable || !onClose) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("keydown", handleKey);
     };
   }, [open, closable, onClose]);
 
