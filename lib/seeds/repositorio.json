@@ -1,14 +1,84 @@
 [{
   "columns": [
-    {"id":"col-1","title":"Informações & Updates","order":0,"createdAt":"2026-01-01T00:00:00.000Z"}
+    { "id": "col-1", "title": "Informações & Updates", "order": 0, "createdAt": "2026-01-01T00:00:00.000Z" }
   ],
   "cards": [
     {
-      "id":"card-1","columnId":"col-1",
-      "title":"Bem-vindo ao Repositório",
-      "description":"Este é o quadro kanban da área. Crie colunas e cards para organizar informações, projetos e updates do time.",
-      "members":[],"dueDate":"","order":0,
-      "createdAt":"2026-01-01T00:00:00.000Z","updatedAt":"2026-01-01T00:00:00.000Z"
+      "id": "card-1", "columnId": "col-1", "order": 0,
+      "title": "[COM] Boas Práticas | Comunicação",
+      "description": "REDES SOCIAIS\n• Gerenciamento da conta\n• Republicação de conteúdo do Instagram para o LinkedIn\n• Criativos de Ads\n\nINSTITUCIONAL\n• Fotos Salas de Reunião e Escritórios Disponíveis\n• Atualização de link no card de vendas\n• Compartilhar conteúdos relevantes postados com o time",
+      "members": [], "dueDate": "",
+      "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "card-2", "columnId": "col-1", "order": 1,
+      "title": "[GERAL] Estratégia | Marketing de Conteúdo",
+      "description": "BLOGPOST — 07 por mês:\n• 05 conteúdos SEO + PERSONA (Verbum + Parceria Paula)\n• 01 conteúdo TIME\n• 01 conteúdo COWORKER\n\nBLOG\n• Repaginação do blog (disposição dos conteúdos, etc)\n• Criar caixas de assinatura de news e download de e-book\n\nE-BOOK — 01 por mês (5 mil palavras)\n\nREDES SOCIAIS\n• Instagram: 01 post + 02 reels/semana; nos stories usar ferramentas de interação (enquetes, votação, etc)\n• TikTok: 02 vídeos/semana (pode ser o mesmo do Reels)\n• LinkedIn: 01 conteúdo/semana\n• Medium: 01 conteúdo/semana\n\nNEWSLETTER\n• 02 news/mês para coworkers\n• 02 news/mês para público em geral\n\nFUTURO\n• Podcast\n• Série de vídeos de conteúdo ou com coworkings",
+      "members": [], "dueDate": "",
+      "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "card-3", "columnId": "col-1", "order": 2,
+      "title": "[GERAL] Acesso ao Painel de Administrador Site e Blog",
+      "description": "PAINEL ADMIN GERAL\n• URL: https://nex.work/wp-admin\n• Usuário: nexadmin\n• Senha: nexcoworking2701\n\nPAINEL BLOG\n• URL: https://nex.work/wp-admin\n• Usuário: nexconteudo\n• Senha: nexcoworking2901\n\nCOMO POSTAR UM CONTEÚDO\n1. Acesse o painel de blog\n2. No menu esquerdo, acesse \"Posts\"\n3. Clique em \"Adicionar Novo Post\"\n4. Coloque o título e o corpo do texto\n5. Formate o necessário (espaçamento pode desconfigura no copy/cole do Word)\n6. No menu lateral direito, adicione tags (até 3), categoria e foto de destaque\n\nSEO (via Yoast)\n1. Role até o painel do Yoast\n2. Clique em \"Editar Amostra\" para configurar como aparecerá nos buscadores\n3. Coloque uma palavra-chave principal\n4. Ajuste Título, Slug e Meta-descrição\n5. No corpo do texto, adicione hiperlink externo (outbound link) em palavra relevante\n\nTEMPLATE INBOUND LINK (inserir 2-3x por texto no editor HTML):\n<hr />\n<strong>(+) Veja também:</strong>\n<strong><a href=\"URL_DO_POST\" target=\"_blank\" rel=\"noopener\">TÍTULO DO POST</a></strong>\n<hr/>",
+      "members": [], "dueDate": "",
+      "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "card-4", "columnId": "col-1", "order": 3,
+      "title": "[GERAL] Acesso ao FileZilla FTP Site",
+      "description": "Download: https://filezilla-project.org/download.php?platform=win64\n\nCREDENCIAIS FTP\n• Protocol: ftp\n• Port: 21\n• Host: 149.100.155.96\n• Username: u556997685\n• Password: R7YbG$5udz9r",
+      "members": [], "dueDate": "",
+      "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "card-5", "columnId": "col-1", "order": 4,
+      "title": "[GERAL] Calendário - Datas de Branding",
+      "description": "Criar um calendário das datas de branding que representam o Nex para organizarmos mensagem, conceito e artes com antecedência.\n\nExemplos: Dia da Mulher, Dia do Orgulho LGBT, Dia do Trabalho, etc.\n\nPlanilha: https://docs.google.com/spreadsheets/d/1hVKX6v5lzrY_di__43dQPsM7eE8pHxn9VO58Yb6Vwp8/edit?gid=0#gid=0",
+      "members": [], "dueDate": "",
+      "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "card-6", "columnId": "col-1", "order": 5,
+      "title": "[GERAL] Gráficas & Brindes",
+      "description": "CURITIBA\n\nPrint It (pequena quantidade — cadernos e etiquetas do Connecting)\n• Betinha: elizabeth@print-it.com.br\n\nGráfica Capital (grande quantidade — cadernos WALI, folder de boas-vindas…)\n• Moises: moises@graficacapital.com.br\n• Ari: comercial@graficacapital.com.br\n\nF9 (Banners, acrílico, PVC, sinalização em Casa…)\n• Cristiano: cristiano@f9.com.br / (41) 98801-1672\n• Bianca: bianca@f9.com.br\n\nHellograf (cartão de visitas)\n• Lubiana: lubiana@hellograf.com.br\n• Ademir: ademirg@hellograff.com.br\n\nDavid (adesivos com recados — usar enquanto há crédito; serviço ruim)\n• dj7digital@gmail.com / (41) 988289586\n• Crédito: R$ 470\n\nAdesipar (adesivos dos estúdios/marcas)\n• Solange: arte@adesipar.com.br\n\nRIO DE JANEIRO\n\nPrinti (tudo online — às vezes tem promoções boas)\n\nA4 (cartazes, impressões em geral)\n• Gilmar: contato@a4cores.com / (21) 3826-2626 / (21) 99528-8432\n\nInformato (impressões em geral)\n• Breno: breno@informato.com.br / (21) 97983-1000\n\nBRINDES\n\nUnity (lápis WALI — muitos materiais legais)\n• Waldirene: waldirenebrindes@gmail.com / (41) 99618-2230\n\nEcontexto (camisetas, ecobags, canecas — tem desconto pro Nex; ficar em cima)\n• Aluísio: econtexto@gmail.com / (41) 99644-8888\n\nDimona (camisetas)\n• Adriana: atendimento@camisadimona.com.br",
+      "members": [], "dueDate": "",
+      "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "card-7", "columnId": "col-1", "order": 6,
+      "title": "[GERAL] Documento | Senhas",
+      "description": "Planilha de senhas atualizada da área:\nhttps://docs.google.com/spreadsheets/d/1FpCjjZpLy8-No3YuCOk6sd7f-LzmEZDW6u2A-P0aX20/edit?usp=sharing",
+      "members": [], "dueDate": "",
+      "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "card-8", "columnId": "col-1", "order": 7,
+      "title": "[GERAL] Apontamentos RD para PIPE > Dono de Lead e Funil",
+      "description": "BATEL\n• PLANOS: curitiba@nex.work\n• EVENTOS + REUNI: relacionamento@nex.work\n\nCASA DE PEDRA\n• PLANOS: lenise@nex.work\n• EVENTOS + REUNI: comercial.cwb@nex.work\n• CONSULTÓRIOS: consultorios@nex.work\n\nESCRITÓRIO VIRTUAL\n• CONNECT: felipe@nex.work\n• CONNECT LEAD: lygia@nex.work",
+      "members": [], "dueDate": "",
+      "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "card-9", "columnId": "col-1", "order": 8,
+      "title": "[GERAL] EV - Pack de Divulgação Parcerias",
+      "description": "Artes editáveis do pack de divulgação para parcerias de Escritório Virtual:\nhttps://drive.google.com/drive/folders/1hyp3ERwFoVYvIITD_d12SGSAZcl84yeL",
+      "members": [], "dueDate": "",
+      "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "card-10", "columnId": "col-1", "order": 9,
+      "title": "[GERAL] Escritórios Com Estrutura Inferior",
+      "description": "Registro dos estúdios com estrutura inferior em comparação ao restante das unidades.\n\nBATEL\n• E07 — Barulho\n• E14 — Coluna\n• E33 — Infiltração\n• E34 — Infiltração\n• E36 — Coluna\n\nCASA DE PEDRA\n• E1 — Sem janela\n• E2 — Sem janela\n• E4 — Sem janela",
+      "members": [], "dueDate": "",
+      "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "card-11", "columnId": "col-1", "order": 10,
+      "title": "[GERAL] Apps da Área",
+      "description": "Ferramentas e plataformas utilizadas pela área:\n\n• Google Ads\n• Meta Ads\n• LinkedIn Ads\n• HotJar\n• SEMrush\n• Reportei\n• RD Conversas\n• RD MKT\n• RD CRM\n• Trello\n• Slack",
+      "members": [], "dueDate": "",
+      "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-01-01T00:00:00.000Z"
     }
   ]
 }]
