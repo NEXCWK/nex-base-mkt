@@ -14,6 +14,7 @@ import {
   Briefcase,
   Palette,
   Megaphone,
+  Store,
   Building,
   Building2,
   CalendarDays,
@@ -54,6 +55,7 @@ const navGroups: {
       { href: "/comercial", label: "Vendas", icon: Briefcase },
       { href: "/comunicacao-design", label: "Comunicação e Design", icon: Palette },
       { href: "/marketing", label: "Marketing", icon: Megaphone },
+      { href: "/marketplaces", label: "Marketplaces", icon: Store },
     ],
   },
   {
