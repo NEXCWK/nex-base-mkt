@@ -4,7 +4,6 @@ import {
   Upload, File, Download, Trash2, Loader2, Eye, X,
   FileText, Image as ImageIcon, Film, FileArchive,
   FileSpreadsheet, Presentation, Sparkles, ChevronUp,
-  Star, Zap, Target, Lightbulb, TrendingUp, Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -234,22 +233,6 @@ interface PdfSummary {
 // and never re-triggers generation. The server is the source of truth.
 const summaryMemo = new Map<string, PdfSummary>();
 
-const HIGHLIGHT_ICONS: Array<{ Icon: React.ElementType; bg: string; color: string }> = [
-  { Icon: Star,       bg: "bg-amber-100",  color: "text-amber-600"  },
-  { Icon: Zap,        bg: "bg-blue-100",   color: "text-blue-600"   },
-  { Icon: Target,     bg: "bg-rose-100",   color: "text-rose-600"   },
-  { Icon: Lightbulb,  bg: "bg-yellow-100", color: "text-yellow-600" },
-  { Icon: TrendingUp, bg: "bg-emerald-100",color: "text-emerald-600"},
-  { Icon: Award,      bg: "bg-violet-100", color: "text-violet-600" },
-];
-
-const SECTION_COLORS = [
-  { border: "border-amber-400",   dot: "bg-amber-400",   heading: "text-amber-700"   },
-  { border: "border-blue-400",    dot: "bg-blue-400",    heading: "text-blue-700"    },
-  { border: "border-violet-400",  dot: "bg-violet-400",  heading: "text-violet-700"  },
-  { border: "border-emerald-400", dot: "bg-emerald-400", heading: "text-emerald-700" },
-];
-
 function SummaryPanel({
   sectionPath,
   file,
@@ -302,27 +285,23 @@ function SummaryPanel({
   }, [cacheKey, sectionPath, file.id, file.storedName]);
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-amber-200/70 shadow-md">
-      {/* Gradient header */}
-      <div className="relative bg-gradient-to-br from-amber-400 via-yellow-300 to-amber-200 px-6 pt-5 pb-6 overflow-hidden">
-        {/* Decorative blobs */}
-        <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/20 pointer-events-none" />
-        <div className="absolute bottom-1 right-8 w-14 h-14 rounded-full bg-amber-500/20 pointer-events-none" />
-        <div className="absolute -bottom-4 left-1/2 w-20 h-20 rounded-full bg-yellow-300/30 pointer-events-none" />
+    <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+      {/* Thin amber accent at top */}
+      <div className="h-0.5 bg-gradient-to-r from-amber-400 via-amber-300 to-transparent" />
 
-        <div className="relative flex items-center justify-between mb-4">
+      {/* Header */}
+      <div className="bg-white px-5 pt-4 pb-4 border-b border-gray-100">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-amber-950/10 flex items-center justify-center">
-              <Sparkles size={12} className="text-amber-900" />
-            </div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-900/80">
+            <Sparkles size={12} className="text-amber-500" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
               Resumo do Documento
             </span>
           </div>
           {collapsible && (
             <button
               onClick={onCollapse}
-              className="p-1 rounded-md text-amber-900/60 hover:text-amber-900 hover:bg-amber-300/40 transition-colors"
+              className="p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
               title="Ocultar resumo"
             >
               <ChevronUp size={16} />
@@ -330,45 +309,37 @@ function SummaryPanel({
           )}
         </div>
 
-        <div className="relative">
-          {summary ? (
-            <>
-              <h3 className="text-xl font-bold text-amber-950 leading-tight pr-4">{summary.title}</h3>
-              {summary.tagline && (
-                <p className="mt-1.5 text-sm text-amber-800/80 italic leading-snug">{summary.tagline}</p>
-              )}
-            </>
-          ) : loading ? (
-            <div className="flex items-center gap-2.5 text-amber-900/70">
-              <Loader2 size={15} className="animate-spin" />
-              <span className="text-sm font-medium">Lendo o PDF e preparando o resumo…</span>
-            </div>
-          ) : error ? (
-            <p className="text-sm text-amber-900/80">{error}</p>
-          ) : null}
-        </div>
+        {summary ? (
+          <>
+            <h3 className="text-lg font-bold text-gray-900 leading-tight">{summary.title}</h3>
+            {summary.tagline && (
+              <p className="mt-1 text-sm text-gray-500 italic leading-snug">{summary.tagline}</p>
+            )}
+          </>
+        ) : loading ? (
+          <div className="flex items-center gap-2 text-gray-500">
+            <Loader2 size={14} className="animate-spin" />
+            <span className="text-sm">Lendo o PDF e preparando o resumo…</span>
+          </div>
+        ) : error ? (
+          <p className="text-sm text-red-500">{error}</p>
+        ) : null}
       </div>
 
-      {/* Body — only rendered once we have a summary */}
+      {/* Body */}
       {summary && (
-        <div className="bg-white px-6 py-5 space-y-5">
-          {/* Highlights with icons */}
+        <div className="bg-white px-5 py-4 space-y-4">
           {summary.highlights.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {summary.highlights.map((h, i) => {
-                const { Icon, bg, color } = HIGHLIGHT_ICONS[i % HIGHLIGHT_ICONS.length];
-                return (
-                  <span
-                    key={i}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gray-50 border border-gray-200/80 px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm"
-                  >
-                    <span className={cn("w-5 h-5 rounded-full flex items-center justify-center shrink-0", bg)}>
-                      <Icon size={11} className={color} />
-                    </span>
-                    {h.text}
-                  </span>
-                );
-              })}
+              {summary.highlights.map((h, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-gray-50 border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700"
+                >
+                  <Sparkles size={10} className="text-amber-400 shrink-0" />
+                  {h.text}
+                </span>
+              ))}
             </div>
           )}
 
@@ -376,27 +347,23 @@ function SummaryPanel({
             <hr className="border-gray-100" />
           )}
 
-          {/* Sections with colored left borders */}
           {summary.sections.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {summary.sections.map((s, i) => {
-                const col = SECTION_COLORS[i % SECTION_COLORS.length];
-                return (
-                  <div key={i} className={cn("pl-3 border-l-2", col.border)}>
-                    <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-2", col.heading)}>
-                      {s.heading}
-                    </p>
-                    <ul className="space-y-1.5">
-                      {s.points.map((p, j) => (
-                        <li key={j} className="flex gap-2 text-sm text-gray-600 leading-snug">
-                          <span className={cn("mt-2 w-1 h-1 rounded-full shrink-0", col.dot)} />
-                          <span>{p}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {summary.sections.map((s, i) => (
+                <div key={i} className="pl-3 border-l-2 border-gray-200">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">
+                    {s.heading}
+                  </p>
+                  <ul className="space-y-1.5">
+                    {s.points.map((p, j) => (
+                      <li key={j} className="flex gap-2 text-sm text-gray-600 leading-snug">
+                        <span className="mt-2 w-1 h-1 rounded-full bg-gray-300 shrink-0" />
+                        <span>{p}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           )}
 

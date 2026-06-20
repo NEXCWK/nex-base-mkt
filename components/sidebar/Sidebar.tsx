@@ -21,6 +21,7 @@ import {
   FileText,
   BarChart2,
   GraduationCap,
+  Award,
   LogOut,
   ChevronRight,
   Menu,
@@ -71,6 +72,7 @@ const navGroups: {
     items: [
       { href: "/reports", label: "Reports Comerciais", icon: BarChart2 },
       { href: "/treinamento", label: "Treinamento", icon: GraduationCap },
+      { href: "/certificacoes", label: "Certificações", icon: Award },
     ],
   },
 ];
