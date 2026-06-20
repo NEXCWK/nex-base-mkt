@@ -58,7 +58,19 @@ function writeSummaries(sectionDir: string, data: Record<string, PdfSummary>) {
 // Guards against two simultaneous first-time requests both calling the LLM.
 const inFlight = new Map<string, Promise<PdfSummary>>();
 
+// pdfjs (used by pdf-parse) expects the browser global DOMMatrix, which Node
+// does not provide. Some environments crash with "DOMMatrix is not defined"
+// while parsing real PDFs. Polyfill it before pdfjs is loaded.
+async function ensurePdfGlobals() {
+  const g = globalThis as unknown as { DOMMatrix?: unknown };
+  if (typeof g.DOMMatrix === "undefined") {
+    const DOMMatrixImpl = (await import("dommatrix")).default;
+    g.DOMMatrix = DOMMatrixImpl;
+  }
+}
+
 async function extractPdfText(filePath: string): Promise<string> {
+  await ensurePdfGlobals();
   const { PDFParse } = await import("pdf-parse");
   const buffer = fs.readFileSync(filePath);
   const parser = new PDFParse({ data: new Uint8Array(buffer) });
