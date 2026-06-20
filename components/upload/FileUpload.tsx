@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Upload, File, Download, Trash2, Loader2, Eye, X,
   FileText, Image as ImageIcon, Film, FileArchive,
-  FileSpreadsheet, Presentation,
+  FileSpreadsheet, Presentation, Sparkles, ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -219,6 +219,158 @@ function FileViewer({
   );
 }
 
+// ─── PDF summary ───────────────────────────────────────────────────────────────
+
+interface PdfSummary {
+  title: string;
+  tagline: string;
+  highlights: { emoji: string; text: string }[];
+  sections: { heading: string; points: string[] }[];
+  generatedAt: string;
+}
+
+// Module-level cache so toggling a summary open/closed never refetches,
+// and never re-triggers generation. The server is the source of truth.
+const summaryMemo = new Map<string, PdfSummary>();
+
+function SummaryPanel({
+  sectionPath,
+  file,
+  collapsible,
+  onCollapse,
+}: {
+  sectionPath: string;
+  file: LocalFile;
+  collapsible?: boolean;
+  onCollapse?: () => void;
+}) {
+  const cacheKey = `${sectionPath}::${file.id}`;
+  const [summary, setSummary] = useState<PdfSummary | null>(summaryMemo.get(cacheKey) ?? null);
+  const [loading, setLoading] = useState(!summaryMemo.has(cacheKey));
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (summaryMemo.has(cacheKey)) {
+      setSummary(summaryMemo.get(cacheKey)!);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await fetch("/api/pdf-summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ section: sectionPath, id: file.id, storedName: file.storedName }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          if (data.error === "no_api_key") throw new Error("Resumo automático ainda não configurado.");
+          if (data.error === "no_text") throw new Error(data.message || "Não foi possível ler o texto deste PDF.");
+          throw new Error(data.message || "Não foi possível gerar o resumo.");
+        }
+        if (!cancelled && data.summary) {
+          summaryMemo.set(cacheKey, data.summary);
+          setSummary(data.summary);
+        }
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Erro ao gerar resumo.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [cacheKey, sectionPath, file.id, file.storedName]);
+
+  return (
+    <div className="relative rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 pt-4 pb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-accent flex items-center justify-center">
+            <Sparkles size={13} className="text-black" />
+          </div>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-amber-700">
+            Resumo do documento
+          </span>
+        </div>
+        {collapsible && (
+          <button
+            onClick={onCollapse}
+            className="p-1 rounded-md text-amber-700/70 hover:text-amber-900 hover:bg-amber-100 transition-colors"
+            title="Ocultar resumo"
+          >
+            <ChevronUp size={16} />
+          </button>
+        )}
+      </div>
+
+      <div className="px-5 pb-5">
+        {loading ? (
+          <div className="flex items-center gap-2.5 py-6 text-amber-700">
+            <Loader2 size={16} className="animate-spin" />
+            <span className="text-sm">Lendo o PDF e preparando o resumo…</span>
+          </div>
+        ) : error ? (
+          <p className="py-4 text-sm text-amber-800/80">{error}</p>
+        ) : summary ? (
+          <div className="space-y-4">
+            {/* Title + tagline */}
+            <div>
+              <h3 className="text-lg font-bold text-black leading-tight">{summary.title}</h3>
+              {summary.tagline && (
+                <p className="mt-1 text-sm text-gray-dark italic">{summary.tagline}</p>
+              )}
+            </div>
+
+            {/* Highlights */}
+            {summary.highlights.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {summary.highlights.map((h, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-white border border-amber-200 px-3 py-1 text-xs font-medium text-gray-dark shadow-sm"
+                  >
+                    <span className="text-sm leading-none">{h.emoji}</span>
+                    {h.text}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Sections */}
+            {summary.sections.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 pt-1">
+                {summary.sections.map((s, i) => (
+                  <div key={i}>
+                    <p className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1.5">
+                      {s.heading}
+                    </p>
+                    <ul className="space-y-1">
+                      {s.points.map((p, j) => (
+                        <li key={j} className="flex gap-2 text-sm text-gray-dark leading-snug">
+                          <span className="mt-1.5 w-1 h-1 rounded-full bg-amber-400 shrink-0" />
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <p className="text-[11px] text-amber-700/60 pt-1">
+              Resumo gerado automaticamente a partir do PDF · baixe o arquivo para ver o conteúdo completo.
+            </p>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ──────────────────────────────────────────────────────────
 
 export function FileUpload({ section, category, label }: FileUploadProps) {
@@ -230,11 +382,23 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
   const [deleteTarget, setDeleteTarget] = useState<LocalFile | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [previewFile, setPreviewFile] = useState<LocalFile | null>(null);
+  const [openSummaryId, setOpenSummaryId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dragDepth = useRef(0);
 
   const sectionPath = category ? `${section}/${category}` : section;
   const uploading = uploadQueue > 0;
+
+  const pdfs = files.filter((f) => f.mimeType === "application/pdf");
+  const multiPdf = pdfs.length > 1;
+  const pdfSignature = pdfs.map((p) => p.id).join(",");
+
+  // Auto-show the summary when there is exactly one PDF; otherwise require a click.
+  useEffect(() => {
+    if (pdfs.length === 1) setOpenSummaryId(pdfs[0].id);
+    else setOpenSummaryId(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pdfSignature]);
 
   useEffect(() => {
     let cancelled = false;
@@ -407,6 +571,21 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
                     </p>
                     {/* Actions */}
                     <div className="flex items-center gap-0.5 mt-1.5 -ml-1">
+                      {f.mimeType === "application/pdf" && multiPdf && (
+                        <button
+                          onClick={() => setOpenSummaryId((cur) => (cur === f.id ? null : f.id))}
+                          className={cn(
+                            "flex items-center gap-1 px-1.5 py-1 rounded text-[11px] font-semibold transition-colors",
+                            openSummaryId === f.id
+                              ? "bg-accent text-black"
+                              : "text-amber-700 hover:bg-amber-50"
+                          )}
+                          title="Ver resumo do PDF"
+                        >
+                          <Sparkles size={11} />
+                          {openSummaryId === f.id ? "Ocultar" : "Ver resumo"}
+                        </button>
+                      )}
                       {viewable && (
                         <button
                           onClick={() => setPreviewFile(f)}
@@ -435,6 +614,19 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* PDF summary (auto for single PDF, on-demand for multiple) */}
+        {openSummaryId && pdfs.some((p) => p.id === openSummaryId) && (
+          <div className="px-4 pb-4">
+            <SummaryPanel
+              key={openSummaryId}
+              sectionPath={sectionPath}
+              file={pdfs.find((p) => p.id === openSummaryId)!}
+              collapsible={multiPdf}
+              onCollapse={() => setOpenSummaryId(null)}
+            />
           </div>
         )}
 
