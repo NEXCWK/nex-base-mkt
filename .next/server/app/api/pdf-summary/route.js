@@ -3,7 +3,7 @@
 {
   "title": "t\xedtulo curto e atraente do documento (m\xe1x 6 palavras)",
   "tagline": "uma frase de uma linha que captura a ess\xeancia do documento",
-  "highlights": [ { "emoji": "um emoji relevante", "text": "destaque curto (m\xe1x 10 palavras)" } ],
+  "highlights": [ { "text": "destaque curto e impactante (m\xe1x 10 palavras)" } ],
   "sections": [ { "heading": "t\xedtulo da se\xe7\xe3o", "points": ["ponto conciso", "outro ponto"] } ]
 }
 
