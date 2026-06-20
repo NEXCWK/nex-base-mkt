@@ -15,6 +15,7 @@ import {
   Palette,
   Megaphone,
   Building,
+  Building2,
   FileText,
   BarChart2,
   GraduationCap,
@@ -39,6 +40,7 @@ const navGroups: {
     items: [
       { href: "/sobre-o-nex", label: "Sobre o Nex", icon: Star },
       { href: "/nosso-time", label: "Nosso Time", icon: Users },
+      { href: "/marcas-parceiras", label: "Marcas Parceiras", icon: Building2 },
       { href: "/repositorio", label: "Repositório", icon: LayoutGrid },
     ],
   },
