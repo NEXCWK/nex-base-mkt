@@ -23,6 +23,7 @@ import {
   Menu,
   X,
   FolderOpen,
+  LayoutGrid,
 } from "lucide-react";
 
 const navGroups: {
@@ -38,6 +39,7 @@ const navGroups: {
     items: [
       { href: "/sobre-o-nex", label: "Sobre o Nex", icon: Star },
       { href: "/nosso-time", label: "Nosso Time", icon: Users },
+      { href: "/repositorio", label: "Repositório", icon: LayoutGrid },
     ],
   },
   {

@@ -1,0 +1,14 @@
+[{
+  "columns": [
+    {"id":"col-1","title":"Informações & Updates","order":0,"createdAt":"2026-01-01T00:00:00.000Z"}
+  ],
+  "cards": [
+    {
+      "id":"card-1","columnId":"col-1",
+      "title":"Bem-vindo ao Repositório",
+      "description":"Este é o quadro kanban da área. Crie colunas e cards para organizar informações, projetos e updates do time.",
+      "members":[],"dueDate":"","order":0,
+      "createdAt":"2026-01-01T00:00:00.000Z","updatedAt":"2026-01-01T00:00:00.000Z"
+    }
+  ]
+}]
