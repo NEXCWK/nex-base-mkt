@@ -354,9 +354,251 @@ function DocumentsPanel({ apiPath, newLabel, emptyTitle, emptyDesc }: DocumentsP
   );
 }
 
+// ─── Process content types ────────────────────────────────────────────────────
+
+type ContentBlock =
+  | { type: "text"; content: string }
+  | { type: "bullets"; items: string[] }
+  | { type: "table"; headers: [string, string]; rows: { condition: string; rule: string }[] }
+  | { type: "note"; text: string };
+
+interface ProcessStep {
+  number: number;
+  title: string;
+  content: ContentBlock[];
+}
+
+const ESCRITORIO_STEPS: ProcessStep[] = [
+  {
+    number: 1,
+    title: "Envio de proposta",
+    content: [{ type: "text", content: "Encaminhar a proposta formal por e-mail ao cliente." }],
+  },
+  {
+    number: 2,
+    title: "Aceite da proposta",
+    content: [{ type: "text", content: "Com o aceite registrado por e-mail, iniciar o processo de assinatura do contrato." }],
+  },
+  {
+    number: 3,
+    title: "Contrato",
+    content: [{
+      type: "bullets",
+      items: [
+        "Coletar a documentação do cliente",
+        "Elaborar e revisar a minuta contratual",
+        "Enviar a minuta para aprovação interna antes de qualquer envio ao cliente",
+        "Após aprovação interna, encaminhar a minuta por e-mail ao cliente",
+        "Com o aval do cliente, enviar via D4Sign para assinatura",
+      ],
+    }],
+  },
+  {
+    number: 4,
+    title: "Faturamento",
+    content: [
+      { type: "text", content: "Com o contrato assinado, emitir a primeira fatura observando a seguinte regra:" },
+      {
+        type: "table",
+        headers: ["Situação", "Regra"],
+        rows: [{ condition: "Início no dia 21 ou depois", rule: "Emitir pro-rata do mês corrente + mês seguinte" }],
+      },
+      { type: "note", text: "O cliente deve ser informado sobre esse critério antes da assinatura do contrato." },
+    ],
+  },
+  {
+    number: 5,
+    title: "Onboarding",
+    content: [
+      { type: "text", content: "Com o pagamento confirmado, enviar e-mail de onboarding conectando o cliente à equipe de Operação." },
+      { type: "text", content: "A partir deste ponto, a condução do processo passa a ser responsabilidade da Unidade." },
+    ],
+  },
+  {
+    number: 6,
+    title: "Arquivamento",
+    content: [{ type: "text", content: "Anexar as minutas assinadas ao dashboard do cliente." }],
+  },
+];
+
+const EVENTOS_STEPS: ProcessStep[] = [
+  {
+    number: 1,
+    title: "Envio de proposta",
+    content: [{ type: "text", content: "Encaminhar a proposta formal por e-mail ao cliente." }],
+  },
+  {
+    number: 2,
+    title: "Aceite da proposta",
+    content: [{ type: "text", content: "Com o aceite registrado por e-mail, iniciar o processo de assinatura do Termo de Compromisso." }],
+  },
+  {
+    number: 3,
+    title: "Termo de Compromisso",
+    content: [{
+      type: "bullets",
+      items: [
+        "Coletar os dados do cliente",
+        "Elaborar e revisar o Termo",
+        "Enviar o Termo por e-mail para aprovação do cliente",
+        "Após aprovação, encaminhar via D4Sign para assinatura",
+      ],
+    }],
+  },
+  {
+    number: 4,
+    title: "Faturamento",
+    content: [
+      { type: "text", content: "Com o Termo assinado, emitir a primeira fatura conforme a condição negociada:" },
+      {
+        type: "table",
+        headers: ["Condição", "Regra"],
+        rows: [
+          { condition: "1×", rule: "Valor integral até 7 dias antes da data do evento" },
+          { condition: "2×", rule: "50% para reserva da data + 50% até 7 dias antes do evento" },
+        ],
+      },
+      { type: "note", text: "As condições de rescisão e multa estão previstas no Termo." },
+    ],
+  },
+  {
+    number: 5,
+    title: "Onboarding",
+    content: [
+      { type: "text", content: "Com o primeiro pagamento confirmado, enviar e-mail de onboarding conectando o cliente à equipe de Operação." },
+      { type: "text", content: "A partir deste ponto, a condução do processo passa a ser responsabilidade da Unidade." },
+    ],
+  },
+];
+
+function StepView({ step, isLast }: { step: ProcessStep; isLast: boolean }) {
+  return (
+    <div className="flex gap-4">
+      <div className="flex flex-col items-center shrink-0">
+        <div className="w-7 h-7 rounded-full bg-[#FFD400] flex items-center justify-center shrink-0">
+          <span className="text-xs font-bold text-black leading-none">{step.number}</span>
+        </div>
+        {!isLast && <div className="flex-1 w-px bg-gray-200 mt-1.5" />}
+      </div>
+      <div className={cn("flex-1 min-w-0", !isLast && "pb-7")}>
+        <h3 className="text-sm font-bold text-gray-900 mb-2.5 leading-tight pt-0.5">{step.title}</h3>
+        <div className="space-y-3">
+          {step.content.map((block, i) => {
+            if (block.type === "text") {
+              return (
+                <p key={i} className="text-sm text-gray-700 leading-relaxed">{block.content}</p>
+              );
+            }
+            if (block.type === "bullets") {
+              return (
+                <ul key={i} className="space-y-2">
+                  {block.items.map((item, j) => (
+                    <li key={j} className="flex gap-2.5 text-sm text-gray-700 leading-snug">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#FFD400] shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              );
+            }
+            if (block.type === "table") {
+              return (
+                <div key={i} className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b-2 border-[#FFD400]">
+                        {block.headers.map((h, hi) => (
+                          <th key={hi} className="text-left py-2 pr-6 text-[11px] font-bold text-gray-900 uppercase tracking-wider">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {block.rows.map((row, ri) => (
+                        <tr key={ri} className="border-b border-gray-100 last:border-0">
+                          <td className="py-2.5 pr-6 text-sm font-semibold text-gray-900 whitespace-nowrap">{row.condition}</td>
+                          <td className="py-2.5 text-sm text-gray-700">{row.rule}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            }
+            if (block.type === "note") {
+              return (
+                <div key={i} className="border-l-[3px] border-[#FFD400] bg-gray-50 px-4 py-3 rounded-r-md">
+                  <p className="text-xs text-gray-700 leading-relaxed">{block.text}</p>
+                </div>
+              );
+            }
+            return null;
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ProcessCardProps {
+  label: string;
+  title: string;
+  steps: ProcessStep[];
+}
+
+function ProcessCard({ label, title, steps }: ProcessCardProps) {
+  return (
+    <div className="rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm flex flex-col">
+      {/* Card header */}
+      <div className="bg-black px-6 py-5 shrink-0">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[#FFD400] mb-1">{label}</p>
+        <h2 className="text-base font-bold text-white leading-snug">{title}</h2>
+      </div>
+      {/* Steps */}
+      <div className="px-6 py-6 flex-1">
+        {steps.map((step, i) => (
+          <StepView key={step.number} step={step} isLast={i === steps.length - 1} />
+        ))}
+      </div>
+      {/* Footer */}
+      <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 shrink-0">
+        <p className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">
+          Documento interno · Uso: time comercial e operação
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ProcessosFechamento() {
+  return (
+    <div>
+      <div className="mb-6">
+        <h2 className="text-base font-semibold text-gray-900">Processos de Fechamento e Cancelamento</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Fluxo padrão de fechamento por tipo de produto · siga a sequência de etapas em cada negociação.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <ProcessCard
+          label="Processo de Fechamento"
+          title="Escritório Privativo"
+          steps={ESCRITORIO_STEPS}
+        />
+        <ProcessCard
+          label="Processo de Fechamento"
+          title="Eventos"
+          steps={EVENTOS_STEPS}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-type MainTab = "arquivos" | "scripts" | "descontos";
+type MainTab = "arquivos" | "scripts" | "descontos" | "processos";
 type ScriptSubTab = "scripts" | "fups" | "keypoints" | "sla";
 
 function TabButton({
@@ -425,6 +667,7 @@ export default function ComercialPage() {
         <TabButton label="Arquivos" active={mainTab === "arquivos"} onClick={() => setMainTab("arquivos")} />
         <TabButton label="Scripts Comerciais" active={mainTab === "scripts"} onClick={() => setMainTab("scripts")} />
         <TabButton label="Diretrizes de Desconto" active={mainTab === "descontos"} onClick={() => setMainTab("descontos")} />
+        <TabButton label="Processos de Fechamento e Cancelamento" active={mainTab === "processos"} onClick={() => setMainTab("processos")} />
       </div>
 
       {mainTab === "arquivos" && <FileUpload section="Comercial" />}
@@ -485,6 +728,8 @@ export default function ComercialPage() {
           emptyDesc="Crie a primeira diretriz de desconto para o time."
         />
       )}
+
+      {mainTab === "processos" && <ProcessosFechamento />}
     </div>
   );
 }
