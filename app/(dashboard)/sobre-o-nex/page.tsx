@@ -64,6 +64,12 @@ const TIMELINE = [
     isNew: true,
   },
   {
+    year: "2026",
+    title: "Nex 15 anos. Um ano muito especial.",
+    text: "Em 2026, o Nex completa 15 anos. Uma data que merece ser celebrada com a mesma intensidade com que foi construída — um ano de cada vez, um cliente de cada vez, um espaço de cada vez. 2026 será um ano muito especial para nós, e estamos construindo algo à altura dessa história.",
+    isNew: true,
+  },
+  {
     year: "Hoje",
     title: "Mais de 1.100 clientes. Duas unidades. E apenas o começo.",
     text: "O Nex tem hoje duas unidades ativas em Curitiba, mais de 1.100 clientes com contrato entre escritório virtual, assinaturas e posições fixas, e milhares de clientes avulsos em salas de reunião, diárias e eventos. O trabalho que começou em uma sala pequena na Comendador Araújo virou algo que muita gente chama de casa.\n\nE isso é apenas o começo do que estamos construindo.",
