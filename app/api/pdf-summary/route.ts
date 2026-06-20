@@ -15,7 +15,6 @@ const MAX_TEXT_CHARS = 30000;
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface SummaryHighlight {
-  emoji: string;
   text: string;
 }
 interface SummarySection {
@@ -104,7 +103,7 @@ async function generateSummary(text: string, fileName: string): Promise<PdfSumma
           `{\n` +
           `  "title": "título curto e atraente do documento (máx 6 palavras)",\n` +
           `  "tagline": "uma frase de uma linha que captura a essência do documento",\n` +
-          `  "highlights": [ { "emoji": "um emoji relevante", "text": "destaque curto (máx 10 palavras)" } ],\n` +
+          `  "highlights": [ { "text": "destaque curto e impactante (máx 10 palavras)" } ],\n` +
           `  "sections": [ { "heading": "título da seção", "points": ["ponto conciso", "outro ponto"] } ]\n` +
           `}\n\n` +
           `Regras: 3 a 4 highlights. 2 a 4 sections, cada uma com 2 a 5 points curtos. ` +

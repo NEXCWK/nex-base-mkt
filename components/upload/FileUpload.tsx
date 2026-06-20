@@ -4,6 +4,7 @@ import {
   Upload, File, Download, Trash2, Loader2, Eye, X,
   FileText, Image as ImageIcon, Film, FileArchive,
   FileSpreadsheet, Presentation, Sparkles, ChevronUp,
+  Star, Zap, Target, Lightbulb, TrendingUp, Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -224,7 +225,7 @@ function FileViewer({
 interface PdfSummary {
   title: string;
   tagline: string;
-  highlights: { emoji: string; text: string }[];
+  highlights: { emoji?: string; text: string }[];
   sections: { heading: string; points: string[] }[];
   generatedAt: string;
 }
@@ -232,6 +233,22 @@ interface PdfSummary {
 // Module-level cache so toggling a summary open/closed never refetches,
 // and never re-triggers generation. The server is the source of truth.
 const summaryMemo = new Map<string, PdfSummary>();
+
+const HIGHLIGHT_ICONS: Array<{ Icon: React.ElementType; bg: string; color: string }> = [
+  { Icon: Star,       bg: "bg-amber-100",  color: "text-amber-600"  },
+  { Icon: Zap,        bg: "bg-blue-100",   color: "text-blue-600"   },
+  { Icon: Target,     bg: "bg-rose-100",   color: "text-rose-600"   },
+  { Icon: Lightbulb,  bg: "bg-yellow-100", color: "text-yellow-600" },
+  { Icon: TrendingUp, bg: "bg-emerald-100",color: "text-emerald-600"},
+  { Icon: Award,      bg: "bg-violet-100", color: "text-violet-600" },
+];
+
+const SECTION_COLORS = [
+  { border: "border-amber-400",   dot: "bg-amber-400",   heading: "text-amber-700"   },
+  { border: "border-blue-400",    dot: "bg-blue-400",    heading: "text-blue-700"    },
+  { border: "border-violet-400",  dot: "bg-violet-400",  heading: "text-violet-700"  },
+  { border: "border-emerald-400", dot: "bg-emerald-400", heading: "text-emerald-700" },
+];
 
 function SummaryPanel({
   sectionPath,
@@ -285,88 +302,109 @@ function SummaryPanel({
   }, [cacheKey, sectionPath, file.id, file.storedName]);
 
   return (
-    <div className="relative rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-4 pb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-accent flex items-center justify-center">
-            <Sparkles size={13} className="text-black" />
+    <div className="rounded-2xl overflow-hidden border border-amber-200/70 shadow-md">
+      {/* Gradient header */}
+      <div className="relative bg-gradient-to-br from-amber-400 via-yellow-300 to-amber-200 px-6 pt-5 pb-6 overflow-hidden">
+        {/* Decorative blobs */}
+        <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/20 pointer-events-none" />
+        <div className="absolute bottom-1 right-8 w-14 h-14 rounded-full bg-amber-500/20 pointer-events-none" />
+        <div className="absolute -bottom-4 left-1/2 w-20 h-20 rounded-full bg-yellow-300/30 pointer-events-none" />
+
+        <div className="relative flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-md bg-amber-950/10 flex items-center justify-center">
+              <Sparkles size={12} className="text-amber-900" />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-900/80">
+              Resumo do Documento
+            </span>
           </div>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-amber-700">
-            Resumo do documento
-          </span>
+          {collapsible && (
+            <button
+              onClick={onCollapse}
+              className="p-1 rounded-md text-amber-900/60 hover:text-amber-900 hover:bg-amber-300/40 transition-colors"
+              title="Ocultar resumo"
+            >
+              <ChevronUp size={16} />
+            </button>
+          )}
         </div>
-        {collapsible && (
-          <button
-            onClick={onCollapse}
-            className="p-1 rounded-md text-amber-700/70 hover:text-amber-900 hover:bg-amber-100 transition-colors"
-            title="Ocultar resumo"
-          >
-            <ChevronUp size={16} />
-          </button>
-        )}
+
+        <div className="relative">
+          {summary ? (
+            <>
+              <h3 className="text-xl font-bold text-amber-950 leading-tight pr-4">{summary.title}</h3>
+              {summary.tagline && (
+                <p className="mt-1.5 text-sm text-amber-800/80 italic leading-snug">{summary.tagline}</p>
+              )}
+            </>
+          ) : loading ? (
+            <div className="flex items-center gap-2.5 text-amber-900/70">
+              <Loader2 size={15} className="animate-spin" />
+              <span className="text-sm font-medium">Lendo o PDF e preparando o resumo…</span>
+            </div>
+          ) : error ? (
+            <p className="text-sm text-amber-900/80">{error}</p>
+          ) : null}
+        </div>
       </div>
 
-      <div className="px-5 pb-5">
-        {loading ? (
-          <div className="flex items-center gap-2.5 py-6 text-amber-700">
-            <Loader2 size={16} className="animate-spin" />
-            <span className="text-sm">Lendo o PDF e preparando o resumo…</span>
-          </div>
-        ) : error ? (
-          <p className="py-4 text-sm text-amber-800/80">{error}</p>
-        ) : summary ? (
-          <div className="space-y-4">
-            {/* Title + tagline */}
-            <div>
-              <h3 className="text-lg font-bold text-black leading-tight">{summary.title}</h3>
-              {summary.tagline && (
-                <p className="mt-1 text-sm text-gray-dark italic">{summary.tagline}</p>
-              )}
-            </div>
-
-            {/* Highlights */}
-            {summary.highlights.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {summary.highlights.map((h, i) => (
+      {/* Body — only rendered once we have a summary */}
+      {summary && (
+        <div className="bg-white px-6 py-5 space-y-5">
+          {/* Highlights with icons */}
+          {summary.highlights.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {summary.highlights.map((h, i) => {
+                const { Icon, bg, color } = HIGHLIGHT_ICONS[i % HIGHLIGHT_ICONS.length];
+                return (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-white border border-amber-200 px-3 py-1 text-xs font-medium text-gray-dark shadow-sm"
+                    className="inline-flex items-center gap-2 rounded-xl bg-gray-50 border border-gray-200/80 px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm"
                   >
-                    <span className="text-sm leading-none">{h.emoji}</span>
+                    <span className={cn("w-5 h-5 rounded-full flex items-center justify-center shrink-0", bg)}>
+                      <Icon size={11} className={color} />
+                    </span>
                     {h.text}
                   </span>
-                ))}
-              </div>
-            )}
+                );
+              })}
+            </div>
+          )}
 
-            {/* Sections */}
-            {summary.sections.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 pt-1">
-                {summary.sections.map((s, i) => (
-                  <div key={i}>
-                    <p className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1.5">
+          {summary.highlights.length > 0 && summary.sections.length > 0 && (
+            <hr className="border-gray-100" />
+          )}
+
+          {/* Sections with colored left borders */}
+          {summary.sections.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {summary.sections.map((s, i) => {
+                const col = SECTION_COLORS[i % SECTION_COLORS.length];
+                return (
+                  <div key={i} className={cn("pl-3 border-l-2", col.border)}>
+                    <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-2", col.heading)}>
                       {s.heading}
                     </p>
-                    <ul className="space-y-1">
+                    <ul className="space-y-1.5">
                       {s.points.map((p, j) => (
-                        <li key={j} className="flex gap-2 text-sm text-gray-dark leading-snug">
-                          <span className="mt-1.5 w-1 h-1 rounded-full bg-amber-400 shrink-0" />
+                        <li key={j} className="flex gap-2 text-sm text-gray-600 leading-snug">
+                          <span className={cn("mt-2 w-1 h-1 rounded-full shrink-0", col.dot)} />
                           <span>{p}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              })}
+            </div>
+          )}
 
-            <p className="text-[11px] text-amber-700/60 pt-1">
-              Resumo gerado automaticamente a partir do PDF · baixe o arquivo para ver o conteúdo completo.
-            </p>
-          </div>
-        ) : null}
-      </div>
+          <p className="text-[10px] text-gray-400">
+            Resumo gerado automaticamente a partir do PDF · baixe o arquivo para ver o conteúdo completo.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
