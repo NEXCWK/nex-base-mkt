@@ -31,6 +31,7 @@ function ParceirosTab() {
   const [editTarget, setEditTarget] = useState<Partner | null>(null);
   const [form, setForm] = useState(EMPTY_PARTNER);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Partner | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -49,18 +50,21 @@ function ParceirosTab() {
   function openCreate() {
     setEditTarget(null);
     setForm(EMPTY_PARTNER);
+    setSaveError("");
     setModalOpen(true);
   }
 
   function openEdit(p: Partner) {
     setEditTarget(p);
     setForm({ name: p.name, category: p.category, bio: p.bio, website: p.website, photoUrl: p.photoUrl });
+    setSaveError("");
     setModalOpen(true);
   }
 
   async function handleSave() {
     if (!form.name.trim()) return;
     setSaving(true);
+    setSaveError("");
     try {
       if (editTarget) {
         const res = await fetch("/api/parceiros", {
@@ -68,22 +72,22 @@ function ParceirosTab() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: editTarget.id, ...form }),
         });
-        if (res.ok) {
-          const updated: Partner = await res.json();
-          setPartners((p) => p.map((x) => (x.id === updated.id ? updated : x)));
-        }
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Erro ao salvar");
+        const updated: Partner = await res.json();
+        setPartners((p) => p.map((x) => (x.id === updated.id ? updated : x)));
       } else {
         const res = await fetch("/api/parceiros", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
-        if (res.ok) {
-          const created: Partner = await res.json();
-          setPartners((p) => [...p, created]);
-        }
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Erro ao criar parceiro");
+        const created: Partner = await res.json();
+        setPartners((p) => [...p, created]);
       }
       setModalOpen(false);
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "Erro desconhecido");
     } finally {
       setSaving(false);
     }
@@ -173,6 +177,7 @@ function ParceirosTab() {
           </div>
           <Textarea label="Mini bio" value={form.bio} onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))} placeholder="Breve descrição do parceiro e dos serviços oferecidos…" rows={3} />
           <Input label="Site / Link" value={form.website} onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))} placeholder="https://…" />
+          {saveError && <p className="text-xs text-red-500">{saveError}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="sm" onClick={() => setModalOpen(false)} disabled={saving}>Cancelar</Button>
             <Button variant="default" size="sm" onClick={handleSave} disabled={saving || !form.name.trim()}>

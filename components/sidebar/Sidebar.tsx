@@ -14,15 +14,20 @@ import {
   Briefcase,
   Palette,
   Megaphone,
+  Store,
   Building,
+  Building2,
+  CalendarDays,
   FileText,
   BarChart2,
   GraduationCap,
+  Award,
   LogOut,
   ChevronRight,
   Menu,
   X,
   FolderOpen,
+  LayoutGrid,
 } from "lucide-react";
 
 const navGroups: {
@@ -38,6 +43,9 @@ const navGroups: {
     items: [
       { href: "/sobre-o-nex", label: "Sobre o Nex", icon: Star },
       { href: "/nosso-time", label: "Nosso Time", icon: Users },
+      { href: "/marcas-parceiras", label: "Marcas Parceiras", icon: Building2 },
+      { href: "/nossos-eventos", label: "Nossos Eventos", icon: CalendarDays },
+      { href: "/repositorio", label: "Repositório", icon: LayoutGrid },
     ],
   },
   {
@@ -48,6 +56,7 @@ const navGroups: {
       { href: "/comercial", label: "Vendas", icon: Briefcase },
       { href: "/comunicacao-design", label: "Comunicação e Design", icon: Palette },
       { href: "/marketing", label: "Marketing", icon: Megaphone },
+      { href: "/marketplaces", label: "Marketplaces", icon: Store },
     ],
   },
   {
@@ -63,6 +72,7 @@ const navGroups: {
     items: [
       { href: "/reports", label: "Reports Comerciais", icon: BarChart2 },
       { href: "/treinamento", label: "Treinamento", icon: GraduationCap },
+      { href: "/certificacoes", label: "Certificações", icon: Award },
     ],
   },
 ];

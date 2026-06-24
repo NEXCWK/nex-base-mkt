@@ -24,25 +24,27 @@ export function Modal({
 }: ModalProps) {
   const dialogRef = React.useRef<HTMLDivElement>(null);
 
-  // Move o foco para o primeiro campo interativo apenas na abertura do modal
+  // Auto-focus and scroll-lock: only when modal opens, never on re-renders
   React.useEffect(() => {
     if (!open) return;
+    document.body.style.overflow = "hidden";
     const el = dialogRef.current;
     const target = el?.querySelector<HTMLElement>("input, textarea, select, button:not([aria-label='Fechar'])");
     (target ?? el)?.focus();
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
-  // Fecha com Escape e bloqueia scroll da página enquanto aberto
+  // Escape key: separate effect so onClose reference changes don't retrigger focus
   React.useEffect(() => {
-    if (!open) return;
+    if (!open || !closable || !onClose) return;
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && closable && onClose) onClose();
+      if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", handleKey);
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", handleKey);
-      document.body.style.overflow = "";
     };
   }, [open, closable, onClose]);
 
