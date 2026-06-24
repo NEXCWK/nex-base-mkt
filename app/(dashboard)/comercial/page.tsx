@@ -602,22 +602,37 @@ function ConteudosVendasTab() {
 
 // ─── Video Grupos Tab ─────────────────────────────────────────────────────────
 
+interface VideoLink {
+  id: string;
+  url: string;
+  descricao?: string;
+  addedAt: string;
+}
+
 interface VideoGrupo {
   id: string;
   name: string;
   createdAt: string;
+  links?: VideoLink[];
 }
 
 function VideoGruposTab({ tipo, descricao }: { tipo: string; descricao: string }) {
   const [grupos, setGrupos] = useState<VideoGrupo[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  // Create group
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [saving, setSaving] = useState(false);
   const [createError, setCreateError] = useState("");
+  // Delete group
   const [deleteTarget, setDeleteTarget] = useState<VideoGrupo | null>(null);
   const [deleting, setDeleting] = useState(false);
+  // Add Instagram link
+  const [addLinkGrupoId, setAddLinkGrupoId] = useState<string | null>(null);
+  const [linkForm, setLinkForm] = useState({ url: "", descricao: "" });
+  const [savingLink, setSavingLink] = useState(false);
+  const [linkError, setLinkError] = useState("");
 
   const fetchGrupos = useCallback(async () => {
     setLoading(true);
@@ -677,6 +692,50 @@ function VideoGruposTab({ tipo, descricao }: { tipo: string; descricao: string }
     }
   }
 
+  async function handleAddLink(grupoId: string) {
+    if (!linkForm.url.trim()) { setLinkError("URL obrigatória."); return; }
+    setSavingLink(true);
+    setLinkError("");
+    try {
+      const grupo = grupos.find((g) => g.id === grupoId)!;
+      const newLink: VideoLink = {
+        id: crypto.randomUUID(),
+        url: linkForm.url.trim(),
+        descricao: linkForm.descricao.trim() || undefined,
+        addedAt: new Date().toISOString(),
+      };
+      const updatedLinks = [...(grupo.links ?? []), newLink];
+      const res = await fetch("/api/video-grupos", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: tipo, id: grupoId, links: updatedLinks }),
+      });
+      if (!res.ok) throw new Error("Erro ao salvar link");
+      const updated: VideoGrupo = await res.json();
+      setGrupos((prev) => prev.map((g) => (g.id === updated.id ? updated : g)));
+      setAddLinkGrupoId(null);
+      setLinkForm({ url: "", descricao: "" });
+    } catch (e) {
+      setLinkError(e instanceof Error ? e.message : "Erro ao salvar");
+    } finally {
+      setSavingLink(false);
+    }
+  }
+
+  async function handleRemoveLink(grupoId: string, linkId: string) {
+    const grupo = grupos.find((g) => g.id === grupoId);
+    if (!grupo) return;
+    const updatedLinks = (grupo.links ?? []).filter((l) => l.id !== linkId);
+    const res = await fetch("/api/video-grupos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: tipo, id: grupoId, links: updatedLinks }),
+    });
+    if (!res.ok) return;
+    const updated: VideoGrupo = await res.json();
+    setGrupos((prev) => prev.map((g) => (g.id === updated.id ? updated : g)));
+  }
+
   return (
     <>
       <div className="flex items-center justify-between mb-5">
@@ -708,8 +767,10 @@ function VideoGruposTab({ tipo, descricao }: { tipo: string; descricao: string }
           {grupos.map((grupo) => {
             const isOpen = expandedId === grupo.id;
             const section = `Vendas/Videos-${tipo}/${grupo.name.replace(/[^a-zA-ZÀ-ú0-9 _-]/g, "").trim().replace(/\s+/g, "-")}`;
+            const links = grupo.links ?? [];
             return (
               <div key={grupo.id} className="border border-gray-medium rounded-xl overflow-hidden bg-white">
+                {/* Group header */}
                 <div className="flex items-center px-4 py-3 gap-2">
                   <button
                     onClick={() => setExpandedId(isOpen ? null : grupo.id)}
@@ -717,10 +778,15 @@ function VideoGruposTab({ tipo, descricao }: { tipo: string; descricao: string }
                   >
                     <Video size={15} className="text-muted-foreground shrink-0" />
                     <span className="text-sm font-semibold text-foreground truncate">{grupo.name}</span>
+                    {links.length > 0 && (
+                      <span className="ml-1 px-1.5 py-0.5 rounded-full bg-gray-light text-[10px] font-medium text-muted-foreground shrink-0">
+                        {links.length} link{links.length > 1 ? "s" : ""}
+                      </span>
+                    )}
                     <ChevronDown
                       size={14}
                       className={cn(
-                        "text-muted-foreground shrink-0 ml-1 transition-transform duration-200",
+                        "text-muted-foreground shrink-0 ml-auto transition-transform duration-200",
                         isOpen && "rotate-180"
                       )}
                     />
@@ -733,9 +799,115 @@ function VideoGruposTab({ tipo, descricao }: { tipo: string; descricao: string }
                     <Trash2 size={13} />
                   </button>
                 </div>
+
+                {/* Expanded content */}
                 {isOpen && (
-                  <div className="border-t border-gray-medium px-4 py-4 bg-gray-light/30">
-                    <FileUpload section={section} />
+                  <div className="border-t border-gray-medium divide-y divide-gray-100">
+                    {/* Upload de arquivo */}
+                    <div className="px-4 py-4 bg-gray-light/30">
+                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                        Arquivo de vídeo
+                      </p>
+                      <FileUpload section={section} />
+                    </div>
+
+                    {/* Links do Instagram */}
+                    <div className="px-4 py-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          Link do Instagram
+                        </p>
+                        {addLinkGrupoId !== grupo.id && (
+                          <button
+                            onClick={() => {
+                              setAddLinkGrupoId(grupo.id);
+                              setLinkForm({ url: "", descricao: "" });
+                              setLinkError("");
+                            }}
+                            className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-black transition-colors"
+                          >
+                            <Plus size={12} />
+                            Adicionar link
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Link list */}
+                      {links.length > 0 && (
+                        <div className="flex flex-col gap-2 mb-3">
+                          {links.map((link) => (
+                            <div
+                              key={link.id}
+                              className="flex items-start gap-2.5 rounded-lg border border-gray-medium bg-white p-2.5"
+                            >
+                              <Link2 size={14} className="text-muted-foreground shrink-0 mt-0.5" />
+                              <div className="flex-1 min-w-0">
+                                <a
+                                  href={link.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-black hover:underline underline-offset-2 break-all"
+                                >
+                                  {link.url}
+                                  <ExternalLink size={10} className="shrink-0" />
+                                </a>
+                                {link.descricao && (
+                                  <p className="text-xs text-muted-foreground mt-0.5">{link.descricao}</p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => handleRemoveLink(grupo.id, link.id)}
+                                className="p-1 rounded text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+                                title="Remover link"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Inline add link form */}
+                      {addLinkGrupoId === grupo.id ? (
+                        <div className="rounded-lg border border-gray-medium bg-gray-light/50 p-3 flex flex-col gap-2">
+                          <Input
+                            label=""
+                            type="url"
+                            value={linkForm.url}
+                            onChange={(e) => setLinkForm((f) => ({ ...f, url: e.target.value }))}
+                            placeholder="https://www.instagram.com/p/…"
+                            autoFocus
+                          />
+                          <Input
+                            label=""
+                            value={linkForm.descricao}
+                            onChange={(e) => setLinkForm((f) => ({ ...f, descricao: e.target.value }))}
+                            placeholder="Descrição (opcional)"
+                          />
+                          {linkError && <p className="text-xs text-red-500">{linkError}</p>}
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setAddLinkGrupoId(null)}
+                              disabled={savingLink}
+                            >
+                              Cancelar
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleAddLink(grupo.id)}
+                              disabled={savingLink || !linkForm.url.trim()}
+                            >
+                              {savingLink && <Loader2 size={12} className="animate-spin" />}
+                              Adicionar
+                            </Button>
+                          </div>
+                        </div>
+                      ) : links.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">Nenhum link adicionado ainda.</p>
+                      ) : null}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1044,7 +1216,7 @@ function ProcessosFechamento() {
 
 type MainTab = "arquivos" | "scripts" | "descontos" | "processos" | "conteudo-vendas";
 type ScriptSubTab = "scripts" | "fups" | "keypoints" | "sla";
-type ConteudoSubTab = "posts" | "carro-chefe" | "sazonais" | "depoimentos";
+type ConteudoSubTab = "posts" | "carro-chefe" | "sazonais" | "depoimentos" | "influs";
 
 function TabButton({
   label,
@@ -1201,6 +1373,11 @@ export default function ComercialPage() {
               active={conteudoSubTab === "depoimentos"}
               onClick={() => setConteudoSubTab("depoimentos")}
             />
+            <SubTabButton
+              label="Vídeos Influs"
+              active={conteudoSubTab === "influs"}
+              onClick={() => setConteudoSubTab("influs")}
+            />
           </div>
           {conteudoSubTab === "posts" && <ConteudosVendasTab />}
           {conteudoSubTab === "carro-chefe" && (
@@ -1219,6 +1396,12 @@ export default function ComercialPage() {
             <VideoGruposTab
               tipo="depoimentos"
               descricao="Vídeos de depoimentos de clientes. Crie um conjunto por produto ou perfil de cliente."
+            />
+          )}
+          {conteudoSubTab === "influs" && (
+            <VideoGruposTab
+              tipo="influs"
+              descricao="Vídeos de influenciadores parceiros. Crie um conjunto por influenciador ou campanha."
             />
           )}
         </div>

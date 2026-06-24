@@ -3,10 +3,18 @@ import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 
+interface VideoLink {
+  id: string;
+  url: string;
+  descricao?: string;
+  addedAt: string;
+}
+
 interface VideoGrupo {
   id: string;
   name: string;
   createdAt: string;
+  links?: VideoLink[];
 }
 
 function safeType(type: string) {
@@ -44,10 +52,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "type and name required" }, { status: 400 });
   }
   const grupos = await readGrupos(type);
-  const novo: VideoGrupo = { id: randomUUID(), name: name.trim(), createdAt: new Date().toISOString() };
+  const novo: VideoGrupo = { id: randomUUID(), name: name.trim(), createdAt: new Date().toISOString(), links: [] };
   grupos.push(novo);
   await writeGrupos(type, grupos);
   return NextResponse.json(novo, { status: 201 });
+}
+
+export async function PUT(req: NextRequest) {
+  const body = await req.json();
+  const { type, id, links } = body as { type?: string; id?: string; links?: VideoLink[] };
+  if (!type || !id) {
+    return NextResponse.json({ error: "type and id required" }, { status: 400 });
+  }
+  const grupos = await readGrupos(type);
+  const idx = grupos.findIndex((g) => g.id === id);
+  if (idx === -1) return NextResponse.json({ error: "not found" }, { status: 404 });
+  grupos[idx] = { ...grupos[idx], links: links ?? [] };
+  await writeGrupos(type, grupos);
+  return NextResponse.json(grupos[idx]);
 }
 
 export async function DELETE(req: NextRequest) {
