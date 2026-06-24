@@ -8,7 +8,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/modal";
 import { MarkdownContent } from "@/components/ui/markdown-content";
 import { cn } from "@/lib/utils";
-import { Plus, Pencil, Trash2, Loader2, FileText, Search } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Loader2,
+  FileText,
+  Search,
+  Video,
+  ChevronDown,
+  ExternalLink,
+  Link2,
+  ShoppingBag,
+} from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface Doc {
   id: string;
@@ -354,6 +368,436 @@ function DocumentsPanel({ apiPath, newLabel, emptyTitle, emptyDesc }: DocumentsP
   );
 }
 
+// ─── Conteúdos para Vendas (Posts & Links) ───────────────────────────────────
+
+interface ConteudoVendas {
+  id: string;
+  url: string;
+  descricao: string;
+  produto: string;
+  createdAt: string;
+}
+
+const EMPTY_CV = { url: "", descricao: "", produto: "" };
+
+function ConteudosVendasTab() {
+  const [items, setItems] = useState<ConteudoVendas[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState(EMPTY_CV);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<ConteudoVendas | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const fetchItems = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/conteudos-vendas");
+      if (res.ok) setItems(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchItems(); }, [fetchItems]);
+
+  function openCreate() {
+    setForm(EMPTY_CV);
+    setFormError("");
+    setModalOpen(true);
+  }
+
+  async function handleSave() {
+    if (!form.url.trim()) { setFormError("URL obrigatória."); return; }
+    setSaving(true);
+    setFormError("");
+    try {
+      const res = await fetch("/api/conteudos-vendas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error("Erro ao salvar");
+      const saved: ConteudoVendas = await res.json();
+      setItems((prev) => [...prev, saved]);
+      setModalOpen(false);
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Erro ao salvar");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await fetch("/api/conteudos-vendas", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: deleteTarget.id }),
+      });
+      setItems((prev) => prev.filter((i) => i.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  function formatCreatedAt(iso: string) {
+    try {
+      return format(parseISO(iso), "dd/MM/yyyy", { locale: ptBR });
+    } catch {
+      return "";
+    }
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Links de posts, conteúdos e materiais úteis para o processo de vendas.
+        </p>
+        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 ml-4">
+          <Plus size={14} />
+          Adicionar
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center gap-2 text-muted-foreground text-sm py-10">
+          <Loader2 size={14} className="animate-spin" /> Carregando…
+        </div>
+      ) : items.length === 0 ? (
+        <div className="border border-dashed border-gray-medium rounded-xl py-14 text-center">
+          <ShoppingBag size={26} className="mx-auto mb-3 text-muted-foreground opacity-30" />
+          <p className="text-sm font-medium text-muted-foreground mb-1">Nenhum conteúdo ainda.</p>
+          <p className="text-xs text-muted-foreground mb-5">
+            Adicione links de posts e materiais para usar nas vendas.
+          </p>
+          <Button variant="outline" size="sm" onClick={openCreate}>
+            <Plus size={13} />
+            Adicionar
+          </Button>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="border border-gray-medium rounded-xl p-4 bg-white flex items-start gap-4"
+            >
+              <div className="mt-0.5 rounded-lg bg-gray-light p-2 shrink-0">
+                <Link2 size={16} className="text-gray-dark" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm font-medium text-black hover:underline underline-offset-2 break-all"
+                    >
+                      {item.url}
+                      <ExternalLink size={11} className="shrink-0" />
+                    </a>
+                    {item.descricao && (
+                      <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+                        {item.descricao}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 mt-2">
+                      {item.produto && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-light text-xs font-medium text-gray-dark">
+                          {item.produto}
+                        </span>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {formatCreatedAt(item.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setDeleteTarget(item)}
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors shrink-0 mt-0.5"
+                    title="Remover"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Create modal */}
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title="Adicionar conteúdo"
+        description="Adicione um link de post ou material útil para o processo de vendas."
+      >
+        <div className="flex flex-col gap-4">
+          <Input
+            label="URL do post *"
+            type="url"
+            value={form.url}
+            onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+            placeholder="https://www.instagram.com/p/..."
+          />
+          <Textarea
+            label="Descrição"
+            value={form.descricao}
+            onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))}
+            placeholder="Descreva o conteúdo ou como usar nas vendas…"
+            rows={3}
+          />
+          <Input
+            label="Produto relacionado"
+            value={form.produto}
+            onChange={(e) => setForm((f) => ({ ...f, produto: e.target.value }))}
+            placeholder="Ex: Sala Privativa, Coworking…"
+          />
+          {formError && <p className="text-xs text-red-500">{formError}</p>}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setModalOpen(false)} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={saving || !form.url.trim()}>
+              {saving && <Loader2 size={13} className="animate-spin" />}
+              Adicionar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete confirmation */}
+      <Modal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Remover conteúdo"
+        description="Tem certeza que deseja remover este link?"
+      >
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" size="sm" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+            Cancelar
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="bg-red-500 text-white hover:bg-red-600"
+          >
+            {deleting && <Loader2 size={13} className="animate-spin" />}
+            Remover
+          </Button>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
+// ─── Video Grupos Tab ─────────────────────────────────────────────────────────
+
+interface VideoGrupo {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+function VideoGruposTab({ tipo, descricao }: { tipo: string; descricao: string }) {
+  const [grupos, setGrupos] = useState<VideoGrupo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<VideoGrupo | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const fetchGrupos = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/video-grupos?type=${tipo}`);
+      if (res.ok) setGrupos(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }, [tipo]);
+
+  useEffect(() => { fetchGrupos(); }, [fetchGrupos]);
+
+  function openCreate() {
+    setNewName("");
+    setCreateError("");
+    setCreateOpen(true);
+  }
+
+  async function handleCreate() {
+    if (!newName.trim()) { setCreateError("Nome obrigatório."); return; }
+    setSaving(true);
+    setCreateError("");
+    try {
+      const res = await fetch("/api/video-grupos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: tipo, name: newName.trim() }),
+      });
+      if (!res.ok) throw new Error("Erro ao criar");
+      const created: VideoGrupo = await res.json();
+      setGrupos((prev) => [...prev, created]);
+      setExpandedId(created.id);
+      setNewName("");
+      setCreateOpen(false);
+    } catch (e) {
+      setCreateError(e instanceof Error ? e.message : "Erro ao criar");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await fetch("/api/video-grupos", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: tipo, id: deleteTarget.id }),
+      });
+      setGrupos((prev) => prev.filter((g) => g.id !== deleteTarget.id));
+      if (expandedId === deleteTarget.id) setExpandedId(null);
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-sm text-muted-foreground leading-relaxed">{descricao}</p>
+        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 ml-4">
+          <Plus size={14} />
+          Novo Conjunto
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center gap-2 text-muted-foreground text-sm py-10">
+          <Loader2 size={14} className="animate-spin" /> Carregando…
+        </div>
+      ) : grupos.length === 0 ? (
+        <div className="border border-dashed border-gray-medium rounded-xl py-14 text-center">
+          <Video size={26} className="mx-auto mb-3 text-muted-foreground opacity-30" />
+          <p className="text-sm font-medium text-muted-foreground mb-1">Nenhum conjunto ainda.</p>
+          <p className="text-xs text-muted-foreground mb-5">
+            Crie um conjunto para organizar os vídeos por produto.
+          </p>
+          <Button variant="outline" size="sm" onClick={openCreate}>
+            <Plus size={13} />
+            Novo Conjunto
+          </Button>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {grupos.map((grupo) => {
+            const isOpen = expandedId === grupo.id;
+            const section = `Vendas/Videos-${tipo}/${grupo.name.replace(/[^a-zA-ZÀ-ú0-9 _-]/g, "").trim().replace(/\s+/g, "-")}`;
+            return (
+              <div key={grupo.id} className="border border-gray-medium rounded-xl overflow-hidden bg-white">
+                <div className="flex items-center px-4 py-3 gap-2">
+                  <button
+                    onClick={() => setExpandedId(isOpen ? null : grupo.id)}
+                    className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
+                  >
+                    <Video size={15} className="text-muted-foreground shrink-0" />
+                    <span className="text-sm font-semibold text-foreground truncate">{grupo.name}</span>
+                    <ChevronDown
+                      size={14}
+                      className={cn(
+                        "text-muted-foreground shrink-0 ml-1 transition-transform duration-200",
+                        isOpen && "rotate-180"
+                      )}
+                    />
+                  </button>
+                  <button
+                    onClick={() => setDeleteTarget(grupo)}
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+                    title="Excluir conjunto"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+                {isOpen && (
+                  <div className="border-t border-gray-medium px-4 py-4 bg-gray-light/30">
+                    <FileUpload section={section} />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Create modal */}
+      <Modal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="Novo Conjunto"
+        description="Dê um nome ao conjunto de vídeos. Ex: Sala Privativa, Escritório Virtual…"
+      >
+        <div className="flex flex-col gap-4">
+          <Input
+            label="Nome do conjunto *"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Ex: Sala Privativa, Coworking, Auditório…"
+            autoFocus
+          />
+          {createError && <p className="text-xs text-red-500">{createError}</p>}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setCreateOpen(false)} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button size="sm" onClick={handleCreate} disabled={saving || !newName.trim()}>
+              {saving && <Loader2 size={13} className="animate-spin" />}
+              Criar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete modal */}
+      <Modal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Excluir conjunto"
+        description={`Tem certeza que deseja excluir o conjunto "${deleteTarget?.name}"? Os vídeos enviados também serão removidos.`}
+      >
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" size="sm" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+            Cancelar
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="bg-red-500 text-white hover:bg-red-600"
+          >
+            {deleting && <Loader2 size={13} className="animate-spin" />}
+            Excluir
+          </Button>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
 // ─── Process content types ────────────────────────────────────────────────────
 
 type ContentBlock =
@@ -598,8 +1042,9 @@ function ProcessosFechamento() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-type MainTab = "arquivos" | "scripts" | "descontos" | "processos";
+type MainTab = "arquivos" | "scripts" | "descontos" | "processos" | "conteudo-vendas";
 type ScriptSubTab = "scripts" | "fups" | "keypoints" | "sla";
+type ConteudoSubTab = "posts" | "carro-chefe" | "sazonais" | "depoimentos";
 
 function TabButton({
   label,
@@ -614,7 +1059,7 @@ function TabButton({
     <button
       onClick={onClick}
       className={cn(
-        "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
+        "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
         active
           ? "border-black text-black"
           : "border-transparent text-muted-foreground hover:text-black"
@@ -652,6 +1097,7 @@ function SubTabButton({
 export default function ComercialPage() {
   const [mainTab, setMainTab] = useState<MainTab>("scripts");
   const [scriptSubTab, setScriptSubTab] = useState<ScriptSubTab>("scripts");
+  const [conteudoSubTab, setConteudoSubTab] = useState<ConteudoSubTab>("posts");
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto">
@@ -663,11 +1109,12 @@ export default function ComercialPage() {
       </div>
 
       {/* Main tabs */}
-      <div className="flex gap-1 border-b border-gray-medium mb-8">
+      <div className="flex gap-1 border-b border-gray-medium mb-8 overflow-x-auto scrollbar-hide">
         <TabButton label="Arquivos" active={mainTab === "arquivos"} onClick={() => setMainTab("arquivos")} />
         <TabButton label="Scripts Comerciais" active={mainTab === "scripts"} onClick={() => setMainTab("scripts")} />
         <TabButton label="Diretrizes de Desconto" active={mainTab === "descontos"} onClick={() => setMainTab("descontos")} />
-        <TabButton label="Processos de Fechamento e Cancelamento" active={mainTab === "processos"} onClick={() => setMainTab("processos")} />
+        <TabButton label="Processos de Fechamento" active={mainTab === "processos"} onClick={() => setMainTab("processos")} />
+        <TabButton label="Conteúdo para Vendas" active={mainTab === "conteudo-vendas"} onClick={() => setMainTab("conteudo-vendas")} />
       </div>
 
       {mainTab === "arquivos" && <FileUpload section="Comercial" />}
@@ -730,6 +1177,52 @@ export default function ComercialPage() {
       )}
 
       {mainTab === "processos" && <ProcessosFechamento />}
+
+      {mainTab === "conteudo-vendas" && (
+        <div>
+          <div className="flex gap-1 mb-6 flex-wrap">
+            <SubTabButton
+              label="Posts & Links"
+              active={conteudoSubTab === "posts"}
+              onClick={() => setConteudoSubTab("posts")}
+            />
+            <SubTabButton
+              label="Vídeos Carro-Chefe"
+              active={conteudoSubTab === "carro-chefe"}
+              onClick={() => setConteudoSubTab("carro-chefe")}
+            />
+            <SubTabButton
+              label="Vídeos Sazonais"
+              active={conteudoSubTab === "sazonais"}
+              onClick={() => setConteudoSubTab("sazonais")}
+            />
+            <SubTabButton
+              label="Vídeos Depoimentos"
+              active={conteudoSubTab === "depoimentos"}
+              onClick={() => setConteudoSubTab("depoimentos")}
+            />
+          </div>
+          {conteudoSubTab === "posts" && <ConteudosVendasTab />}
+          {conteudoSubTab === "carro-chefe" && (
+            <VideoGruposTab
+              tipo="carro-chefe"
+              descricao="Principais vídeos de cada produto. Crie um conjunto por produto e envie os vídeos específicos."
+            />
+          )}
+          {conteudoSubTab === "sazonais" && (
+            <VideoGruposTab
+              tipo="sazonais"
+              descricao="Vídeos sazonais com condições especiais ou diferenciais. Crie um conjunto por campanha ou produto."
+            />
+          )}
+          {conteudoSubTab === "depoimentos" && (
+            <VideoGruposTab
+              tipo="depoimentos"
+              descricao="Vídeos de depoimentos de clientes. Crie um conjunto por produto ou perfil de cliente."
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
