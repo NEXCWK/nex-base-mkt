@@ -20,6 +20,7 @@ import {
   ExternalLink,
   Link2,
   ShoppingBag,
+  MonitorPlay,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -365,6 +366,254 @@ function DocumentsPanel({ apiPath, newLabel, emptyTitle, emptyDesc }: DocumentsP
         </div>
       </Modal>
     </div>
+  );
+}
+
+// ─── Apresentações Comerciais ────────────────────────────────────────────────
+
+interface ApresentacaoComercial {
+  id: string;
+  produto: string;
+  url: string;
+  descricao?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const EMPTY_AP = { produto: "", url: "", descricao: "" };
+
+function ApresentacoesComerciais() {
+  const [items, setItems] = useState<ApresentacaoComercial[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<ApresentacaoComercial | null>(null);
+  const [form, setForm] = useState(EMPTY_AP);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<ApresentacaoComercial | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const fetchItems = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/apresentacoes-comerciais");
+      if (res.ok) setItems(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchItems(); }, [fetchItems]);
+
+  function openCreate() {
+    setEditTarget(null);
+    setForm(EMPTY_AP);
+    setFormError("");
+    setModalOpen(true);
+  }
+
+  function openEdit(item: ApresentacaoComercial) {
+    setEditTarget(item);
+    setForm({ produto: item.produto, url: item.url, descricao: item.descricao ?? "" });
+    setFormError("");
+    setModalOpen(true);
+  }
+
+  async function handleSave() {
+    if (!form.produto.trim()) { setFormError("Nome do produto obrigatório."); return; }
+    if (!form.url.trim()) { setFormError("URL obrigatória."); return; }
+    setSaving(true);
+    setFormError("");
+    try {
+      if (editTarget) {
+        const res = await fetch("/api/apresentacoes-comerciais", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editTarget.id, ...form }),
+        });
+        if (!res.ok) throw new Error("Erro ao salvar");
+        const updated: ApresentacaoComercial = await res.json();
+        setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+      } else {
+        const res = await fetch("/api/apresentacoes-comerciais", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        if (!res.ok) throw new Error("Erro ao criar");
+        const created: ApresentacaoComercial = await res.json();
+        setItems((prev) => [...prev, created]);
+      }
+      setModalOpen(false);
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Erro ao salvar");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await fetch("/api/apresentacoes-comerciais", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: deleteTarget.id }),
+      });
+      setItems((prev) => prev.filter((i) => i.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Links atualizados das apresentações comerciais por produto. Mantenha sempre o link mais recente.
+        </p>
+        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 ml-4">
+          <Plus size={14} />
+          Adicionar
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center gap-2 text-muted-foreground text-sm py-10">
+          <Loader2 size={14} className="animate-spin" /> Carregando…
+        </div>
+      ) : items.length === 0 ? (
+        <div className="border border-dashed border-gray-medium rounded-xl py-14 text-center">
+          <MonitorPlay size={28} className="mx-auto mb-3 text-muted-foreground opacity-30" />
+          <p className="text-sm font-medium text-muted-foreground mb-1">Nenhuma apresentação ainda.</p>
+          <p className="text-xs text-muted-foreground mb-5">
+            Adicione o link da apresentação de cada produto.
+          </p>
+          <Button variant="outline" size="sm" onClick={openCreate}>
+            <Plus size={13} />
+            Adicionar
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="border border-gray-medium rounded-xl bg-white overflow-hidden flex flex-col"
+            >
+              {/* Card header */}
+              <div className="bg-black px-4 py-3.5 flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <MonitorPlay size={15} className="text-[#FFD400] shrink-0" />
+                  <h3 className="text-sm font-bold text-white truncate">{item.produto}</h3>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => openEdit(item)}
+                    className="p-1 rounded text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                    title="Editar"
+                  >
+                    <Pencil size={12} />
+                  </button>
+                  <button
+                    onClick={() => setDeleteTarget(item)}
+                    className="p-1 rounded text-white/50 hover:text-red-400 hover:bg-white/10 transition-colors"
+                    title="Excluir"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+              {/* Card body */}
+              <div className="px-4 py-3 flex-1 flex flex-col gap-2">
+                {item.descricao && (
+                  <p className="text-xs text-muted-foreground leading-relaxed">{item.descricao}</p>
+                )}
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 mt-auto pt-1 text-xs font-medium text-black hover:underline underline-offset-2 break-all"
+                >
+                  <ExternalLink size={11} className="shrink-0" />
+                  Abrir apresentação
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Create / Edit modal */}
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editTarget ? "Editar apresentação" : "Nova apresentação"}
+        description={
+          editTarget
+            ? "Atualize o produto e o link da apresentação."
+            : "Adicione o nome do produto e o link mais atual da apresentação."
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <Input
+            label="Produto *"
+            value={form.produto}
+            onChange={(e) => setForm((f) => ({ ...f, produto: e.target.value }))}
+            placeholder="Ex: Sala Privativa, Coworking, Auditório…"
+            autoFocus
+          />
+          <Input
+            label="Link da apresentação *"
+            type="url"
+            value={form.url}
+            onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+            placeholder="https://www.canva.com/…"
+          />
+          <Input
+            label="Observação (opcional)"
+            value={form.descricao}
+            onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))}
+            placeholder="Ex: versão atualizada em junho/2025"
+          />
+          {formError && <p className="text-xs text-red-500">{formError}</p>}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setModalOpen(false)} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={saving || !form.produto.trim() || !form.url.trim()}>
+              {saving && <Loader2 size={13} className="animate-spin" />}
+              {editTarget ? "Salvar alterações" : "Adicionar"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete confirmation */}
+      <Modal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Excluir apresentação"
+        description={`Remover a apresentação de "${deleteTarget?.produto}"?`}
+      >
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" size="sm" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+            Cancelar
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="bg-red-500 text-white hover:bg-red-600"
+          >
+            {deleting && <Loader2 size={13} className="animate-spin" />}
+            Excluir
+          </Button>
+        </div>
+      </Modal>
+    </>
   );
 }
 
@@ -1415,7 +1664,7 @@ function ProcessosFechamento() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-type MainTab = "arquivos" | "scripts" | "descontos" | "processos" | "conteudo-vendas";
+type MainTab = "arquivos" | "scripts" | "descontos" | "processos" | "apresentacoes" | "conteudo-vendas";
 type ScriptSubTab = "scripts" | "fups" | "keypoints" | "sla";
 type ConteudoSubTab = "posts" | "carro-chefe" | "sazonais" | "depoimentos" | "influs";
 
@@ -1487,6 +1736,7 @@ export default function ComercialPage() {
         <TabButton label="Scripts Comerciais" active={mainTab === "scripts"} onClick={() => setMainTab("scripts")} />
         <TabButton label="Diretrizes de Desconto" active={mainTab === "descontos"} onClick={() => setMainTab("descontos")} />
         <TabButton label="Processos de Fechamento" active={mainTab === "processos"} onClick={() => setMainTab("processos")} />
+        <TabButton label="Apresentações Comerciais" active={mainTab === "apresentacoes"} onClick={() => setMainTab("apresentacoes")} />
         <TabButton label="Conteúdo para Vendas" active={mainTab === "conteudo-vendas"} onClick={() => setMainTab("conteudo-vendas")} />
       </div>
 
@@ -1550,6 +1800,8 @@ export default function ComercialPage() {
       )}
 
       {mainTab === "processos" && <ProcessosFechamento />}
+
+      {mainTab === "apresentacoes" && <ApresentacoesComerciais />}
 
       {mainTab === "conteudo-vendas" && (
         <div>
