@@ -974,7 +974,11 @@ function VideoGruposTab({ tipo, descricao }: { tipo: string; descricao: string }
 
 type ContentBlock =
   | { type: "text"; content: string }
+  | { type: "subtitle"; text: string }
   | { type: "bullets"; items: string[] }
+  | { type: "nested-bullets"; items: { text: string; sub?: string[] }[] }
+  | { type: "ordered"; items: string[] }
+  | { type: "sub-steps"; items: { number: number; title: string; text?: string; bullets?: string[] }[] }
   | { type: "table"; headers: [string, string]; rows: { condition: string; rule: string }[] }
   | { type: "note"; text: string };
 
@@ -987,53 +991,176 @@ interface ProcessStep {
 const ESCRITORIO_STEPS: ProcessStep[] = [
   {
     number: 1,
-    title: "Envio de proposta",
-    content: [{ type: "text", content: "Encaminhar a proposta formal por e-mail ao cliente." }],
+    title: "Geração do Lead",
+    content: [
+      { type: "text", content: "O lead é gerado a partir dos movimentos de marketing do Nex, incluindo, entre outros:" },
+      { type: "bullets", items: [
+        "Anúncios pagos",
+        "Eventos",
+        "Indicações",
+        "Boca a boca",
+        "Outros canais orgânicos e proprietários",
+      ]},
+    ],
   },
   {
     number: 2,
-    title: "Aceite da proposta",
-    content: [{ type: "text", content: "Com o aceite registrado por e-mail, iniciar o processo de assinatura do contrato." }],
+    title: "Conversão e Qualificação Inicial (MQL → SAL)",
+    content: [
+      { type: "text", content: "Durante a jornada nos canais digitais, o lead realiza a conversão por meio de um formulário de conversão." },
+      { type: "text", content: "A partir dessa conversão:" },
+      { type: "nested-bullets", items: [
+        { text: "O cliente recebe automaticamente:", sub: [
+          "Informações completas sobre o produto de interesse",
+          "Apresentação detalhada da solução",
+          "CTAs claros para contato direto com o time comercial",
+        ]},
+        { text: "Nesse momento, o lead deixa de ser MQL e passa a ser classificado como SAL (Sales Accepted Lead)" },
+        { text: "Simultaneamente:", sub: [
+          "O CRM notifica o time comercial sobre a geração do SAL",
+          "O time comercial tem a responsabilidade de realizar contato ativo em até 60 minutos",
+        ]},
+      ]},
+      { type: "subtitle", text: "Objetivo dessa etapa:" },
+      { type: "text", content: "Entender a necessidade inicial do cliente e iniciar o processo de qualificação comercial." },
+    ],
   },
   {
     number: 3,
-    title: "Contrato",
-    content: [{
-      type: "bullets",
-      items: [
-        "Coletar a documentação do cliente",
-        "Elaborar e revisar a minuta contratual",
-        "Enviar a minuta para aprovação interna antes de qualquer envio ao cliente",
-        "Após aprovação interna, encaminhar a minuta por e-mail ao cliente",
-        "Com o aval do cliente, enviar via D4Sign para assinatura",
-      ],
-    }],
+    title: "Qualificação Comercial (SAL → SQL)",
+    content: [
+      { type: "text", content: "A qualificação é conduzida pelo time de SDR, por meio de:" },
+      { type: "bullets", items: [
+        "Atendimento estruturado",
+        "Perguntas-chave previamente definidas",
+        "Análise de aderência ao produto Escritório Privativo",
+      ]},
+      { type: "text", content: "Quando identificado que o lead possui fit comercial:" },
+      { type: "nested-bullets", items: [
+        { text: "O SAL é convertido em SQL (Sales Qualified Lead)" },
+        { text: "O SQL é então:", sub: [
+          "Sinalizado corretamente no CRM",
+          "Direcionado ao time da unidade responsável",
+          "Agendada a visita presencial ao espaço",
+        ]},
+      ]},
+      { type: "note", text: "O time de SDR não é responsável pela criação da proposta formal. A proposta formal (PDF) deve ser elaborada pelo profissional que conduzirá a negociação direta com o cliente, após entendimento aprofundado de: Preço, Urgência, Condições comerciais e Expectativas específicas." },
+    ],
   },
   {
     number: 4,
-    title: "Faturamento",
+    title: "Proposta Comercial",
     content: [
-      { type: "text", content: "Com o contrato assinado, emitir a primeira fatura observando a seguinte regra:" },
-      {
-        type: "table",
-        headers: ["Situação", "Regra"],
-        rows: [{ condition: "Início no dia 21 ou depois", rule: "Emitir pro-rata do mês corrente + mês seguinte" }],
-      },
-      { type: "note", text: "O cliente deve ser informado sobre esse critério antes da assinatura do contrato." },
+      { type: "text", content: "A proposta comercial deve seguir o seguinte padrão:" },
+      { type: "nested-bullets", items: [
+        { text: "Envio ao cliente por e-mail" },
+        { text: "Diretores sempre em cópia oculta (BCC) para acompanhamento:", sub: [
+          "felipe@nex.work",
+          "lenise@nex.work",
+          "andre@nex.work",
+        ]},
+      ]},
+      { type: "subtitle", text: "Objetivo:" },
+      { type: "text", content: "Garantir visibilidade, governança e acompanhamento do pipeline estratégico." },
     ],
   },
   {
     number: 5,
-    title: "Onboarding",
+    title: "Aceite da Proposta e Cadastro no Conexa",
     content: [
-      { type: "text", content: "Com o pagamento confirmado, enviar e-mail de onboarding conectando o cliente à equipe de Operação." },
-      { type: "text", content: "A partir deste ponto, a condução do processo passa a ser responsabilidade da Unidade." },
+      { type: "text", content: "Após o OK formal do cliente na proposta, inicia-se o processo operacional:" },
+      { type: "subtitle", text: "Cadastro no Conexa" },
+      { type: "bullets", items: [
+        "Criação do perfil do cliente",
+        "Cadastramento do plano contratado",
+      ]},
+      { type: "subtitle", text: "Documentação Necessária" },
+      { type: "subtitle", text: "Pessoa Física" },
+      { type: "bullets", items: [
+        "Documento de identificação com foto",
+        "Comprovante de residência",
+      ]},
+      { type: "subtitle", text: "Pessoa Jurídica" },
+      { type: "bullets", items: [
+        "Contrato social",
+        "Cartão CNPJ",
+        "Documento de identificação com foto do representante legal ou procurador",
+        "Comprovante de residência do representante legal ou procurador",
+      ]},
+      { type: "text", content: "Todos os documentos devem ser anexados corretamente ao perfil do cliente no sistema." },
     ],
   },
   {
     number: 6,
-    title: "Arquivamento",
-    content: [{ type: "text", content: "Anexar as minutas assinadas ao dashboard do cliente." }],
+    title: "Produção e Assinatura do Contrato",
+    content: [
+      { type: "subtitle", text: "Escritório Privativo — Fluxo obrigatório:" },
+      { type: "sub-steps", items: [
+        { number: 1, title: "Conferência interna", bullets: [
+          "Envio do contrato por e-mail para: felipe@nex.work e lenise@nex.work",
+          "Objetivo: conferência e validação interna",
+        ]},
+        { number: 2, title: "Conferência do cliente", bullets: [
+          "Após validação interna, envio do contrato ao cliente",
+          "Diretores permanecem em cópia oculta",
+        ]},
+        { number: 3, title: "Assinatura", bullets: [
+          "Com o OK do cliente via e-mail: Envio do contrato via D4Sign",
+          "Assinantes: Cliente → Parte Contratante · André Pegorer → Parte Contratada",
+        ]},
+        { number: 4, title: "Faturamento", text: "Com o contrato assinado: Envio da fatura para pagamento" },
+      ]},
+    ],
+  },
+  {
+    number: 7,
+    title: "Onboarding do Cliente",
+    content: [
+      { type: "text", content: "Após a confirmação do pagamento:" },
+      { type: "nested-bullets", items: [
+        { text: "Envio de e-mail formal de onboarding, contendo:", sub: [
+          "Boas-vindas",
+          "Resumo da contratação",
+          "Oficialização da data de início",
+          "Solicitação de informações adicionais relevantes",
+        ]},
+      ]},
+      { type: "text", content: "Somente após essa etapa o cliente está oficialmente onboarded." },
+    ],
+  },
+  {
+    number: 8,
+    title: "Regras Gerais",
+    content: [
+      { type: "note", text: "Contratos fechados entre 01 e 19 do mês: pagamento de pro-rata, e o próximo mês conta como o segundo mês da vigência. Contratos fechados no dia 20 ou depois: paga a pro-rata e o próximo mês é o primeiro mês da vigência completa (pro-rata + vigência do contrato). Ex: cliente assinou dia 25 um contrato de 6 meses → na prática fica 6 meses + 5 dias. A pro-rata não precisa mais ser enviada junto à primeira mensalidade, os pagamentos podem ocorrer separadamente." },
+      { type: "subtitle", text: "Ordem obrigatória do processo:" },
+      { type: "ordered", items: [
+        "OK formal na proposta",
+        "Assinatura do contrato",
+        "Envio da fatura",
+        "Pagamento confirmado",
+        "E-mail de onboarding",
+      ]},
+      { type: "text", content: "Apenas após todas essas etapas o cliente está apto a iniciar." },
+    ],
+  },
+  {
+    number: 9,
+    title: "Boas Práticas Operacionais",
+    content: [
+      { type: "nested-bullets", items: [
+        { text: "O CRM deve estar sempre atualizado, refletindo:", sub: [
+          "Status real das negociações",
+          "Etapas corretas do funil",
+          "Negociações ativas e encerradas",
+        ]},
+        { text: "Semanalmente, envio de e-mail consolidado com:", sub: [
+          "Principais negociações em andamento",
+          "Fechamentos realizados",
+        ]},
+      ]},
+      { type: "text", content: "Esse material será analisado em TT para acompanhamento estratégico e tomada de decisão." },
+    ],
   },
 ];
 
@@ -1146,6 +1273,80 @@ function StepView({ step, isLast }: { step: ProcessStep; isLast: boolean }) {
               return (
                 <div key={i} className="border-l-[3px] border-[#FFD400] bg-gray-50 px-4 py-3 rounded-r-md">
                   <p className="text-xs text-gray-700 leading-relaxed">{block.text}</p>
+                </div>
+              );
+            }
+            if (block.type === "subtitle") {
+              return (
+                <p key={i} className="text-[11px] font-bold text-gray-900 uppercase tracking-wide mt-1">
+                  {block.text}
+                </p>
+              );
+            }
+            if (block.type === "nested-bullets") {
+              return (
+                <ul key={i} className="space-y-2">
+                  {block.items.map((item, j) => (
+                    <li key={j}>
+                      <div className="flex gap-2.5 text-sm text-gray-700 leading-snug">
+                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#FFD400] shrink-0" />
+                        <span>{item.text}</span>
+                      </div>
+                      {item.sub && (
+                        <ul className="ml-4 mt-1.5 space-y-1.5">
+                          {item.sub.map((sub, k) => (
+                            <li key={k} className="flex gap-2 text-sm text-gray-600 leading-snug">
+                              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+                              <span>{sub}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              );
+            }
+            if (block.type === "ordered") {
+              return (
+                <ol key={i} className="space-y-2">
+                  {block.items.map((item, j) => (
+                    <li key={j} className="flex gap-2.5 text-sm text-gray-700 leading-snug">
+                      <span className="w-5 h-5 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-900 shrink-0 mt-0.5">
+                        {j + 1}
+                      </span>
+                      <span className="pt-0.5">{item}</span>
+                    </li>
+                  ))}
+                </ol>
+              );
+            }
+            if (block.type === "sub-steps") {
+              return (
+                <div key={i} className="space-y-4 mt-1">
+                  {block.items.map((subStep) => (
+                    <div key={subStep.number} className="flex gap-3">
+                      <div className="w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center text-[9px] font-bold text-white shrink-0 mt-0.5">
+                        {subStep.number}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 mb-1.5">{subStep.title}</p>
+                        {subStep.text && (
+                          <p className="text-sm text-gray-700 leading-relaxed">{subStep.text}</p>
+                        )}
+                        {subStep.bullets && (
+                          <ul className="space-y-1.5">
+                            {subStep.bullets.map((b, bi) => (
+                              <li key={bi} className="flex gap-2 text-sm text-gray-700 leading-snug">
+                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+                                <span>{b}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               );
             }
