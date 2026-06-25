@@ -44,6 +44,8 @@ export async function POST(req: NextRequest) {
     compliments: body.compliments || "",
     complaints: body.complaints || "",
     notes: body.notes || "",
+    leadTemp: body.leadTemp || "",
+    qualidadeRetornos: body.qualidadeRetornos || "",
   };
 
   reports.push(newReport);

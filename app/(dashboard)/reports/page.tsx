@@ -34,6 +34,8 @@ interface Report {
   compliments: string;
   complaints: string;
   notes: string;
+  leadTemp?: string;
+  qualidadeRetornos?: string;
 }
 
 const FEELINGS = [
@@ -44,6 +46,12 @@ const FEELINGS = [
   { value: "pessimo", label: "Péssimo", color: "#ef4444" },
 ];
 
+const LEAD_TEMPS = [
+  { value: "frio",   label: "Frio",   color: "#60a5fa" },
+  { value: "morno",  label: "Morno",  color: "#f59e0b" },
+  { value: "quente", label: "Quente", color: "#ef4444" },
+];
+
 const EMPTY_FORM = {
   feeling: "bom",
   leads: "",
@@ -52,10 +60,16 @@ const EMPTY_FORM = {
   notes: "",
   compliments: "",
   complaints: "",
+  leadTemp: "morno",
+  qualidadeRetornos: "",
 };
 
 function feelingInfo(val: string) {
   return FEELINGS.find((f) => f.value === val) ?? FEELINGS[1];
+}
+
+function leadTempInfo(val?: string) {
+  return LEAD_TEMPS.find((t) => t.value === val) ?? null;
 }
 
 function dateLabel(dateStr: string) {
@@ -63,6 +77,100 @@ function dateLabel(dateStr: string) {
   if (isToday(d)) return "Hoje";
   if (isYesterday(d)) return "Ontem";
   return format(d, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+}
+
+// ─── Word Cloud helpers ───────────────────────────────────────────────────────
+
+const PT_STOPWORDS = new Set([
+  "a","o","as","os","e","de","da","do","das","dos","em","na","no","nas","nos",
+  "um","uma","uns","umas","que","se","com","para","por","mas","ou","eu","tu",
+  "ele","ela","nos","eles","elas","me","te","lhe","meu","minha","meus","minhas",
+  "seu","sua","seus","suas","esse","essa","esses","essas","este","esta","estes",
+  "estas","aquele","aquela","aqueles","aquelas","muito","mais","bem","ja","ainda",
+  "nao","sim","tambem","ao","aos","foi","ser","ter","estar","tem","sao","ha",
+  "como","quando","onde","porque","entao","isso","isto","aqui","ali","la","toda",
+  "todo","todas","todos","cada","entre","ate","apos","antes","agora","hoje","dia",
+  "dias","pelo","pela","pelos","pelas","num","numa","pois","tudo","nada","mesmo",
+  "algum","alguns","alguma","algumas","outro","outra","outros","outras","apenas",
+  "sobre","sem","assim","logo","portanto","desse","dessa","deste","desta","neste",
+  "nessa","naquele","naquela","qual","quais","quem","cujo","cuja","era","sera",
+  "seria","seja","foram","eram","serao","teve","tinha","tera","teria","tenha",
+  "sendo","estado","fez","fazia","fara","faria","faca","feito","fazendo","vai",
+  "ia","ira","iria","pode","podia","podera","poderia","possa","ver","via","vera",
+  "veja","visto","vendo","ca","ta","tras","alem","diante","frente","tras","depois",
+  "nao","ja","la","ca","ate","bem","foi","tem","nao","isso","esse","essa","esta",
+  "este","aqui","ali","la","mais","menos","muito","pouco","tao","tanto","quanto",
+  "coisa","coisas","vez","vezes","ano","anos","mes","meses","hora","horas",
+  "parte","partes","lugar","lugares","gente","pessoa","pessoas","tipo","tipos",
+  "aqui","todo","forma","formas","caso","casos","ponto","pontos","quer","quero",
+]);
+
+function buildWordCloud(reports: Report[]): { word: string; count: number }[] {
+  const counts: Record<string, number> = {};
+  const display: Record<string, string> = {};
+
+  for (const r of reports) {
+    const texts = [r.notes, r.compliments, r.complaints, r.qualidadeRetornos];
+    for (const text of texts) {
+      if (!text) continue;
+      const tokens = text.split(/[\s,.\-!?;:()\[\]{}'"""«»\/\\]+/);
+      for (const token of tokens) {
+        if (!token) continue;
+        const lower = token.toLowerCase();
+        const normalized = lower
+          .normalize("NFD")
+          .replace(/[̀-ͯ]/g, "")
+          .replace(/[^a-z]/g, "");
+        if (normalized.length < 4 || PT_STOPWORDS.has(normalized)) continue;
+        counts[normalized] = (counts[normalized] || 0) + 1;
+        if (!display[normalized]) display[normalized] = lower;
+      }
+    }
+  }
+
+  return Object.entries(counts)
+    .map(([key, count]) => ({ word: display[key] || key, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 50);
+}
+
+// ─── Word Cloud Component ──────────────────────────────────────────────────────
+
+function WordCloud({ reports }: { reports: Report[] }) {
+  const words = buildWordCloud(reports);
+
+  if (words.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground py-8 text-center">
+        Sem texto suficiente para gerar a nuvem de palavras.
+      </p>
+    );
+  }
+
+  const maxCount = words[0].count;
+  const minCount = words[words.length - 1].count;
+  const range = Math.max(maxCount - minCount, 1);
+
+  return (
+    <div className="flex flex-wrap gap-x-3 gap-y-2 justify-center items-center py-4 px-2">
+      {words.map(({ word, count }) => {
+        const ratio = (count - minCount) / range;
+        const size = Math.round(11 + ratio * 22);
+        const opacity = 0.3 + ratio * 0.7;
+        const weight = ratio > 0.6 ? 700 : ratio > 0.3 ? 600 : 400;
+        return (
+          <span
+            key={word}
+            title={`${count} ${count === 1 ? "ocorrência" : "ocorrências"}`}
+            style={{ fontSize: size, opacity, fontWeight: weight, lineHeight: 1.3 }}
+            className="text-black cursor-default select-none transition-opacity hover:opacity-100"
+          >
+            {word}
+          </span>
+        );
+      })}
+    </div>
+  );
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -353,6 +461,7 @@ export default function ReportsPage() {
 
 function ReportCard({ report: r, compact = false }: { report: Report; compact?: boolean }) {
   const fi = feelingInfo(r.feeling);
+  const lt = leadTempInfo(r.leadTemp);
   return (
     <div className={cn("bg-white border border-gray-medium rounded-xl p-5", compact && "rounded-none border-0 bg-transparent p-0")}>
       {/* Author + feeling */}
@@ -372,6 +481,14 @@ function ReportCard({ report: r, compact = false }: { report: Report; compact?: 
             >
               {fi.label}
             </span>
+            {lt && (
+              <span
+                className="text-xs font-medium px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: lt.color + "20", color: lt.color }}
+              >
+                Leads: {lt.label}
+              </span>
+            )}
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
             {format(parseISO(r.timestamp), "HH:mm")}
@@ -422,6 +539,15 @@ function ReportCard({ report: r, compact = false }: { report: Report; compact?: 
             </div>
           </div>
         )}
+        {r.qualidadeRetornos && (
+          <div className="flex gap-3">
+            <FileText size={13} className="mt-0.5 text-blue-400 shrink-0" />
+            <div>
+              <p className="text-xs font-600 text-muted-foreground uppercase tracking-wide mb-1">Qualidade dos retornos</p>
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{r.qualidadeRetornos}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -462,6 +588,28 @@ function DailyReportForm({
               )}
             >
               {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Lead temperature */}
+      <div>
+        <p className="text-sm font-medium text-gray-dark mb-2">Temperatura Média dos Leads Gerados</p>
+        <div className="flex gap-2">
+          {LEAD_TEMPS.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => setForm((prev) => ({ ...prev, leadTemp: t.value }))}
+              className={cn(
+                "flex-1 py-2 rounded-md border text-xs font-600 transition-all",
+                form.leadTemp === t.value
+                  ? "border-black bg-black text-white"
+                  : "border-gray-medium text-muted-foreground hover:border-gray-dark hover:text-foreground"
+              )}
+            >
+              {t.label}
             </button>
           ))}
         </div>
@@ -518,6 +666,15 @@ function DailyReportForm({
         rows={3}
         value={form.complaints}
         onChange={set("complaints")}
+      />
+
+      {/* Qualidade dos retornos */}
+      <Textarea
+        label="Qualidade dos Retornos"
+        placeholder="Descreva a qualidade dos retornos dos leads — engajamento, objeções, interesse demonstrado..."
+        rows={3}
+        value={form.qualidadeRetornos}
+        onChange={set("qualidadeRetornos")}
       />
 
       {error && <p className="text-xs text-red-500">{error}</p>}
@@ -616,6 +773,13 @@ function KpiDashboard({ reports, loading }: { reports: Report[]; loading: boolea
     label: f.label,
     color: f.color,
     value: inRange.filter((r) => r.feeling === f.value).length,
+  }));
+
+  // Temperatura dos leads
+  const leadTempCounts = LEAD_TEMPS.map((t) => ({
+    label: t.label,
+    color: t.color,
+    value: inRange.filter((r) => r.leadTemp === t.value).length,
   }));
 
   // Ranking por membro
@@ -726,6 +890,38 @@ function KpiDashboard({ reports, loading }: { reports: Report[]; loading: boolea
             })}
           </div>
         </div>
+      </div>
+
+      {/* Temperatura dos leads */}
+      <div className="bg-white border border-gray-medium rounded-xl p-5">
+        <p className="text-sm font-600 mb-4">Temperatura dos Leads</p>
+        <div className="flex gap-4">
+          {leadTempCounts.map((t) => {
+            const total = leadTempCounts.reduce((s, x) => s + x.value, 0) || 1;
+            const pct = Math.round((t.value / total) * 100);
+            return (
+              <div key={t.label} className="flex-1 flex flex-col items-center gap-2">
+                <div
+                  className="w-full rounded-lg py-4 flex flex-col items-center justify-center gap-1"
+                  style={{ backgroundColor: t.color + "18", border: `1px solid ${t.color}40` }}
+                >
+                  <span className="text-2xl font-700" style={{ color: t.color }}>{t.value}</span>
+                  <span className="text-xs font-600" style={{ color: t.color }}>{t.label}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">{pct}%</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Nuvem de Palavras */}
+      <div className="bg-white border border-gray-medium rounded-xl p-5">
+        <p className="text-sm font-600 mb-1">Nuvem de Palavras</p>
+        <p className="text-xs text-muted-foreground mb-4">
+          Palavras mais frequentes nos textos dos reports do período
+        </p>
+        <WordCloud reports={inRange} />
       </div>
     </div>
   );
