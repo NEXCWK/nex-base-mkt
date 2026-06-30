@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 interface CertItem {
   id: string;
   name: string;
-  url: string;
+  url?: string;
   addedAt: string;
 }
 
@@ -83,7 +83,7 @@ export default function CertificacoesPage() {
 
   function openEditItem(groupId: string, item: CertItem) {
     setItemName(item.name);
-    setItemUrl(item.url);
+    setItemUrl(item.url ?? "");
     setFormError("");
     setItemModal({ open: true, groupId, editing: item });
   }
@@ -116,7 +116,7 @@ export default function CertificacoesPage() {
 
   async function saveItem(e: React.FormEvent) {
     e.preventDefault();
-    if (!itemName.trim() || !itemUrl.trim()) { setFormError("Nome e URL obrigatórios."); return; }
+    if (!itemName.trim()) { setFormError("Nome obrigatório."); return; }
     setSaving(true);
     setFormError("");
     try {
@@ -265,18 +265,22 @@ export default function CertificacoesPage() {
                               <LinkIcon size={13} className="shrink-0 text-muted-foreground" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-foreground truncate">{item.name}</p>
-                                <p className="text-xs text-muted-foreground truncate">{item.url}</p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {item.url || "Sem link ainda — clique no lápis para adicionar"}
+                                </p>
                               </div>
                               <div className="flex items-center gap-0.5 shrink-0">
-                                <a
-                                  href={item.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors"
-                                  title="Abrir link"
-                                >
-                                  <ExternalLink size={13} />
-                                </a>
+                                {item.url && (
+                                  <a
+                                    href={item.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors"
+                                    title="Abrir link"
+                                  >
+                                    <ExternalLink size={13} />
+                                  </a>
+                                )}
                                 <button
                                   onClick={() => openEditItem(group.id, item)}
                                   className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors"
@@ -358,8 +362,8 @@ export default function CertificacoesPage() {
             autoFocus
           />
           <Input
-            label="URL / Link *"
-            placeholder="https://..."
+            label="URL / Link"
+            placeholder="https://... (opcional)"
             value={itemUrl}
             onChange={(e) => setItemUrl(e.target.value)}
           />

@@ -10,7 +10,7 @@ const DATA_FILE = path.join(process.cwd(), "data", "certificacoes.json");
 interface CertItem {
   id: string;
   name: string;
-  url: string;
+  url?: string;
   addedAt: string;
 }
 
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (body.type === "item") {
-    if (!body.name?.trim() || !body.url?.trim() || !body.groupId) {
+    if (!body.name?.trim() || !body.groupId) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
     const group = groups.find((g) => g.id === body.groupId);
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     const item: CertItem = {
       id: randomUUID(),
       name: body.name.trim(),
-      url: body.url.trim(),
+      url: body.url?.trim() || "",
       addedAt: new Date().toISOString(),
     };
     group.items.push(item);
@@ -102,7 +102,7 @@ export async function PUT(req: NextRequest) {
     const item = group.items.find((i) => i.id === body.id);
     if (!item) return NextResponse.json({ error: "Item not found" }, { status: 404 });
     item.name = body.name?.trim() || item.name;
-    item.url = body.url?.trim() || item.url;
+    if (body.url !== undefined) item.url = body.url.trim();
     writeGroups(groups);
     return NextResponse.json(item);
   }
