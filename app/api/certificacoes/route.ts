@@ -6,6 +6,10 @@ import path from "path";
 import { randomUUID } from "crypto";
 
 const DATA_FILE = path.join(process.cwd(), "data", "certificacoes.json");
+// Marker so the default certificates are seeded only once per environment.
+// Storing it next to the data (on the persistent volume in production) means a
+// later deletion of these certs is respected and they are never re-added.
+const SEED_MARKER = path.join(process.cwd(), "data", ".certificacoes-seed-v1");
 
 interface CertItem {
   id: string;
@@ -21,6 +25,17 @@ interface CertGroup {
   createdAt: string;
 }
 
+const DEFAULT_CERT_NAMES = [
+  "Conexa",
+  "Claude",
+  "Google Analytics 4",
+  "Google Search Console",
+  "Google Ads",
+  "semRUSH",
+  "Hotjar",
+  "Reportei",
+];
+
 function readGroups(): CertGroup[] {
   if (!fs.existsSync(DATA_FILE)) return [];
   try {
@@ -35,10 +50,38 @@ function writeGroups(groups: CertGroup[]) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(groups, null, 2));
 }
 
+// Seeds the default "Ferramentas & Plataformas" group exactly once per
+// environment. Runs against the live (volume-backed) data, so it works in
+// production where the committed JSON file is shadowed by the volume.
+function ensureSeed(groups: CertGroup[]): CertGroup[] {
+  try {
+    if (fs.existsSync(SEED_MARKER)) return groups;
+    const now = new Date().toISOString();
+    const seededGroup: CertGroup = {
+      id: randomUUID(),
+      name: "Ferramentas & Plataformas",
+      createdAt: now,
+      items: DEFAULT_CERT_NAMES.map((name) => ({
+        id: randomUUID(),
+        name,
+        url: "",
+        addedAt: now,
+      })),
+    };
+    const merged = [...groups, seededGroup];
+    writeGroups(merged);
+    fs.mkdirSync(path.dirname(SEED_MARKER), { recursive: true });
+    fs.writeFileSync(SEED_MARKER, now);
+    return merged;
+  } catch {
+    return groups;
+  }
+}
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return NextResponse.json(readGroups());
+  return NextResponse.json(ensureSeed(readGroups()));
 }
 
 export async function POST(req: NextRequest) {
