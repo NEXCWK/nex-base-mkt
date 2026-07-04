@@ -22,6 +22,7 @@ import {
   BarChart2,
   GraduationCap,
   Award,
+  CalendarClock,
   LogOut,
   ChevronRight,
   Menu,
@@ -73,6 +74,7 @@ const navGroups: {
       { href: "/reports", label: "Reports Comerciais", icon: BarChart2 },
       { href: "/treinamento", label: "Treinamento", icon: GraduationCap },
       { href: "/certificacoes", label: "Certificações", icon: Award },
+      { href: "/reunioes-da-area", label: "Reuniões da Área", icon: CalendarClock },
     ],
   },
 ];
