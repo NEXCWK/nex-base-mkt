@@ -75,6 +75,7 @@ const navGroups: {
       { href: "/treinamento", label: "Treinamento", icon: GraduationCap },
       { href: "/certificacoes", label: "Certificações", icon: Award },
       { href: "/reunioes-da-area", label: "Reuniões da Área", icon: CalendarClock },
+      { href: "/cadencia-campanhas", label: "Cadência de Campanhas", icon: Megaphone },
     ],
   },
 ];
