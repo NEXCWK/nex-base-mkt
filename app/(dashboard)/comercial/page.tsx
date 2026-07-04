@@ -21,6 +21,10 @@ import {
   Link2,
   ShoppingBag,
   MonitorPlay,
+  Percent,
+  ShieldCheck,
+  Info,
+  Ban,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -362,6 +366,635 @@ function DocumentsPanel({ apiPath, newLabel, emptyTitle, emptyDesc }: DocumentsP
           >
             {deleting && <Loader2 size={13} className="animate-spin" />}
             Excluir
+          </Button>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// ─── Diretrizes de Desconto ──────────────────────────────────────────────────
+
+interface DiscountRule {
+  condition: string;
+  value: string;
+}
+
+interface ProductPolicy {
+  id: string;
+  product: string;
+  profile: string;
+  rules: DiscountRule[];
+  freeText: string;
+  note: string;
+  noDiscount: boolean;
+}
+
+interface PermanentCampaign {
+  id: string;
+  name: string;
+  objective: string;
+  incentive: string;
+  kickoff: string;
+  responsible: string;
+  channel: string;
+}
+
+interface Pillar {
+  title: string;
+  description: string;
+}
+
+interface DiscountGuidelines {
+  overview: string;
+  pillars: Pillar[];
+  premises: string[];
+  premisesNote: string;
+  productPolicies: ProductPolicy[];
+  campaigns: PermanentCampaign[];
+  updatedAt: string;
+}
+
+const EMPTY_OVERVIEW_FORM = { overview: "", pillarsText: "", premisesText: "", premisesNote: "" };
+const EMPTY_PRODUCT_FORM = { product: "", profile: "", rulesText: "", freeText: "", note: "", noDiscount: false };
+const EMPTY_CAMPAIGN_FORM = { name: "", objective: "", incentive: "", kickoff: "", responsible: "", channel: "" };
+
+function parsePipeList<T>(text: string, map: (a: string, b: string) => T): T[] {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [first, ...rest] = line.split("|");
+      return map(first.trim(), rest.join("|").trim());
+    });
+}
+
+function DiretrizesDesconto() {
+  const [data, setData] = useState<DiscountGuidelines | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const [overviewModal, setOverviewModal] = useState(false);
+  const [overviewForm, setOverviewForm] = useState(EMPTY_OVERVIEW_FORM);
+
+  const [productModal, setProductModal] = useState<{ open: boolean; editing?: ProductPolicy }>({ open: false });
+  const [productForm, setProductForm] = useState(EMPTY_PRODUCT_FORM);
+  const [productDeleteTarget, setProductDeleteTarget] = useState<ProductPolicy | null>(null);
+
+  const [campaignModal, setCampaignModal] = useState<{ open: boolean; editing?: PermanentCampaign }>({ open: false });
+  const [campaignForm, setCampaignForm] = useState(EMPTY_CAMPAIGN_FORM);
+  const [campaignDeleteTarget, setCampaignDeleteTarget] = useState<PermanentCampaign | null>(null);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/diretrizes-desconto");
+      if (res.ok) setData(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  async function persist(partial: Partial<DiscountGuidelines>) {
+    const res = await fetch("/api/diretrizes-desconto", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(partial),
+    });
+    if (!res.ok) throw new Error("Erro ao salvar");
+    const updated: DiscountGuidelines = await res.json();
+    setData(updated);
+    return updated;
+  }
+
+  function openOverviewEdit() {
+    if (!data) return;
+    setOverviewForm({
+      overview: data.overview,
+      pillarsText: data.pillars.map((p) => `${p.title} | ${p.description}`).join("\n"),
+      premisesText: data.premises.join("\n"),
+      premisesNote: data.premisesNote,
+    });
+    setFormError("");
+    setOverviewModal(true);
+  }
+
+  async function saveOverview(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setFormError("");
+    try {
+      const pillars = parsePipeList<Pillar>(overviewForm.pillarsText, (title, description) => ({ title, description }));
+      const premises = overviewForm.premisesText.split("\n").map((s) => s.trim()).filter(Boolean);
+      await persist({ overview: overviewForm.overview.trim(), pillars, premises, premisesNote: overviewForm.premisesNote.trim() });
+      setOverviewModal(false);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Erro");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function openProductCreate() {
+    setProductForm(EMPTY_PRODUCT_FORM);
+    setFormError("");
+    setProductModal({ open: true });
+  }
+
+  function openProductEdit(p: ProductPolicy) {
+    setProductForm({
+      product: p.product,
+      profile: p.profile,
+      rulesText: p.rules.map((r) => `${r.condition} | ${r.value}`).join("\n"),
+      freeText: p.freeText,
+      note: p.note,
+      noDiscount: p.noDiscount,
+    });
+    setFormError("");
+    setProductModal({ open: true, editing: p });
+  }
+
+  async function saveProduct(e: React.FormEvent) {
+    e.preventDefault();
+    if (!productForm.product.trim()) { setFormError("Nome do produto obrigatório."); return; }
+    if (!data) return;
+    setSaving(true);
+    setFormError("");
+    try {
+      const rules = parsePipeList<DiscountRule>(productForm.rulesText, (condition, value) => ({ condition, value }));
+      const isEdit = !!productModal.editing;
+      const newPolicy: ProductPolicy = {
+        id: isEdit ? productModal.editing!.id : Date.now().toString(),
+        product: productForm.product.trim(),
+        profile: productForm.profile.trim(),
+        rules,
+        freeText: productForm.freeText.trim(),
+        note: productForm.note.trim(),
+        noDiscount: productForm.noDiscount,
+      };
+      const productPolicies = isEdit
+        ? data.productPolicies.map((p) => (p.id === newPolicy.id ? newPolicy : p))
+        : [...data.productPolicies, newPolicy];
+      await persist({ productPolicies });
+      setProductModal({ open: false });
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Erro");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteProduct() {
+    if (!productDeleteTarget || !data) return;
+    setSaving(true);
+    try {
+      await persist({ productPolicies: data.productPolicies.filter((p) => p.id !== productDeleteTarget.id) });
+      setProductDeleteTarget(null);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function openCampaignCreate() {
+    setCampaignForm(EMPTY_CAMPAIGN_FORM);
+    setFormError("");
+    setCampaignModal({ open: true });
+  }
+
+  function openCampaignEdit(c: PermanentCampaign) {
+    setCampaignForm({
+      name: c.name,
+      objective: c.objective,
+      incentive: c.incentive,
+      kickoff: c.kickoff,
+      responsible: c.responsible,
+      channel: c.channel,
+    });
+    setFormError("");
+    setCampaignModal({ open: true, editing: c });
+  }
+
+  async function saveCampaign(e: React.FormEvent) {
+    e.preventDefault();
+    if (!campaignForm.name.trim()) { setFormError("Nome da campanha obrigatório."); return; }
+    if (!data) return;
+    setSaving(true);
+    setFormError("");
+    try {
+      const isEdit = !!campaignModal.editing;
+      const newCampaign: PermanentCampaign = {
+        id: isEdit ? campaignModal.editing!.id : Date.now().toString(),
+        name: campaignForm.name.trim(),
+        objective: campaignForm.objective.trim(),
+        incentive: campaignForm.incentive.trim(),
+        kickoff: campaignForm.kickoff.trim(),
+        responsible: campaignForm.responsible.trim(),
+        channel: campaignForm.channel.trim(),
+      };
+      const campaigns = isEdit
+        ? data.campaigns.map((c) => (c.id === newCampaign.id ? newCampaign : c))
+        : [...data.campaigns, newCampaign];
+      await persist({ campaigns });
+      setCampaignModal({ open: false });
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Erro");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteCampaign() {
+    if (!campaignDeleteTarget || !data) return;
+    setSaving(true);
+    try {
+      await persist({ campaigns: data.campaigns.filter((c) => c.id !== campaignDeleteTarget.id) });
+      setCampaignDeleteTarget(null);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading || !data) {
+    return (
+      <div className="flex items-center gap-2 text-muted-foreground text-sm py-10">
+        <Loader2 size={15} className="animate-spin" /> Carregando...
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-8">
+      {/* Visão Geral */}
+      <div className="bg-white border border-gray-medium rounded-xl p-6">
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-gray-light rounded-lg flex items-center justify-center shrink-0">
+              <Percent size={15} />
+            </div>
+            <h3 className="text-base font-700">Visão Geral</h3>
+          </div>
+          <button
+            onClick={openOverviewEdit}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors shrink-0"
+            title="Editar"
+          >
+            <Pencil size={13} />
+          </button>
+        </div>
+        <p className="text-sm leading-relaxed whitespace-pre-wrap mb-5">{data.overview}</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+          {data.pillars.map((p, i) => (
+            <div key={i} className="border border-gray-medium rounded-lg p-4 flex items-start gap-3">
+              <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center shrink-0 mt-0.5">
+                <ShieldCheck size={14} className="text-black" />
+              </div>
+              <div>
+                <p className="text-xs font-700 uppercase tracking-wide mb-1">{p.title}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{p.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-2">
+            O desconto pode ser utilizado quando
+          </p>
+          <ul className="flex flex-col gap-1.5 mb-4">
+            {data.premises.map((item, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5 shrink-0" />
+                {item}
+              </li>
+            ))}
+          </ul>
+          {data.premisesNote && (
+            <div className="flex items-start gap-2 bg-gray-light rounded-lg px-3.5 py-3">
+              <Info size={13} className="mt-0.5 text-muted-foreground shrink-0" />
+              <p className="text-xs text-muted-foreground leading-relaxed">{data.premisesNote}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Diretrizes por Produto */}
+      <div>
+        <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+          <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground">Diretrizes por Produto</p>
+          <Button variant="outline" size="sm" onClick={openProductCreate}>
+            <Plus size={13} />
+            Adicionar produto
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {data.productPolicies.map((p) => (
+            <div key={p.id} className="bg-white border border-gray-medium rounded-xl p-5 flex flex-col">
+              <div className="flex items-start justify-between gap-2 mb-1.5">
+                <h4 className="text-sm font-700">{p.product}</h4>
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <button onClick={() => openProductEdit(p)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors" title="Editar">
+                    <Pencil size={12} />
+                  </button>
+                  <button onClick={() => setProductDeleteTarget(p)} className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors" title="Remover">
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+              {p.profile && <p className="text-xs text-muted-foreground italic mb-3">{p.profile}</p>}
+
+              {p.noDiscount && (
+                <div className="flex items-center gap-2 bg-black text-white rounded-md px-3 py-2.5 text-xs font-700 uppercase tracking-wide mb-2">
+                  <Ban size={13} />
+                  Sem desconto
+                </div>
+              )}
+
+              {p.rules.length > 0 && (
+                <div className="flex flex-col divide-y divide-gray-medium border-t border-b border-gray-medium mb-2">
+                  {p.rules.map((r, i) => (
+                    <div key={i} className="flex items-center justify-between gap-3 py-2 text-xs">
+                      <span className="text-muted-foreground">{r.condition}</span>
+                      <span className="font-600 shrink-0 bg-gray-light px-2 py-0.5 rounded-md">{r.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {p.freeText && <p className="text-sm leading-relaxed">{p.freeText}</p>}
+              {p.note && <p className="text-xs text-muted-foreground italic mt-2">{p.note}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Campanhas Permanentes */}
+      <div>
+        <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+          <div>
+            <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground">Campanhas Permanentes</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Condições sempre ativas no sistema de reservas, sem necessidade de aprovação caso a caso.
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={openCampaignCreate}>
+            <Plus size={13} />
+            Adicionar campanha
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {data.campaigns.map((c) => (
+            <div key={c.id} className="bg-white border border-gray-medium rounded-xl p-5 flex flex-col">
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-4 h-0.5 bg-accent shrink-0" />
+                  <h4 className="text-sm font-700">{c.name}</h4>
+                </div>
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <button onClick={() => openCampaignEdit(c)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors" title="Editar">
+                    <Pencil size={12} />
+                  </button>
+                  <button onClick={() => setCampaignDeleteTarget(c)} className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors" title="Remover">
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2.5 mb-3">
+                <div>
+                  <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-0.5">Objetivo</p>
+                  <p className="text-sm">{c.objective}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-0.5">Incentivo</p>
+                  <p className="text-sm">{c.incentive}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-gray-medium">
+                <div>
+                  <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-0.5">Kickoff</p>
+                  <p className="text-xs">{c.kickoff}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-0.5">Responsável</p>
+                  <p className="text-xs">{c.responsible}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-0.5">Meio</p>
+                  <p className="text-xs">{c.channel}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Overview edit modal */}
+      <Modal
+        open={overviewModal}
+        onClose={() => setOverviewModal(false)}
+        title="Editar visão geral"
+        description="Texto introdutório, pilares e premissas de uso do desconto."
+        className="max-w-lg"
+      >
+        <form onSubmit={saveOverview} className="flex flex-col gap-4">
+          <Textarea
+            label="Visão geral"
+            rows={4}
+            value={overviewForm.overview}
+            onChange={(e) => setOverviewForm((f) => ({ ...f, overview: e.target.value }))}
+          />
+          <Textarea
+            label="Pilares (um por linha, no formato Título | Descrição)"
+            rows={3}
+            placeholder={"Não Depreciar | Ações promocionais nunca devem depreciar o produto."}
+            value={overviewForm.pillarsText}
+            onChange={(e) => setOverviewForm((f) => ({ ...f, pillarsText: e.target.value }))}
+          />
+          <Textarea
+            label="O desconto pode ser utilizado quando (uma premissa por linha)"
+            rows={4}
+            value={overviewForm.premisesText}
+            onChange={(e) => setOverviewForm((f) => ({ ...f, premisesText: e.target.value }))}
+          />
+          <Textarea
+            label="Observação"
+            rows={3}
+            value={overviewForm.premisesNote}
+            onChange={(e) => setOverviewForm((f) => ({ ...f, premisesNote: e.target.value }))}
+          />
+          {formError && <p className="text-xs text-red-500">{formError}</p>}
+          <div className="flex gap-2 pt-1">
+            <Button type="button" variant="outline" className="flex-1" onClick={() => setOverviewModal(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={saving} className="flex-1">
+              {saving && <Loader2 size={13} className="animate-spin" />}
+              Salvar
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Product policy modal */}
+      <Modal
+        open={productModal.open}
+        onClose={() => setProductModal({ open: false })}
+        title={productModal.editing ? "Editar diretriz de produto" : "Nova diretriz de produto"}
+        description="Defina o perfil do lead e as condições de desconto para este produto."
+        className="max-w-lg"
+      >
+        <form onSubmit={saveProduct} className="flex flex-col gap-4">
+          <Input
+            label="Produto *"
+            placeholder="Ex: Escritório Virtual"
+            value={productForm.product}
+            onChange={(e) => setProductForm((f) => ({ ...f, product: e.target.value }))}
+            autoFocus
+          />
+          <Input
+            label="Perfil do lead"
+            placeholder="Ex: Perfil do lead: empresas, uso contínuo..."
+            value={productForm.profile}
+            onChange={(e) => setProductForm((f) => ({ ...f, profile: e.target.value }))}
+          />
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-dark">
+            <input
+              type="checkbox"
+              checked={productForm.noDiscount}
+              onChange={(e) => setProductForm((f) => ({ ...f, noDiscount: e.target.checked }))}
+              className="rounded border-gray-medium"
+            />
+            Produto sem política de desconto
+          </label>
+          <Textarea
+            label="Condições (uma por linha, no formato Condição | Desconto)"
+            rows={4}
+            placeholder={"De 2 a 4 escritórios | 10% nas modalidades semestral e anual"}
+            value={productForm.rulesText}
+            onChange={(e) => setProductForm((f) => ({ ...f, rulesText: e.target.value }))}
+          />
+          <Textarea
+            label="Texto livre (usado quando não há tabela de condições)"
+            rows={3}
+            value={productForm.freeText}
+            onChange={(e) => setProductForm((f) => ({ ...f, freeText: e.target.value }))}
+          />
+          <Input
+            label="Observação"
+            value={productForm.note}
+            onChange={(e) => setProductForm((f) => ({ ...f, note: e.target.value }))}
+          />
+          {formError && <p className="text-xs text-red-500">{formError}</p>}
+          <div className="flex gap-2 pt-1">
+            <Button type="button" variant="outline" className="flex-1" onClick={() => setProductModal({ open: false })}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={saving} className="flex-1">
+              {saving && <Loader2 size={13} className="animate-spin" />}
+              {productModal.editing ? "Salvar" : "Adicionar"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Campaign modal */}
+      <Modal
+        open={campaignModal.open}
+        onClose={() => setCampaignModal({ open: false })}
+        title={campaignModal.editing ? "Editar campanha permanente" : "Nova campanha permanente"}
+        description="Condições estruturadas sempre ativas no sistema de reservas."
+        className="max-w-lg"
+      >
+        <form onSubmit={saveCampaign} className="flex flex-col gap-4">
+          <Input
+            label="Nome da campanha *"
+            placeholder="Ex: Desconto Off-Peak"
+            value={campaignForm.name}
+            onChange={(e) => setCampaignForm((f) => ({ ...f, name: e.target.value }))}
+            autoFocus
+          />
+          <Textarea
+            label="Objetivo"
+            rows={2}
+            value={campaignForm.objective}
+            onChange={(e) => setCampaignForm((f) => ({ ...f, objective: e.target.value }))}
+          />
+          <Textarea
+            label="Incentivo"
+            rows={2}
+            value={campaignForm.incentive}
+            onChange={(e) => setCampaignForm((f) => ({ ...f, incentive: e.target.value }))}
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Kickoff"
+              placeholder="Ex: 15/05/2026"
+              value={campaignForm.kickoff}
+              onChange={(e) => setCampaignForm((f) => ({ ...f, kickoff: e.target.value }))}
+            />
+            <Input
+              label="Responsável"
+              value={campaignForm.responsible}
+              onChange={(e) => setCampaignForm((f) => ({ ...f, responsible: e.target.value }))}
+            />
+          </div>
+          <Input
+            label="Meio"
+            placeholder="Ex: Aplicado no sistema de reservas."
+            value={campaignForm.channel}
+            onChange={(e) => setCampaignForm((f) => ({ ...f, channel: e.target.value }))}
+          />
+          {formError && <p className="text-xs text-red-500">{formError}</p>}
+          <div className="flex gap-2 pt-1">
+            <Button type="button" variant="outline" className="flex-1" onClick={() => setCampaignModal({ open: false })}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={saving} className="flex-1">
+              {saving && <Loader2 size={13} className="animate-spin" />}
+              {campaignModal.editing ? "Salvar" : "Adicionar"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete product confirm */}
+      <Modal
+        open={!!productDeleteTarget}
+        onClose={() => setProductDeleteTarget(null)}
+        title="Remover diretriz de produto"
+        description={`Remover a diretriz de "${productDeleteTarget?.product}"? Esta ação não pode ser desfeita.`}
+      >
+        <div className="flex gap-2 pt-2">
+          <Button variant="outline" className="flex-1" onClick={() => setProductDeleteTarget(null)}>
+            Cancelar
+          </Button>
+          <Button onClick={deleteProduct} disabled={saving} className="flex-1 bg-red-500 text-white hover:bg-red-600">
+            {saving && <Loader2 size={13} className="animate-spin" />}
+            Remover
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Delete campaign confirm */}
+      <Modal
+        open={!!campaignDeleteTarget}
+        onClose={() => setCampaignDeleteTarget(null)}
+        title="Remover campanha"
+        description={`Remover a campanha "${campaignDeleteTarget?.name}"? Esta ação não pode ser desfeita.`}
+      >
+        <div className="flex gap-2 pt-2">
+          <Button variant="outline" className="flex-1" onClick={() => setCampaignDeleteTarget(null)}>
+            Cancelar
+          </Button>
+          <Button onClick={deleteCampaign} disabled={saving} className="flex-1 bg-red-500 text-white hover:bg-red-600">
+            {saving && <Loader2 size={13} className="animate-spin" />}
+            Remover
           </Button>
         </div>
       </Modal>
@@ -1789,15 +2422,7 @@ export default function ComercialPage() {
         </div>
       )}
 
-      {mainTab === "descontos" && (
-        <DocumentsPanel
-          key="descontos"
-          apiPath="/api/descontos"
-          newLabel="Nova Diretriz"
-          emptyTitle="Nenhuma diretriz ainda"
-          emptyDesc="Crie a primeira diretriz de desconto para o time."
-        />
-      )}
+      {mainTab === "descontos" && <DiretrizesDesconto />}
 
       {mainTab === "processos" && <ProcessosFechamento />}
 

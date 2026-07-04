@@ -1,8 +1,8 @@
-// File: /home/user/nex-base-mkt/app/api/descontos/route.ts
-import * as entry from '../../../../../app/api/descontos/route.js'
+// File: /home/user/nex-base-mkt/app/api/diretrizes-desconto/route.ts
+import * as entry from '../../../../../app/api/diretrizes-desconto/route.js'
 import type { NextRequest } from 'next/server.js'
 
-type TEntry = typeof import('../../../../../app/api/descontos/route.js')
+type TEntry = typeof import('../../../../../app/api/diretrizes-desconto/route.js')
 
 // Check that the entry is a valid entry
 checkFields<Diff<{
