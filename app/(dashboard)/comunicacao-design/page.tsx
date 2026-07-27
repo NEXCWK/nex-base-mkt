@@ -14,7 +14,12 @@ import {
   Globe,
   Pencil,
   Camera,
+  Video,
+  Link2,
+  ChevronLeft,
+  PlayCircle,
 } from "lucide-react";
+import { FileUpload } from "@/components/upload/FileUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,7 +32,7 @@ import { ptBR } from "date-fns/locale";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = "recursos" | "datas-comemorativas" | "influenciadores";
+type Tab = "recursos" | "datas-comemorativas" | "influenciadores" | "conteudo-influs";
 
 interface DataComemorativa {
   id: string;
@@ -44,6 +49,24 @@ interface Influenciador {
   bio: string;
   website: string;
   photoUrl: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ContentLink {
+  id: string;
+  url: string;
+  descricao?: string;
+  addedAt: string;
+}
+
+interface InfluencerConteudo {
+  id: string;
+  name: string;
+  category: string;
+  photoUrl: string;
+  profileLink: string;
+  contentLinks: ContentLink[];
   createdAt: string;
   updatedAt: string;
 }
@@ -544,12 +567,469 @@ function InfluenciadoresTab() {
   );
 }
 
+// ─── Conteúdo Influs Tab ──────────────────────────────────────────────────────
+
+const EMPTY_CI = { name: "", category: "", photoUrl: "", profileLink: "" };
+
+function slugify(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+}
+
+function InfluencerDetailScreen({
+  influencer,
+  onBack,
+  onUpdate,
+  onDelete,
+}: {
+  influencer: InfluencerConteudo;
+  onBack: () => void;
+  onUpdate: (updated: InfluencerConteudo) => void;
+  onDelete: () => void;
+}) {
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState(EMPTY_CI);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const [addLinkOpen, setAddLinkOpen] = useState(false);
+  const [linkForm, setLinkForm] = useState({ url: "", descricao: "" });
+  const [savingLink, setSavingLink] = useState(false);
+  const [linkError, setLinkError] = useState("");
+
+  const section = `Comunicacao/Influs/${slugify(influencer.name) || "influenciador"}-${influencer.id.slice(-6)}`;
+
+  function openEdit() {
+    setEditForm({
+      name: influencer.name,
+      category: influencer.category,
+      photoUrl: influencer.photoUrl,
+      profileLink: influencer.profileLink,
+    });
+    setSaveError("");
+    setEditModalOpen(true);
+  }
+
+  async function handleSaveEdit() {
+    if (!editForm.name.trim()) return;
+    setSaving(true);
+    setSaveError("");
+    try {
+      const res = await fetch("/api/conteudo-influs", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: influencer.id, ...editForm }),
+      });
+      if (!res.ok) throw new Error("Erro ao salvar");
+      const updated: InfluencerConteudo = await res.json();
+      onUpdate(updated);
+      setEditModalOpen(false);
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "Erro ao salvar");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await fetch("/api/conteudo-influs", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: influencer.id }),
+      });
+      onDelete();
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function handleAddLink() {
+    if (!linkForm.url.trim()) { setLinkError("URL obrigatória."); return; }
+    setSavingLink(true);
+    setLinkError("");
+    try {
+      const newLink: ContentLink = {
+        id: Date.now().toString(),
+        url: linkForm.url.trim(),
+        descricao: linkForm.descricao.trim() || undefined,
+        addedAt: new Date().toISOString(),
+      };
+      const contentLinks = [...influencer.contentLinks, newLink];
+      const res = await fetch("/api/conteudo-influs", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: influencer.id, contentLinks }),
+      });
+      if (!res.ok) throw new Error("Erro ao salvar link");
+      const updated: InfluencerConteudo = await res.json();
+      onUpdate(updated);
+      setAddLinkOpen(false);
+      setLinkForm({ url: "", descricao: "" });
+    } catch (e) {
+      setLinkError(e instanceof Error ? e.message : "Erro ao salvar");
+    } finally {
+      setSavingLink(false);
+    }
+  }
+
+  async function handleRemoveLink(linkId: string) {
+    const contentLinks = influencer.contentLinks.filter((l) => l.id !== linkId);
+    const res = await fetch("/api/conteudo-influs", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: influencer.id, contentLinks }),
+    });
+    if (!res.ok) return;
+    onUpdate(await res.json());
+  }
+
+  return (
+    <div>
+      <button
+        onClick={onBack}
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-5"
+      >
+        <ChevronLeft size={15} />
+        Voltar para Conteúdo Influs
+      </button>
+
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3 mb-8 flex-wrap">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-light flex items-center justify-center shrink-0 border border-gray-medium">
+            {influencer.photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={influencer.photoUrl} alt={influencer.name} className="w-full h-full object-cover" />
+            ) : (
+              <User size={26} className="text-muted-foreground" />
+            )}
+          </div>
+          <div>
+            <h2 className="text-lg font-700">{influencer.name}</h2>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              {influencer.category && <Badge variant="muted">{influencer.category}</Badge>}
+              {influencer.profileLink && (
+                <a
+                  href={influencer.profileLink.startsWith("http") ? influencer.profileLink : `https://${influencer.profileLink}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-black hover:underline"
+                >
+                  <Globe size={11} />
+                  {influencer.profileLink.replace(/^https?:\/\//, "")}
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button variant="outline" size="sm" onClick={openEdit}>
+            <Pencil size={13} />
+            Editar
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setDeleteConfirmOpen(true)}
+            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+          >
+            <Trash2 size={13} />
+          </Button>
+        </div>
+      </div>
+
+      {/* Arquivo de vídeo */}
+      <div className="mb-8">
+        <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-3">
+          Arquivo de vídeo
+        </p>
+        <FileUpload section={section} />
+      </div>
+
+      {/* Links de conteúdo */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground">
+            Links de conteúdo (Instagram, TikTok, YouTube...)
+          </p>
+          {!addLinkOpen && (
+            <button
+              onClick={() => { setAddLinkOpen(true); setLinkForm({ url: "", descricao: "" }); setLinkError(""); }}
+              className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-black transition-colors"
+            >
+              <Plus size={12} />
+              Adicionar link
+            </button>
+          )}
+        </div>
+
+        {influencer.contentLinks.length === 0 && !addLinkOpen ? (
+          <div className="border border-dashed border-gray-medium rounded-xl py-10 text-center">
+            <Link2 size={22} className="mx-auto mb-2 text-muted-foreground opacity-30" />
+            <p className="text-sm text-muted-foreground">Nenhum link de conteúdo ainda.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2 mb-3">
+            {influencer.contentLinks.map((link) => (
+              <div key={link.id} className="flex items-start gap-2.5 rounded-lg border border-gray-medium bg-white p-3">
+                <PlayCircle size={15} className="text-muted-foreground shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm font-medium text-black hover:underline underline-offset-2 break-all"
+                  >
+                    {link.url}
+                    <ExternalLink size={11} className="shrink-0" />
+                  </a>
+                  {link.descricao && (
+                    <p className="mt-1 text-xs text-muted-foreground">{link.descricao}</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleRemoveLink(link.id)}
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+                  title="Remover"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {addLinkOpen && (
+          <div className="rounded-lg border border-gray-medium bg-gray-light/40 p-3.5 flex flex-col gap-3">
+            <Input
+              label="URL do conteúdo *"
+              value={linkForm.url}
+              onChange={(e) => setLinkForm((f) => ({ ...f, url: e.target.value }))}
+              placeholder="https://www.instagram.com/reel/..."
+              autoFocus
+            />
+            <Input
+              label="Descrição (opcional)"
+              value={linkForm.descricao}
+              onChange={(e) => setLinkForm((f) => ({ ...f, descricao: e.target.value }))}
+              placeholder="Ex: Vídeo de divulgação do coworking"
+            />
+            {linkError && <p className="text-xs text-red-500">{linkError}</p>}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => setAddLinkOpen(false)} disabled={savingLink}>
+                Cancelar
+              </Button>
+              <Button size="sm" onClick={handleAddLink} disabled={savingLink}>
+                {savingLink && <Loader2 size={13} className="animate-spin" />}
+                Adicionar
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Edit modal */}
+      <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)} title="Editar influenciador" className="max-w-lg">
+        <div className="flex flex-col gap-4">
+          <PhotoUploadInf value={editForm.photoUrl} onChange={(v) => setEditForm((f) => ({ ...f, photoUrl: v }))} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Nome *" value={editForm.name} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} autoFocus />
+            <Input label="Nicho / Categoria" value={editForm.category} onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))} placeholder="Ex: Lifestyle, Tech…" />
+          </div>
+          <Input label="Perfil / Link" value={editForm.profileLink} onChange={(e) => setEditForm((f) => ({ ...f, profileLink: e.target.value }))} placeholder="https://instagram.com/…" />
+          {saveError && <p className="text-xs text-red-500">{saveError}</p>}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setEditModalOpen(false)} disabled={saving}>Cancelar</Button>
+            <Button size="sm" onClick={handleSaveEdit} disabled={saving || !editForm.name.trim()}>
+              {saving && <Loader2 size={13} className="animate-spin" />}
+              Salvar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete confirmation */}
+      <Modal
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        title="Excluir influenciador"
+        description={`Remover "${influencer.name}" e todos os links de conteúdo cadastrados? Esta ação não pode ser desfeita.`}
+      >
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" size="sm" onClick={() => setDeleteConfirmOpen(false)} disabled={deleting}>Cancelar</Button>
+          <Button size="sm" onClick={handleDelete} disabled={deleting} className="bg-red-500 text-white hover:bg-red-600">
+            {deleting && <Loader2 size={13} className="animate-spin" />}
+            Excluir
+          </Button>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+function ConteudoInflusTab() {
+  const [influencers, setInfluencers] = useState<InfluencerConteudo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState(EMPTY_CI);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  const fetchInfluencers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/conteudo-influs");
+      if (res.ok) setInfluencers(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchInfluencers(); }, [fetchInfluencers]);
+
+  function openCreate() {
+    setForm(EMPTY_CI);
+    setSaveError("");
+    setModalOpen(true);
+  }
+
+  async function handleCreate() {
+    if (!form.name.trim()) return;
+    setSaving(true);
+    setSaveError("");
+    try {
+      const res = await fetch("/api/conteudo-influs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Erro ao criar");
+      const created: InfluencerConteudo = await res.json();
+      setInfluencers((prev) => [...prev, created]);
+      setModalOpen(false);
+      setSelectedId(created.id);
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "Erro desconhecido");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const selected = influencers.find((i) => i.id === selectedId) ?? null;
+
+  if (selected) {
+    return (
+      <InfluencerDetailScreen
+        influencer={selected}
+        onBack={() => setSelectedId(null)}
+        onUpdate={(updated) => setInfluencers((prev) => prev.map((i) => (i.id === updated.id ? updated : i)))}
+        onDelete={() => {
+          setInfluencers((prev) => prev.filter((i) => i.id !== selected.id));
+          setSelectedId(null);
+        }}
+      />
+    );
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Cadastre influenciadores parceiros e os vídeos/conteúdos que eles postaram.
+        </p>
+        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 ml-4">
+          <Plus size={14} />
+          Adicionar influenciador
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center gap-2 text-muted-foreground text-sm py-10">
+          <Loader2 size={14} className="animate-spin" /> Carregando…
+        </div>
+      ) : influencers.length === 0 ? (
+        <div className="border border-dashed border-gray-medium rounded-xl p-16 text-center">
+          <Video size={32} className="mx-auto mb-3 text-muted-foreground opacity-40" />
+          <p className="text-sm font-medium text-gray-dark mb-1">Nenhum influenciador cadastrado ainda</p>
+          <p className="text-xs text-muted-foreground mb-5">
+            Cadastre um influenciador para começar a registrar os conteúdos dele.
+          </p>
+          <Button variant="outline" size="sm" onClick={openCreate}>
+            <Plus size={14} />
+            Adicionar influenciador
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {influencers.map((inf) => (
+            <button key={inf.id} onClick={() => setSelectedId(inf.id)} className="text-left">
+              <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-0">
+                  <div className="h-28 bg-gray-light flex items-center justify-center overflow-hidden">
+                    {inf.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={inf.photoUrl} alt={inf.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-14 h-14 rounded-full bg-gray-medium flex items-center justify-center">
+                        <User size={24} className="text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-sm text-black truncate">{inf.name}</h3>
+                    {inf.category && <Badge variant="muted" className="mt-1">{inf.category}</Badge>}
+                    <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1.5">
+                      <Video size={12} />
+                      {inf.contentLinks.length} {inf.contentLinks.length === 1 ? "conteúdo" : "conteúdos"}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Create modal */}
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Adicionar influenciador" className="max-w-lg">
+        <div className="flex flex-col gap-4">
+          <PhotoUploadInf value={form.photoUrl} onChange={(v) => setForm((f) => ({ ...f, photoUrl: v }))} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Nome *" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Nome do influenciador" autoFocus />
+            <Input label="Nicho / Categoria" value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} placeholder="Ex: Lifestyle, Tech…" />
+          </div>
+          <Input label="Perfil / Link" value={form.profileLink} onChange={(e) => setForm((f) => ({ ...f, profileLink: e.target.value }))} placeholder="https://instagram.com/…" />
+          {saveError && <p className="text-xs text-red-500">{saveError}</p>}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setModalOpen(false)} disabled={saving}>Cancelar</Button>
+            <Button variant="default" size="sm" onClick={handleCreate} disabled={saving || !form.name.trim()}>
+              {saving && <Loader2 size={13} className="animate-spin" />}
+              Adicionar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "recursos", label: "Recursos" },
   { key: "datas-comemorativas", label: "Datas Comemorativas" },
   { key: "influenciadores", label: "Influenciadores" },
+  { key: "conteudo-influs", label: "Conteúdo Influs" },
 ];
 
 export default function ComunicacaoDesignPage() {
@@ -585,6 +1065,7 @@ export default function ComunicacaoDesignPage() {
       {tab === "recursos" && <RecursosTab />}
       {tab === "datas-comemorativas" && <DatasComemorativasTab />}
       {tab === "influenciadores" && <InfluenciadoresTab />}
+      {tab === "conteudo-influs" && <ConteudoInflusTab />}
     </div>
   );
 }
