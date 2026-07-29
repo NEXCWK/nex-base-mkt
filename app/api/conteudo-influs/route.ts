@@ -10,15 +10,22 @@ interface ContentLink {
   addedAt: string;
 }
 
+type InfluencerTipo = "fixo" | "avulso";
+
 interface InfluencerConteudo {
   id: string;
   name: string;
   category: string;
   photoUrl: string;
   profileLink: string;
+  tipo: InfluencerTipo | "";
   contentLinks: ContentLink[];
   createdAt: string;
   updatedAt: string;
+}
+
+function isValidTipo(v: unknown): v is InfluencerTipo {
+  return v === "fixo" || v === "avulso";
 }
 
 export async function GET() {
@@ -32,6 +39,9 @@ export async function POST(req: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json();
   if (!body.name?.trim()) return NextResponse.json({ error: "Nome obrigatório" }, { status: 400 });
+  if (!isValidTipo(body.tipo)) {
+    return NextResponse.json({ error: "Tipo (Fixo ou Avulso) é obrigatório" }, { status: 400 });
+  }
   const items = readFile("conteudo-influs") as InfluencerConteudo[];
   const now = new Date().toISOString();
   const item: InfluencerConteudo = {
@@ -40,6 +50,7 @@ export async function POST(req: NextRequest) {
     category: body.category || "",
     photoUrl: body.photoUrl || "",
     profileLink: body.profileLink || "",
+    tipo: body.tipo,
     contentLinks: [],
     createdAt: now,
     updatedAt: now,
@@ -53,6 +64,9 @@ export async function PUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json();
+  if (body.tipo !== undefined && !isValidTipo(body.tipo)) {
+    return NextResponse.json({ error: "Tipo inválido" }, { status: 400 });
+  }
   const items = readFile("conteudo-influs") as InfluencerConteudo[];
   const idx = items.findIndex((i) => i.id === body.id);
   if (idx === -1) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -62,6 +76,7 @@ export async function PUT(req: NextRequest) {
     category: body.category !== undefined ? body.category : items[idx].category,
     photoUrl: body.photoUrl !== undefined ? body.photoUrl : items[idx].photoUrl,
     profileLink: body.profileLink !== undefined ? body.profileLink : items[idx].profileLink,
+    tipo: body.tipo !== undefined ? body.tipo : items[idx].tipo,
     contentLinks: body.contentLinks !== undefined ? body.contentLinks : items[idx].contentLinks,
     updatedAt: new Date().toISOString(),
   };

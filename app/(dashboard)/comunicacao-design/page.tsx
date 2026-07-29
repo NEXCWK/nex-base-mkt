@@ -60,12 +60,15 @@ interface ContentLink {
   addedAt: string;
 }
 
+type InfluencerTipo = "fixo" | "avulso";
+
 interface InfluencerConteudo {
   id: string;
   name: string;
   category: string;
   photoUrl: string;
   profileLink: string;
+  tipo: InfluencerTipo | "";
   contentLinks: ContentLink[];
   createdAt: string;
   updatedAt: string;
@@ -569,7 +572,12 @@ function InfluenciadoresTab() {
 
 // ─── Conteúdo Influs Tab ──────────────────────────────────────────────────────
 
-const EMPTY_CI = { name: "", category: "", photoUrl: "", profileLink: "" };
+const EMPTY_CI = { name: "", category: "", photoUrl: "", profileLink: "", tipo: "" as InfluencerTipo | "" };
+
+const TIPO_META: Record<InfluencerTipo, { label: string }> = {
+  fixo: { label: "Fixo" },
+  avulso: { label: "Avulso" },
+};
 
 function slugify(text: string) {
   return text
@@ -578,6 +586,51 @@ function slugify(text: string) {
     .replace(/[^a-zA-Z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .toLowerCase();
+}
+
+function TipoBadge({ tipo }: { tipo: InfluencerTipo | "" }) {
+  if (!tipo) return null;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center text-[11px] font-600 uppercase tracking-wide rounded-full px-2 py-0.5",
+        tipo === "fixo" ? "bg-black text-white" : "border border-black text-black"
+      )}
+    >
+      {TIPO_META[tipo].label}
+    </span>
+  );
+}
+
+function TipoToggle({
+  value,
+  onChange,
+}: {
+  value: InfluencerTipo | "";
+  onChange: (v: InfluencerTipo) => void;
+}) {
+  return (
+    <div>
+      <label className="text-sm font-medium text-gray-dark block mb-1.5">Tipo de influenciador *</label>
+      <div className="flex gap-2">
+        {(["fixo", "avulso"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => onChange(t)}
+            className={cn(
+              "flex-1 py-2 rounded-md border text-sm font-600 transition-all",
+              value === t
+                ? "border-black bg-black text-white"
+                : "border-gray-medium text-muted-foreground hover:border-gray-dark hover:text-foreground"
+            )}
+          >
+            {TIPO_META[t].label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function InfluencerDetailScreen({
@@ -611,13 +664,29 @@ function InfluencerDetailScreen({
       category: influencer.category,
       photoUrl: influencer.photoUrl,
       profileLink: influencer.profileLink,
+      tipo: influencer.tipo,
     });
     setSaveError("");
     setEditModalOpen(true);
   }
 
+  async function setTipoQuick(tipo: InfluencerTipo) {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/conteudo-influs", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: influencer.id, tipo }),
+      });
+      if (res.ok) onUpdate(await res.json());
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function handleSaveEdit() {
     if (!editForm.name.trim()) return;
+    if (!editForm.tipo) { setSaveError("Indique se o influenciador é Fixo ou Avulso."); return; }
     setSaving(true);
     setSaveError("");
     try {
@@ -715,6 +784,7 @@ function InfluencerDetailScreen({
           <div>
             <h2 className="text-lg font-700">{influencer.name}</h2>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <TipoBadge tipo={influencer.tipo} />
               {influencer.category && <Badge variant="muted">{influencer.category}</Badge>}
               {influencer.profileLink && (
                 <a
@@ -745,6 +815,19 @@ function InfluencerDetailScreen({
           </Button>
         </div>
       </div>
+
+      {/* Aviso: tipo não definido (registros antigos) */}
+      {!influencer.tipo && (
+        <div className="flex items-center justify-between gap-3 mb-8 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex-wrap">
+          <p className="text-sm text-amber-700">
+            Indique se este influenciador é Fixo ou Avulso antes de cadastrar conteúdos.
+          </p>
+          <div className="flex gap-2 shrink-0">
+            <Button size="sm" variant="outline" disabled={saving} onClick={() => setTipoQuick("fixo")}>Fixo</Button>
+            <Button size="sm" variant="outline" disabled={saving} onClick={() => setTipoQuick("avulso")}>Avulso</Button>
+          </div>
+        </div>
+      )}
 
       {/* Arquivo de vídeo */}
       <div className="mb-8">
@@ -844,11 +927,12 @@ function InfluencerDetailScreen({
             <Input label="Nome *" value={editForm.name} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} autoFocus />
             <Input label="Nicho / Categoria" value={editForm.category} onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))} placeholder="Ex: Lifestyle, Tech…" />
           </div>
+          <TipoToggle value={editForm.tipo} onChange={(tipo) => setEditForm((f) => ({ ...f, tipo }))} />
           <Input label="Perfil / Link" value={editForm.profileLink} onChange={(e) => setEditForm((f) => ({ ...f, profileLink: e.target.value }))} placeholder="https://instagram.com/…" />
           {saveError && <p className="text-xs text-red-500">{saveError}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="sm" onClick={() => setEditModalOpen(false)} disabled={saving}>Cancelar</Button>
-            <Button size="sm" onClick={handleSaveEdit} disabled={saving || !editForm.name.trim()}>
+            <Button size="sm" onClick={handleSaveEdit} disabled={saving || !editForm.name.trim() || !editForm.tipo}>
               {saving && <Loader2 size={13} className="animate-spin" />}
               Salvar
             </Button>
@@ -875,10 +959,19 @@ function InfluencerDetailScreen({
   );
 }
 
+type ContentSubTab = "todos" | "fixos" | "avulsos";
+
+const CONTENT_SUB_TABS: { key: ContentSubTab; label: string }[] = [
+  { key: "todos", label: "Todos" },
+  { key: "fixos", label: "Fixos" },
+  { key: "avulsos", label: "Avulsos" },
+];
+
 function ConteudoInflusTab() {
   const [influencers, setInfluencers] = useState<InfluencerConteudo[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [subTab, setSubTab] = useState<ContentSubTab>("todos");
 
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_CI);
@@ -905,6 +998,7 @@ function ConteudoInflusTab() {
 
   async function handleCreate() {
     if (!form.name.trim()) return;
+    if (!form.tipo) { setSaveError("Indique se o influenciador é Fixo ou Avulso."); return; }
     setSaving(true);
     setSaveError("");
     try {
@@ -941,6 +1035,12 @@ function ConteudoInflusTab() {
     );
   }
 
+  const filteredInfluencers = influencers.filter((inf) => {
+    if (subTab === "fixos") return inf.tipo === "fixo";
+    if (subTab === "avulsos") return inf.tipo === "avulso";
+    return true;
+  });
+
   return (
     <>
       <div className="flex items-center justify-between mb-5">
@@ -951,6 +1051,24 @@ function ConteudoInflusTab() {
           <Plus size={14} />
           Adicionar influenciador
         </Button>
+      </div>
+
+      {/* Sub-tabs: Todos / Fixos / Avulsos */}
+      <div className="flex gap-1 bg-gray-light p-1 rounded-lg w-fit mb-6">
+        {CONTENT_SUB_TABS.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setSubTab(key)}
+            className={cn(
+              "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
+              subTab === key
+                ? "bg-white text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {loading ? (
@@ -969,9 +1087,16 @@ function ConteudoInflusTab() {
             Adicionar influenciador
           </Button>
         </div>
+      ) : filteredInfluencers.length === 0 ? (
+        <div className="border border-dashed border-gray-medium rounded-xl p-16 text-center">
+          <Video size={32} className="mx-auto mb-3 text-muted-foreground opacity-40" />
+          <p className="text-sm font-medium text-gray-dark mb-1">
+            Nenhum influenciador {subTab === "fixos" ? "Fixo" : "Avulso"} cadastrado ainda
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {influencers.map((inf) => (
+          {filteredInfluencers.map((inf) => (
             <button key={inf.id} onClick={() => setSelectedId(inf.id)} className="text-left">
               <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
                 <CardContent className="p-0">
@@ -986,7 +1111,10 @@ function ConteudoInflusTab() {
                     )}
                   </div>
                   <div className="p-4">
-                    <h3 className="font-semibold text-sm text-black truncate">{inf.name}</h3>
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-semibold text-sm text-black truncate">{inf.name}</h3>
+                      <TipoBadge tipo={inf.tipo} />
+                    </div>
                     {inf.category && <Badge variant="muted" className="mt-1">{inf.category}</Badge>}
                     <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1.5">
                       <Video size={12} />
@@ -1008,11 +1136,12 @@ function ConteudoInflusTab() {
             <Input label="Nome *" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Nome do influenciador" autoFocus />
             <Input label="Nicho / Categoria" value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} placeholder="Ex: Lifestyle, Tech…" />
           </div>
+          <TipoToggle value={form.tipo} onChange={(tipo) => setForm((f) => ({ ...f, tipo }))} />
           <Input label="Perfil / Link" value={form.profileLink} onChange={(e) => setForm((f) => ({ ...f, profileLink: e.target.value }))} placeholder="https://instagram.com/…" />
           {saveError && <p className="text-xs text-red-500">{saveError}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="sm" onClick={() => setModalOpen(false)} disabled={saving}>Cancelar</Button>
-            <Button variant="default" size="sm" onClick={handleCreate} disabled={saving || !form.name.trim()}>
+            <Button variant="default" size="sm" onClick={handleCreate} disabled={saving || !form.name.trim() || !form.tipo}>
               {saving && <Loader2 size={13} className="animate-spin" />}
               Adicionar
             </Button>
