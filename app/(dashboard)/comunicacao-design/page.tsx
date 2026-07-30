@@ -32,7 +32,7 @@ import { ptBR } from "date-fns/locale";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = "recursos" | "datas-comemorativas" | "influenciadores" | "conteudo-influs";
+type Tab = "recursos" | "datas-comemorativas" | "conteudo-influs";
 
 interface DataComemorativa {
   id: string;
@@ -40,17 +40,6 @@ interface DataComemorativa {
   nomeAcao: string;
   razao: string;
   createdAt: string;
-}
-
-interface Influenciador {
-  id: string;
-  name: string;
-  category: string;
-  bio: string;
-  website: string;
-  photoUrl: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 interface ContentLink {
@@ -64,11 +53,14 @@ type InfluencerTipo = "fixo" | "avulso";
 
 interface InfluencerConteudo {
   id: string;
+  tipo: InfluencerTipo;
   name: string;
   category: string;
+  bio: string;
   photoUrl: string;
   profileLink: string;
-  tipo: InfluencerTipo | "";
+  instagram: string;
+  contentLink: string;
   contentLinks: ContentLink[];
   createdAt: string;
   updatedAt: string;
@@ -361,9 +353,7 @@ function DatasComemorativasTab() {
   );
 }
 
-// ─── Influenciadores Tab ──────────────────────────────────────────────────────
-
-const EMPTY_INF = { name: "", category: "", bio: "", website: "", photoUrl: "" };
+// ─── Shared helpers ───────────────────────────────────────────────────────────
 
 function resizeImage(file: File, maxPx = 480, quality = 0.85): Promise<string> {
   return new Promise((resolve) => {
@@ -429,150 +419,10 @@ function PhotoUploadInf({ value, onChange }: { value: string; onChange: (v: stri
   );
 }
 
-function InfluenciadoresTab() {
-  const [influenciadores, setInfluenciadores] = useState<Influenciador[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<Influenciador | null>(null);
-  const [form, setForm] = useState(EMPTY_INF);
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<Influenciador | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  const fetchInfluenciadores = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/influenciadores");
-      if (res.ok) setInfluenciadores(await res.json());
-    } finally { setLoading(false); }
-  }, []);
-
-  useEffect(() => { fetchInfluenciadores(); }, [fetchInfluenciadores]);
-
-  function openCreate() { setEditTarget(null); setForm(EMPTY_INF); setSaveError(""); setModalOpen(true); }
-  function openEdit(i: Influenciador) { setEditTarget(i); setForm({ name: i.name, category: i.category, bio: i.bio, website: i.website, photoUrl: i.photoUrl }); setSaveError(""); setModalOpen(true); }
-
-  async function handleSave() {
-    if (!form.name.trim()) return;
-    setSaving(true); setSaveError("");
-    try {
-      if (editTarget) {
-        const res = await fetch("/api/influenciadores", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: editTarget.id, ...form }) });
-        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Erro ao salvar");
-        const updated: Influenciador = await res.json();
-        setInfluenciadores((p) => p.map((x) => x.id === updated.id ? updated : x));
-      } else {
-        const res = await fetch("/api/influenciadores", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Erro ao criar");
-        const created: Influenciador = await res.json();
-        setInfluenciadores((p) => [...p, created]);
-      }
-      setModalOpen(false);
-    } catch (e) { setSaveError(e instanceof Error ? e.message : "Erro desconhecido"); }
-    finally { setSaving(false); }
-  }
-
-  async function handleDelete() {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      await fetch("/api/influenciadores", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: deleteTarget.id }) });
-      setInfluenciadores((p) => p.filter((x) => x.id !== deleteTarget.id));
-      setDeleteTarget(null);
-    } finally { setDeleting(false); }
-  }
-
-  return (
-    <>
-      <div className="flex items-center justify-between mb-5">
-        <p className="text-sm text-muted-foreground">{influenciadores.length} {influenciadores.length === 1 ? "influenciador" : "influenciadores"} cadastrados</p>
-        <Button variant="default" size="sm" onClick={openCreate}><Plus size={14} /> Adicionar</Button>
-      </div>
-
-      {loading ? (
-        <div className="flex items-center gap-2 text-muted-foreground text-sm py-10"><Loader2 size={14} className="animate-spin" /> Carregando…</div>
-      ) : influenciadores.length === 0 ? (
-        <div className="border border-dashed border-gray-medium rounded-xl p-16 text-center">
-          <User size={32} className="mx-auto mb-3 text-muted-foreground opacity-40" />
-          <p className="text-sm font-medium text-gray-dark mb-1">Nenhum influenciador cadastrado ainda</p>
-          <p className="text-xs text-muted-foreground mb-5">Cadastre os influenciadores parceiros da área.</p>
-          <Button variant="outline" size="sm" onClick={openCreate}><Plus size={14} /> Adicionar</Button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {influenciadores.map((inf) => (
-            <Card key={inf.id} className="overflow-hidden">
-              <CardContent className="p-0">
-                <div className="h-32 bg-gray-light flex items-center justify-center overflow-hidden">
-                  {inf.photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={inf.photoUrl} alt={inf.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-gray-medium flex items-center justify-center">
-                      <User size={28} className="text-muted-foreground" />
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-sm text-black truncate">{inf.name}</h3>
-                      {inf.category && <Badge variant="muted" className="mt-1">{inf.category}</Badge>}
-                    </div>
-                    <div className="flex gap-1 shrink-0">
-                      <button onClick={() => openEdit(inf)} className="p-1 rounded-md text-muted-foreground hover:text-black hover:bg-gray-light transition-colors" title="Editar"><Pencil size={13} /></button>
-                      <button onClick={() => setDeleteTarget(inf)} className="p-1 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors" title="Excluir"><Trash2 size={13} /></button>
-                    </div>
-                  </div>
-                  {inf.bio && <p className="text-xs text-muted-foreground leading-relaxed mt-2 line-clamp-3">{inf.bio}</p>}
-                  {inf.website && (
-                    <a href={inf.website.startsWith("http") ? inf.website : `https://${inf.website}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-2 text-xs text-black hover:underline">
-                      <Globe size={11} />{inf.website.replace(/^https?:\/\//, "")}
-                    </a>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editTarget ? "Editar influenciador" : "Adicionar influenciador"} className="max-w-lg">
-        <div className="flex flex-col gap-4">
-          <PhotoUploadInf value={form.photoUrl} onChange={(v) => setForm((f) => ({ ...f, photoUrl: v }))} />
-          <div className="grid grid-cols-2 gap-3">
-            <Input label="Nome *" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Nome do influenciador" autoFocus />
-            <Input label="Nicho / Categoria" value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} placeholder="Ex: Lifestyle, Tech…" />
-          </div>
-          <Textarea label="Bio" value={form.bio} onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))} placeholder="Breve descrição do influenciador e da parceria…" rows={3} />
-          <Input label="Perfil / Link" value={form.website} onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))} placeholder="https://instagram.com/…" />
-          {saveError && <p className="text-xs text-red-500">{saveError}</p>}
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" size="sm" onClick={() => setModalOpen(false)} disabled={saving}>Cancelar</Button>
-            <Button variant="default" size="sm" onClick={handleSave} disabled={saving || !form.name.trim()}>
-              {saving && <Loader2 size={13} className="animate-spin" />}
-              {editTarget ? "Salvar alterações" : "Adicionar"}
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Excluir influenciador" description={`Remover "${deleteTarget?.name}"? Esta ação não pode ser desfeita.`}>
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" size="sm" onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancelar</Button>
-          <Button size="sm" onClick={handleDelete} disabled={deleting} className="bg-red-500 text-white hover:bg-red-600">
-            {deleting && <Loader2 size={13} className="animate-spin" />}Excluir
-          </Button>
-        </div>
-      </Modal>
-    </>
-  );
-}
-
 // ─── Conteúdo Influs Tab ──────────────────────────────────────────────────────
 
-const EMPTY_CI = { name: "", category: "", photoUrl: "", profileLink: "", tipo: "" as InfluencerTipo | "" };
+const EMPTY_FIXO_FORM = { name: "", category: "", bio: "", photoUrl: "", profileLink: "" };
+const EMPTY_AVULSO_FORM = { name: "", instagram: "", contentLink: "" };
 
 const TIPO_META: Record<InfluencerTipo, { label: string }> = {
   fixo: { label: "Fixo" },
@@ -588,48 +438,16 @@ function slugify(text: string) {
     .toLowerCase();
 }
 
-function TipoBadge({ tipo }: { tipo: InfluencerTipo | "" }) {
-  if (!tipo) return null;
+function TipoBadge({ tipo }: { tipo: InfluencerTipo }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center text-[11px] font-600 uppercase tracking-wide rounded-full px-2 py-0.5",
+        "inline-flex items-center text-[11px] font-600 uppercase tracking-wide rounded-full px-2 py-0.5 shrink-0",
         tipo === "fixo" ? "bg-black text-white" : "border border-black text-black"
       )}
     >
       {TIPO_META[tipo].label}
     </span>
-  );
-}
-
-function TipoToggle({
-  value,
-  onChange,
-}: {
-  value: InfluencerTipo | "";
-  onChange: (v: InfluencerTipo) => void;
-}) {
-  return (
-    <div>
-      <label className="text-sm font-medium text-gray-dark block mb-1.5">Tipo de influenciador *</label>
-      <div className="flex gap-2">
-        {(["fixo", "avulso"] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => onChange(t)}
-            className={cn(
-              "flex-1 py-2 rounded-md border text-sm font-600 transition-all",
-              value === t
-                ? "border-black bg-black text-white"
-                : "border-gray-medium text-muted-foreground hover:border-gray-dark hover:text-foreground"
-            )}
-          >
-            {TIPO_META[t].label}
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -645,7 +463,7 @@ function InfluencerDetailScreen({
   onDelete: () => void;
 }) {
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState(EMPTY_CI);
+  const [editForm, setEditForm] = useState(EMPTY_FIXO_FORM);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -662,31 +480,16 @@ function InfluencerDetailScreen({
     setEditForm({
       name: influencer.name,
       category: influencer.category,
+      bio: influencer.bio,
       photoUrl: influencer.photoUrl,
       profileLink: influencer.profileLink,
-      tipo: influencer.tipo,
     });
     setSaveError("");
     setEditModalOpen(true);
   }
 
-  async function setTipoQuick(tipo: InfluencerTipo) {
-    setSaving(true);
-    try {
-      const res = await fetch("/api/conteudo-influs", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: influencer.id, tipo }),
-      });
-      if (res.ok) onUpdate(await res.json());
-    } finally {
-      setSaving(false);
-    }
-  }
-
   async function handleSaveEdit() {
     if (!editForm.name.trim()) return;
-    if (!editForm.tipo) { setSaveError("Indique se o influenciador é Fixo ou Avulso."); return; }
     setSaving(true);
     setSaveError("");
     try {
@@ -798,6 +601,9 @@ function InfluencerDetailScreen({
                 </a>
               )}
             </div>
+            {influencer.bio && (
+              <p className="text-xs text-muted-foreground leading-relaxed mt-2 max-w-md">{influencer.bio}</p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -815,19 +621,6 @@ function InfluencerDetailScreen({
           </Button>
         </div>
       </div>
-
-      {/* Aviso: tipo não definido (registros antigos) */}
-      {!influencer.tipo && (
-        <div className="flex items-center justify-between gap-3 mb-8 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex-wrap">
-          <p className="text-sm text-amber-700">
-            Indique se este influenciador é Fixo ou Avulso antes de cadastrar conteúdos.
-          </p>
-          <div className="flex gap-2 shrink-0">
-            <Button size="sm" variant="outline" disabled={saving} onClick={() => setTipoQuick("fixo")}>Fixo</Button>
-            <Button size="sm" variant="outline" disabled={saving} onClick={() => setTipoQuick("avulso")}>Avulso</Button>
-          </div>
-        </div>
-      )}
 
       {/* Arquivo de vídeo */}
       <div className="mb-8">
@@ -927,12 +720,12 @@ function InfluencerDetailScreen({
             <Input label="Nome *" value={editForm.name} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} autoFocus />
             <Input label="Nicho / Categoria" value={editForm.category} onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))} placeholder="Ex: Lifestyle, Tech…" />
           </div>
-          <TipoToggle value={editForm.tipo} onChange={(tipo) => setEditForm((f) => ({ ...f, tipo }))} />
+          <Textarea label="Bio" value={editForm.bio} onChange={(e) => setEditForm((f) => ({ ...f, bio: e.target.value }))} placeholder="Breve descrição do influenciador e da parceria…" rows={3} />
           <Input label="Perfil / Link" value={editForm.profileLink} onChange={(e) => setEditForm((f) => ({ ...f, profileLink: e.target.value }))} placeholder="https://instagram.com/…" />
           {saveError && <p className="text-xs text-red-500">{saveError}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="sm" onClick={() => setEditModalOpen(false)} disabled={saving}>Cancelar</Button>
-            <Button size="sm" onClick={handleSaveEdit} disabled={saving || !editForm.name.trim() || !editForm.tipo}>
+            <Button size="sm" onClick={handleSaveEdit} disabled={saving || !editForm.name.trim()}>
               {saving && <Loader2 size={13} className="animate-spin" />}
               Salvar
             </Button>
@@ -973,10 +766,25 @@ function ConteudoInflusTab() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [subTab, setSubTab] = useState<ContentSubTab>("todos");
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState(EMPTY_CI);
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState("");
+  // Fixo creation
+  const [fixoModalOpen, setFixoModalOpen] = useState(false);
+  const [fixoForm, setFixoForm] = useState(EMPTY_FIXO_FORM);
+  const [savingFixo, setSavingFixo] = useState(false);
+  const [fixoError, setFixoError] = useState("");
+
+  // Avulso creation
+  const [avulsoModalOpen, setAvulsoModalOpen] = useState(false);
+  const [avulsoForm, setAvulsoForm] = useState(EMPTY_AVULSO_FORM);
+  const [savingAvulso, setSavingAvulso] = useState(false);
+  const [avulsoError, setAvulsoError] = useState("");
+
+  // Avulso edit / delete (no dedicated screen — just a lightweight modal)
+  const [avulsoEditTarget, setAvulsoEditTarget] = useState<InfluencerConteudo | null>(null);
+  const [avulsoEditForm, setAvulsoEditForm] = useState(EMPTY_AVULSO_FORM);
+  const [savingAvulsoEdit, setSavingAvulsoEdit] = useState(false);
+  const [avulsoEditError, setAvulsoEditError] = useState("");
+  const [avulsoDeleteTarget, setAvulsoDeleteTarget] = useState<InfluencerConteudo | null>(null);
+  const [deletingAvulso, setDeletingAvulso] = useState(false);
 
   const fetchInfluencers = useCallback(async () => {
     setLoading(true);
@@ -990,32 +798,108 @@ function ConteudoInflusTab() {
 
   useEffect(() => { fetchInfluencers(); }, [fetchInfluencers]);
 
-  function openCreate() {
-    setForm(EMPTY_CI);
-    setSaveError("");
-    setModalOpen(true);
+  function openFixoCreate() {
+    setFixoForm(EMPTY_FIXO_FORM);
+    setFixoError("");
+    setFixoModalOpen(true);
   }
 
-  async function handleCreate() {
-    if (!form.name.trim()) return;
-    if (!form.tipo) { setSaveError("Indique se o influenciador é Fixo ou Avulso."); return; }
-    setSaving(true);
-    setSaveError("");
+  async function handleCreateFixo() {
+    if (!fixoForm.name.trim()) { setFixoError("Nome obrigatório."); return; }
+    setSavingFixo(true);
+    setFixoError("");
     try {
       const res = await fetch("/api/conteudo-influs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...fixoForm, tipo: "fixo" }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Erro ao criar");
       const created: InfluencerConteudo = await res.json();
       setInfluencers((prev) => [...prev, created]);
-      setModalOpen(false);
+      setFixoModalOpen(false);
       setSelectedId(created.id);
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : "Erro desconhecido");
+      setFixoError(e instanceof Error ? e.message : "Erro desconhecido");
     } finally {
-      setSaving(false);
+      setSavingFixo(false);
+    }
+  }
+
+  function openAvulsoCreate() {
+    setAvulsoForm(EMPTY_AVULSO_FORM);
+    setAvulsoError("");
+    setAvulsoModalOpen(true);
+  }
+
+  async function handleCreateAvulso() {
+    if (!avulsoForm.name.trim() || !avulsoForm.instagram.trim() || !avulsoForm.contentLink.trim()) {
+      setAvulsoError("Nome, @ do Instagram e link do conteúdo são obrigatórios.");
+      return;
+    }
+    setSavingAvulso(true);
+    setAvulsoError("");
+    try {
+      const res = await fetch("/api/conteudo-influs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...avulsoForm, tipo: "avulso" }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Erro ao criar");
+      const created: InfluencerConteudo = await res.json();
+      setInfluencers((prev) => [...prev, created]);
+      setAvulsoModalOpen(false);
+    } catch (e) {
+      setAvulsoError(e instanceof Error ? e.message : "Erro desconhecido");
+    } finally {
+      setSavingAvulso(false);
+    }
+  }
+
+  function openAvulsoEdit(inf: InfluencerConteudo) {
+    setAvulsoEditForm({ name: inf.name, instagram: inf.instagram, contentLink: inf.contentLink });
+    setAvulsoEditError("");
+    setAvulsoEditTarget(inf);
+  }
+
+  async function handleSaveAvulsoEdit() {
+    if (!avulsoEditTarget) return;
+    if (!avulsoEditForm.name.trim() || !avulsoEditForm.instagram.trim() || !avulsoEditForm.contentLink.trim()) {
+      setAvulsoEditError("Nome, @ do Instagram e link do conteúdo são obrigatórios.");
+      return;
+    }
+    setSavingAvulsoEdit(true);
+    setAvulsoEditError("");
+    try {
+      const res = await fetch("/api/conteudo-influs", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: avulsoEditTarget.id, ...avulsoEditForm }),
+      });
+      if (!res.ok) throw new Error("Erro ao salvar");
+      const updated: InfluencerConteudo = await res.json();
+      setInfluencers((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+      setAvulsoEditTarget(null);
+    } catch (e) {
+      setAvulsoEditError(e instanceof Error ? e.message : "Erro ao salvar");
+    } finally {
+      setSavingAvulsoEdit(false);
+    }
+  }
+
+  async function handleDeleteAvulso() {
+    if (!avulsoDeleteTarget) return;
+    setDeletingAvulso(true);
+    try {
+      await fetch("/api/conteudo-influs", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: avulsoDeleteTarget.id }),
+      });
+      setInfluencers((prev) => prev.filter((i) => i.id !== avulsoDeleteTarget.id));
+      setAvulsoDeleteTarget(null);
+    } finally {
+      setDeletingAvulso(false);
     }
   }
 
@@ -1043,14 +927,20 @@ function ConteudoInflusTab() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
         <p className="text-sm text-muted-foreground leading-relaxed">
           Cadastre influenciadores parceiros e os vídeos/conteúdos que eles postaram.
         </p>
-        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 ml-4">
-          <Plus size={14} />
-          Adicionar influenciador
-        </Button>
+        <div className="flex gap-2 shrink-0">
+          <Button variant="outline" size="sm" onClick={openFixoCreate}>
+            <Plus size={14} />
+            Influenciador Fixo
+          </Button>
+          <Button variant="default" size="sm" onClick={openAvulsoCreate}>
+            <Plus size={14} />
+            Influenciador Avulso
+          </Button>
+        </div>
       </div>
 
       {/* Sub-tabs: Todos / Fixos / Avulsos */}
@@ -1080,12 +970,8 @@ function ConteudoInflusTab() {
           <Video size={32} className="mx-auto mb-3 text-muted-foreground opacity-40" />
           <p className="text-sm font-medium text-gray-dark mb-1">Nenhum influenciador cadastrado ainda</p>
           <p className="text-xs text-muted-foreground mb-5">
-            Cadastre um influenciador para começar a registrar os conteúdos dele.
+            Cadastre um influenciador Fixo ou Avulso para começar a registrar os conteúdos.
           </p>
-          <Button variant="outline" size="sm" onClick={openCreate}>
-            <Plus size={14} />
-            Adicionar influenciador
-          </Button>
         </div>
       ) : filteredInfluencers.length === 0 ? (
         <div className="border border-dashed border-gray-medium rounded-xl p-16 text-center">
@@ -1096,56 +982,166 @@ function ConteudoInflusTab() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredInfluencers.map((inf) => (
-            <button key={inf.id} onClick={() => setSelectedId(inf.id)} className="text-left">
-              <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-0">
-                  <div className="h-28 bg-gray-light flex items-center justify-center overflow-hidden">
-                    {inf.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={inf.photoUrl} alt={inf.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-14 h-14 rounded-full bg-gray-medium flex items-center justify-center">
-                        <User size={24} className="text-muted-foreground" />
+          {filteredInfluencers.map((inf) =>
+            inf.tipo === "fixo" ? (
+              <button key={inf.id} onClick={() => setSelectedId(inf.id)} className="text-left">
+                <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+                  <CardContent className="p-0">
+                    <div className="h-28 bg-gray-light flex items-center justify-center overflow-hidden">
+                      {inf.photoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={inf.photoUrl} alt={inf.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-gray-medium flex items-center justify-center">
+                          <User size={24} className="text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-semibold text-sm text-black truncate">{inf.name}</h3>
+                        <TipoBadge tipo={inf.tipo} />
                       </div>
-                    )}
+                      {inf.category && <Badge variant="muted" className="mt-1">{inf.category}</Badge>}
+                      <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1.5">
+                        <Video size={12} />
+                        {inf.contentLinks.length} {inf.contentLinks.length === 1 ? "conteúdo" : "conteúdos"}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </button>
+            ) : (
+              <Card key={inf.id} className="overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="h-28 bg-gray-light flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-full bg-gray-medium flex items-center justify-center">
+                      <Link2 size={22} className="text-muted-foreground" />
+                    </div>
                   </div>
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-semibold text-sm text-black truncate">{inf.name}</h3>
                       <TipoBadge tipo={inf.tipo} />
                     </div>
-                    {inf.category && <Badge variant="muted" className="mt-1">{inf.category}</Badge>}
-                    <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1.5">
-                      <Video size={12} />
-                      {inf.contentLinks.length} {inf.contentLinks.length === 1 ? "conteúdo" : "conteúdos"}
-                    </p>
+                    {inf.instagram && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {inf.instagram.startsWith("@") ? inf.instagram : `@${inf.instagram}`}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between mt-3">
+                      {inf.contentLink ? (
+                        <a
+                          href={inf.contentLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-black hover:underline underline-offset-2"
+                        >
+                          <PlayCircle size={13} />
+                          Assistir conteúdo
+                        </a>
+                      ) : <span />}
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <button onClick={() => openAvulsoEdit(inf)} className="p-1 rounded-md text-muted-foreground hover:text-black hover:bg-gray-light transition-colors" title="Editar">
+                          <Pencil size={13} />
+                        </button>
+                        <button onClick={() => setAvulsoDeleteTarget(inf)} className="p-1 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors" title="Excluir">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-            </button>
-          ))}
+            )
+          )}
         </div>
       )}
 
-      {/* Create modal */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Adicionar influenciador" className="max-w-lg">
+      {/* Create Fixo modal */}
+      <Modal open={fixoModalOpen} onClose={() => setFixoModalOpen(false)} title="Adicionar influenciador Fixo" className="max-w-lg">
         <div className="flex flex-col gap-4">
-          <PhotoUploadInf value={form.photoUrl} onChange={(v) => setForm((f) => ({ ...f, photoUrl: v }))} />
+          <PhotoUploadInf value={fixoForm.photoUrl} onChange={(v) => setFixoForm((f) => ({ ...f, photoUrl: v }))} />
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Nome *" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Nome do influenciador" autoFocus />
-            <Input label="Nicho / Categoria" value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} placeholder="Ex: Lifestyle, Tech…" />
+            <Input label="Nome *" value={fixoForm.name} onChange={(e) => setFixoForm((f) => ({ ...f, name: e.target.value }))} placeholder="Nome do influenciador" autoFocus />
+            <Input label="Nicho / Categoria" value={fixoForm.category} onChange={(e) => setFixoForm((f) => ({ ...f, category: e.target.value }))} placeholder="Ex: Lifestyle, Tech…" />
           </div>
-          <TipoToggle value={form.tipo} onChange={(tipo) => setForm((f) => ({ ...f, tipo }))} />
-          <Input label="Perfil / Link" value={form.profileLink} onChange={(e) => setForm((f) => ({ ...f, profileLink: e.target.value }))} placeholder="https://instagram.com/…" />
-          {saveError && <p className="text-xs text-red-500">{saveError}</p>}
+          <Textarea label="Bio" value={fixoForm.bio} onChange={(e) => setFixoForm((f) => ({ ...f, bio: e.target.value }))} placeholder="Breve descrição do influenciador e da parceria…" rows={3} />
+          <Input label="Perfil / Link" value={fixoForm.profileLink} onChange={(e) => setFixoForm((f) => ({ ...f, profileLink: e.target.value }))} placeholder="https://instagram.com/…" />
+          {fixoError && <p className="text-xs text-red-500">{fixoError}</p>}
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" size="sm" onClick={() => setModalOpen(false)} disabled={saving}>Cancelar</Button>
-            <Button variant="default" size="sm" onClick={handleCreate} disabled={saving || !form.name.trim() || !form.tipo}>
-              {saving && <Loader2 size={13} className="animate-spin" />}
+            <Button variant="outline" size="sm" onClick={() => setFixoModalOpen(false)} disabled={savingFixo}>Cancelar</Button>
+            <Button variant="default" size="sm" onClick={handleCreateFixo} disabled={savingFixo || !fixoForm.name.trim()}>
+              {savingFixo && <Loader2 size={13} className="animate-spin" />}
               Adicionar
             </Button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Create Avulso modal */}
+      <Modal
+        open={avulsoModalOpen}
+        onClose={() => setAvulsoModalOpen(false)}
+        title="Adicionar influenciador Avulso"
+        description="Cadastro rápido: nome, @ do Instagram e o link do conteúdo publicado."
+        className="max-w-md"
+      >
+        <div className="flex flex-col gap-4">
+          <Input label="Nome *" value={avulsoForm.name} onChange={(e) => setAvulsoForm((f) => ({ ...f, name: e.target.value }))} placeholder="Nome do influenciador" autoFocus />
+          <Input label="@ do Instagram *" value={avulsoForm.instagram} onChange={(e) => setAvulsoForm((f) => ({ ...f, instagram: e.target.value }))} placeholder="@usuario" />
+          <Input label="Link do conteúdo *" value={avulsoForm.contentLink} onChange={(e) => setAvulsoForm((f) => ({ ...f, contentLink: e.target.value }))} placeholder="https://www.instagram.com/reel/..." />
+          {avulsoError && <p className="text-xs text-red-500">{avulsoError}</p>}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setAvulsoModalOpen(false)} disabled={savingAvulso}>Cancelar</Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleCreateAvulso}
+              disabled={savingAvulso || !avulsoForm.name.trim() || !avulsoForm.instagram.trim() || !avulsoForm.contentLink.trim()}
+            >
+              {savingAvulso && <Loader2 size={13} className="animate-spin" />}
+              Adicionar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Avulso modal */}
+      <Modal
+        open={!!avulsoEditTarget}
+        onClose={() => setAvulsoEditTarget(null)}
+        title="Editar influenciador Avulso"
+        className="max-w-md"
+      >
+        <div className="flex flex-col gap-4">
+          <Input label="Nome *" value={avulsoEditForm.name} onChange={(e) => setAvulsoEditForm((f) => ({ ...f, name: e.target.value }))} autoFocus />
+          <Input label="@ do Instagram *" value={avulsoEditForm.instagram} onChange={(e) => setAvulsoEditForm((f) => ({ ...f, instagram: e.target.value }))} placeholder="@usuario" />
+          <Input label="Link do conteúdo *" value={avulsoEditForm.contentLink} onChange={(e) => setAvulsoEditForm((f) => ({ ...f, contentLink: e.target.value }))} placeholder="https://www.instagram.com/reel/..." />
+          {avulsoEditError && <p className="text-xs text-red-500">{avulsoEditError}</p>}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setAvulsoEditTarget(null)} disabled={savingAvulsoEdit}>Cancelar</Button>
+            <Button size="sm" onClick={handleSaveAvulsoEdit} disabled={savingAvulsoEdit}>
+              {savingAvulsoEdit && <Loader2 size={13} className="animate-spin" />}
+              Salvar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Avulso confirmation */}
+      <Modal
+        open={!!avulsoDeleteTarget}
+        onClose={() => setAvulsoDeleteTarget(null)}
+        title="Excluir influenciador"
+        description={`Remover "${avulsoDeleteTarget?.name}"? Esta ação não pode ser desfeita.`}
+      >
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" size="sm" onClick={() => setAvulsoDeleteTarget(null)} disabled={deletingAvulso}>Cancelar</Button>
+          <Button size="sm" onClick={handleDeleteAvulso} disabled={deletingAvulso} className="bg-red-500 text-white hover:bg-red-600">
+            {deletingAvulso && <Loader2 size={13} className="animate-spin" />}
+            Excluir
+          </Button>
         </div>
       </Modal>
     </>
@@ -1157,7 +1153,6 @@ function ConteudoInflusTab() {
 const TABS: { key: Tab; label: string }[] = [
   { key: "recursos", label: "Recursos" },
   { key: "datas-comemorativas", label: "Datas Comemorativas" },
-  { key: "influenciadores", label: "Influenciadores" },
   { key: "conteudo-influs", label: "Conteúdo Influs" },
 ];
 
@@ -1193,7 +1188,6 @@ export default function ComunicacaoDesignPage() {
 
       {tab === "recursos" && <RecursosTab />}
       {tab === "datas-comemorativas" && <DatasComemorativasTab />}
-      {tab === "influenciadores" && <InfluenciadoresTab />}
       {tab === "conteudo-influs" && <ConteudoInflusTab />}
     </div>
   );
