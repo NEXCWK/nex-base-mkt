@@ -60,7 +60,6 @@ interface InfluencerConteudo {
   photoUrl: string;
   profileLink: string;
   instagram: string;
-  contentLink: string;
   contentLinks: ContentLink[];
   createdAt: string;
   updatedAt: string;
@@ -780,11 +779,16 @@ function ConteudoInflusTab() {
 
   // Avulso edit / delete (no dedicated screen — just a lightweight modal)
   const [avulsoEditTarget, setAvulsoEditTarget] = useState<InfluencerConteudo | null>(null);
-  const [avulsoEditForm, setAvulsoEditForm] = useState(EMPTY_AVULSO_FORM);
+  const [avulsoEditForm, setAvulsoEditForm] = useState({ name: "", instagram: "" });
   const [savingAvulsoEdit, setSavingAvulsoEdit] = useState(false);
   const [avulsoEditError, setAvulsoEditError] = useState("");
   const [avulsoDeleteTarget, setAvulsoDeleteTarget] = useState<InfluencerConteudo | null>(null);
   const [deletingAvulso, setDeletingAvulso] = useState(false);
+
+  // Avulso content links (managed live from within the edit modal)
+  const [avulsoLinkForm, setAvulsoLinkForm] = useState({ url: "", descricao: "" });
+  const [savingAvulsoLink, setSavingAvulsoLink] = useState(false);
+  const [avulsoLinkError, setAvulsoLinkError] = useState("");
 
   const fetchInfluencers = useCallback(async () => {
     setLoading(true);
@@ -857,15 +861,17 @@ function ConteudoInflusTab() {
   }
 
   function openAvulsoEdit(inf: InfluencerConteudo) {
-    setAvulsoEditForm({ name: inf.name, instagram: inf.instagram, contentLink: inf.contentLink });
+    setAvulsoEditForm({ name: inf.name, instagram: inf.instagram });
     setAvulsoEditError("");
+    setAvulsoLinkForm({ url: "", descricao: "" });
+    setAvulsoLinkError("");
     setAvulsoEditTarget(inf);
   }
 
   async function handleSaveAvulsoEdit() {
     if (!avulsoEditTarget) return;
-    if (!avulsoEditForm.name.trim() || !avulsoEditForm.instagram.trim() || !avulsoEditForm.contentLink.trim()) {
-      setAvulsoEditError("Nome, @ do Instagram e link do conteúdo são obrigatórios.");
+    if (!avulsoEditForm.name.trim() || !avulsoEditForm.instagram.trim()) {
+      setAvulsoEditError("Nome e @ do Instagram são obrigatórios.");
       return;
     }
     setSavingAvulsoEdit(true);
@@ -874,7 +880,11 @@ function ConteudoInflusTab() {
       const res = await fetch("/api/conteudo-influs", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: avulsoEditTarget.id, ...avulsoEditForm }),
+        body: JSON.stringify({
+          id: avulsoEditTarget.id,
+          name: avulsoEditForm.name.trim(),
+          instagram: avulsoEditForm.instagram.trim(),
+        }),
       });
       if (!res.ok) throw new Error("Erro ao salvar");
       const updated: InfluencerConteudo = await res.json();
@@ -885,6 +895,50 @@ function ConteudoInflusTab() {
     } finally {
       setSavingAvulsoEdit(false);
     }
+  }
+
+  async function handleAddAvulsoLink() {
+    if (!avulsoEditTarget) return;
+    if (!avulsoLinkForm.url.trim()) { setAvulsoLinkError("URL obrigatória."); return; }
+    setSavingAvulsoLink(true);
+    setAvulsoLinkError("");
+    try {
+      const newLink: ContentLink = {
+        id: Date.now().toString(),
+        url: avulsoLinkForm.url.trim(),
+        descricao: avulsoLinkForm.descricao.trim() || undefined,
+        addedAt: new Date().toISOString(),
+      };
+      const contentLinks = [...avulsoEditTarget.contentLinks, newLink];
+      const res = await fetch("/api/conteudo-influs", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: avulsoEditTarget.id, contentLinks }),
+      });
+      if (!res.ok) throw new Error("Erro ao salvar link");
+      const updated: InfluencerConteudo = await res.json();
+      setInfluencers((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+      setAvulsoEditTarget(updated);
+      setAvulsoLinkForm({ url: "", descricao: "" });
+    } catch (e) {
+      setAvulsoLinkError(e instanceof Error ? e.message : "Erro ao salvar");
+    } finally {
+      setSavingAvulsoLink(false);
+    }
+  }
+
+  async function handleRemoveAvulsoLink(linkId: string) {
+    if (!avulsoEditTarget) return;
+    const contentLinks = avulsoEditTarget.contentLinks.filter((l) => l.id !== linkId);
+    const res = await fetch("/api/conteudo-influs", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: avulsoEditTarget.id, contentLinks }),
+    });
+    if (!res.ok) return;
+    const updated: InfluencerConteudo = await res.json();
+    setInfluencers((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+    setAvulsoEditTarget(updated);
   }
 
   async function handleDeleteAvulso() {
@@ -1013,42 +1067,47 @@ function ConteudoInflusTab() {
               </button>
             ) : (
               <Card key={inf.id} className="overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="h-28 bg-gray-light flex items-center justify-center">
-                    <div className="w-14 h-14 rounded-full bg-gray-medium flex items-center justify-center">
-                      <Link2 size={22} className="text-muted-foreground" />
-                    </div>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-sm text-black truncate">{inf.name}</h3>
+                    <TipoBadge tipo={inf.tipo} />
                   </div>
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold text-sm text-black truncate">{inf.name}</h3>
-                      <TipoBadge tipo={inf.tipo} />
-                    </div>
-                    {inf.instagram && (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {inf.instagram.startsWith("@") ? inf.instagram : `@${inf.instagram}`}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between mt-3">
-                      {inf.contentLink ? (
+                  {inf.instagram && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {inf.instagram.startsWith("@") ? inf.instagram : `@${inf.instagram}`}
+                    </p>
+                  )}
+
+                  <div className="flex flex-col gap-1.5 mt-3">
+                    {inf.contentLinks.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">Nenhum link de conteúdo ainda.</p>
+                    ) : (
+                      inf.contentLinks.map((link) => (
                         <a
-                          href={inf.contentLink}
+                          key={link.id}
+                          href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-black hover:underline underline-offset-2"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-black hover:underline underline-offset-2 truncate"
                         >
-                          <PlayCircle size={13} />
-                          Assistir conteúdo
+                          <PlayCircle size={12} className="shrink-0" />
+                          <span className="truncate">{link.descricao || "Assistir conteúdo"}</span>
                         </a>
-                      ) : <span />}
-                      <div className="flex items-center gap-0.5 shrink-0">
-                        <button onClick={() => openAvulsoEdit(inf)} className="p-1 rounded-md text-muted-foreground hover:text-black hover:bg-gray-light transition-colors" title="Editar">
-                          <Pencil size={13} />
-                        </button>
-                        <button onClick={() => setAvulsoDeleteTarget(inf)} className="p-1 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors" title="Excluir">
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-medium">
+                    <span className="text-xs text-muted-foreground">
+                      {inf.contentLinks.length} {inf.contentLinks.length === 1 ? "conteúdo" : "conteúdos"}
+                    </span>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <button onClick={() => openAvulsoEdit(inf)} className="p-1 rounded-md text-muted-foreground hover:text-black hover:bg-gray-light transition-colors" title="Editar">
+                        <Pencil size={13} />
+                      </button>
+                      <button onClick={() => setAvulsoDeleteTarget(inf)} className="p-1 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors" title="Excluir">
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   </div>
                 </CardContent>
@@ -1084,7 +1143,7 @@ function ConteudoInflusTab() {
         open={avulsoModalOpen}
         onClose={() => setAvulsoModalOpen(false)}
         title="Adicionar influenciador Avulso"
-        description="Cadastro rápido: nome, @ do Instagram e o link do conteúdo publicado."
+        description="Cadastro rápido: nome, @ do Instagram e o link do conteúdo publicado. Você poderá adicionar mais links depois, editando este mesmo perfil."
         className="max-w-md"
       >
         <div className="flex flex-col gap-4">
@@ -1114,19 +1173,76 @@ function ConteudoInflusTab() {
         title="Editar influenciador Avulso"
         className="max-w-md"
       >
-        <div className="flex flex-col gap-4">
-          <Input label="Nome *" value={avulsoEditForm.name} onChange={(e) => setAvulsoEditForm((f) => ({ ...f, name: e.target.value }))} autoFocus />
-          <Input label="@ do Instagram *" value={avulsoEditForm.instagram} onChange={(e) => setAvulsoEditForm((f) => ({ ...f, instagram: e.target.value }))} placeholder="@usuario" />
-          <Input label="Link do conteúdo *" value={avulsoEditForm.contentLink} onChange={(e) => setAvulsoEditForm((f) => ({ ...f, contentLink: e.target.value }))} placeholder="https://www.instagram.com/reel/..." />
-          {avulsoEditError && <p className="text-xs text-red-500">{avulsoEditError}</p>}
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" size="sm" onClick={() => setAvulsoEditTarget(null)} disabled={savingAvulsoEdit}>Cancelar</Button>
-            <Button size="sm" onClick={handleSaveAvulsoEdit} disabled={savingAvulsoEdit}>
-              {savingAvulsoEdit && <Loader2 size={13} className="animate-spin" />}
-              Salvar
-            </Button>
+        {avulsoEditTarget && (
+          <div className="flex flex-col gap-4">
+            <Input label="Nome *" value={avulsoEditForm.name} onChange={(e) => setAvulsoEditForm((f) => ({ ...f, name: e.target.value }))} autoFocus />
+            <Input label="@ do Instagram *" value={avulsoEditForm.instagram} onChange={(e) => setAvulsoEditForm((f) => ({ ...f, instagram: e.target.value }))} placeholder="@usuario" />
+            {avulsoEditError && <p className="text-xs text-red-500">{avulsoEditError}</p>}
+            <div className="flex justify-end gap-2">
+              <Button size="sm" onClick={handleSaveAvulsoEdit} disabled={savingAvulsoEdit}>
+                {savingAvulsoEdit && <Loader2 size={13} className="animate-spin" />}
+                Salvar
+              </Button>
+            </div>
+
+            <div className="border-t border-gray-medium pt-4">
+              <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-3">
+                Links de conteúdo
+              </p>
+
+              {avulsoEditTarget.contentLinks.length > 0 && (
+                <div className="flex flex-col gap-2 mb-3">
+                  {avulsoEditTarget.contentLinks.map((link) => (
+                    <div key={link.id} className="flex items-start gap-2.5 rounded-lg border border-gray-medium bg-white p-2.5">
+                      <PlayCircle size={14} className="text-muted-foreground shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-sm font-medium text-black hover:underline underline-offset-2 break-all"
+                        >
+                          {link.url}
+                          <ExternalLink size={11} className="shrink-0" />
+                        </a>
+                        {link.descricao && <p className="mt-1 text-xs text-muted-foreground">{link.descricao}</p>}
+                      </div>
+                      <button
+                        onClick={() => handleRemoveAvulsoLink(link.id)}
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+                        title="Remover"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="rounded-lg border border-gray-medium bg-gray-light/40 p-3 flex flex-col gap-2.5">
+                <Input
+                  label="Adicionar novo link"
+                  value={avulsoLinkForm.url}
+                  onChange={(e) => setAvulsoLinkForm((f) => ({ ...f, url: e.target.value }))}
+                  placeholder="https://www.instagram.com/reel/..."
+                />
+                <Input
+                  label="Descrição (opcional)"
+                  value={avulsoLinkForm.descricao}
+                  onChange={(e) => setAvulsoLinkForm((f) => ({ ...f, descricao: e.target.value }))}
+                  placeholder="Ex: Vídeo de divulgação do coworking"
+                />
+                {avulsoLinkError && <p className="text-xs text-red-500">{avulsoLinkError}</p>}
+                <Button size="sm" onClick={handleAddAvulsoLink} disabled={savingAvulsoLink} className="self-end">
+                  {savingAvulsoLink && <Loader2 size={13} className="animate-spin" />}
+                  Adicionar link
+                </Button>
+              </div>
+            </div>
+
+            <Button variant="outline" size="sm" onClick={() => setAvulsoEditTarget(null)}>Fechar</Button>
           </div>
-        </div>
+        )}
       </Modal>
 
       {/* Delete Avulso confirmation */}
