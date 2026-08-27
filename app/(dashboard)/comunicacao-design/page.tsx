@@ -20,6 +20,7 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { FileUpload } from "@/components/upload/FileUpload";
+import { CalendarioInfluTab } from "@/components/calendario-influ/CalendarioInfluTab";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,7 +33,7 @@ import { ptBR } from "date-fns/locale";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = "recursos" | "datas-comemorativas" | "conteudo-influs";
+type Tab = "recursos" | "datas-comemorativas" | "conteudo-influs" | "calendario-influ";
 
 interface DataComemorativa {
   id: string;
@@ -1270,6 +1271,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "recursos", label: "Recursos" },
   { key: "datas-comemorativas", label: "Datas Comemorativas" },
   { key: "conteudo-influs", label: "Conteúdo Influs" },
+  { key: "calendario-influ", label: "Calendário Influ (Avulso)" },
 ];
 
 export default function ComunicacaoDesignPage() {
@@ -1305,6 +1307,7 @@ export default function ComunicacaoDesignPage() {
       {tab === "recursos" && <RecursosTab />}
       {tab === "datas-comemorativas" && <DatasComemorativasTab />}
       {tab === "conteudo-influs" && <ConteudoInflusTab />}
+      {tab === "calendario-influ" && <CalendarioInfluTab />}
     </div>
   );
 }
