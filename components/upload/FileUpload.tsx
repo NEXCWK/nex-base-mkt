@@ -287,7 +287,7 @@ function SummaryPanel({
   return (
     <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
       {/* Thin amber accent at top */}
-      <div className="h-0.5 bg-gradient-to-r from-amber-400 via-amber-300 to-transparent" />
+      <div className="h-[3px] w-16 bg-accent" />
 
       {/* Header */}
       <div className="bg-white px-5 pt-4 pb-4 border-b border-gray-100">
@@ -489,8 +489,8 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
     <>
       <div
         className={cn(
-          "relative border border-gray-medium rounded-xl overflow-hidden bg-white",
-          dragging && "ring-2 ring-black ring-offset-1"
+          "relative border border-gray-medium rounded-xl overflow-hidden bg-white shadow-card",
+          dragging && "ring-2 ring-black ring-offset-2"
         )}
         onDragEnter={(e) => { e.preventDefault(); dragDepth.current++; setDragging(true); }}
         onDragOver={(e) => e.preventDefault()}
@@ -506,8 +506,8 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
         )}
 
         {/* Header */}
-        <div className="flex items-center gap-2 px-4 py-3 bg-gray-light/50 border-b border-gray-medium">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1 truncate">
+        <div className="flex items-center gap-2 px-4 py-3 bg-canvas border-b border-gray-medium">
+          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.12em] flex-1 truncate">
             {label ?? "Arquivos"}
           </span>
           {!loading && (
@@ -518,9 +518,9 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
           <button
             onClick={() => !uploading && inputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-md border border-gray-medium bg-white hover:bg-gray-light transition-colors disabled:opacity-50 shrink-0 ml-1"
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 h-8 rounded-lg bg-black text-white hover:bg-gray-dark transition-colors disabled:opacity-50 shrink-0 ml-1"
           >
-            {uploading ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} />}
+            {uploading ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
             {uploading ? `Enviando (${uploadQueue})…` : "Adicionar"}
           </button>
           <input ref={inputRef} type="file" multiple className="hidden" accept={ACCEPTED} onChange={(e) => { if (e.target.files) uploadMany(e.target.files); }} disabled={uploading} />
@@ -533,12 +533,19 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
             <span className="text-sm">Carregando…</span>
           </div>
         ) : files.length === 0 ? (
-          <div className="py-12 text-center">
-            <p className="text-sm text-muted-foreground">Nenhum arquivo ainda.</p>
-            <p className="text-xs text-muted-foreground mt-1 opacity-70">
-              Clique em &ldquo;Adicionar&rdquo; ou arraste arquivos aqui.
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={() => !uploading && inputRef.current?.click()}
+            className="m-4 flex w-[calc(100%-2rem)] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-medium py-10 text-center transition-colors hover:border-black hover:bg-canvas"
+          >
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gray-light ring-1 ring-inset ring-gray-medium">
+              <Upload size={18} className="text-muted-foreground" />
+            </span>
+            <span className="text-sm font-semibold text-foreground">Nenhum arquivo ainda</span>
+            <span className="text-xs text-muted-foreground">
+              Clique para enviar ou arraste arquivos aqui · PDF, DOCX, PPTX, XLSX, imagens ou MP4 (até 100 MB)
+            </span>
+          </button>
         ) : (
           <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {files.map((f) => {
@@ -546,7 +553,7 @@ export function FileUpload({ section, category, label }: FileUploadProps) {
               return (
                 <div
                   key={f.id}
-                  className="group border border-gray-medium rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow"
+                  className="group border border-gray-medium rounded-xl overflow-hidden bg-white hover:shadow-card-hover hover:border-[#D4D4D4] transition-all"
                 >
                   {/* Thumbnail */}
                   <div

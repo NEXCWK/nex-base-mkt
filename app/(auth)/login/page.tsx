@@ -9,9 +9,9 @@ function LoginCard() {
   const error = searchParams.get("error");
 
   return (
-    <div className="bg-white rounded-xl border border-gray-medium p-6 shadow-sm">
-      <h2 className="text-base font-bold mb-2">Entrar na plataforma</h2>
-      <p className="text-xs text-muted-foreground mb-5">
+    <div className="bg-white rounded-2xl border border-gray-medium p-6 sm:p-7 shadow-pop">
+      <h2 className="text-lg font-bold tracking-tight mb-1">Entrar na plataforma</h2>
+      <p className="text-sm text-muted-foreground mb-6">
         Use sua conta Google do Nex para acessar.
       </p>
 
@@ -28,7 +28,8 @@ function LoginCard() {
 
       <button
         onClick={() => signIn("google", { callbackUrl: "/" })}
-        className="flex items-center justify-center gap-3 w-full border border-gray-medium rounded-lg px-4 py-2.5 text-sm font-medium text-foreground hover:bg-gray-light transition-colors"
+        type="button"
+        className="flex items-center justify-center gap-3 w-full h-11 border border-gray-medium rounded-lg px-4 text-sm font-semibold text-foreground shadow-xs hover:bg-gray-light hover:border-[#D4D4D4] active:scale-[0.99] transition-all"
       >
         <GoogleIcon />
         Entrar com Google
@@ -39,7 +40,7 @@ function LoginCard() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gray-light flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-canvas flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-5">
@@ -52,12 +53,13 @@ export default function LoginPage() {
               priority
             />
           </div>
-          <p className="text-sm font-semibold text-gray-dark tracking-wide uppercase">
+          <p className="text-[11px] font-bold text-muted-foreground tracking-[0.16em] uppercase">
             Marketing, Comunicação &amp; Vendas
           </p>
+          <div className="mx-auto mt-3 h-[3px] w-8 rounded-full bg-accent" />
         </div>
 
-        <Suspense fallback={<div className="bg-white rounded-xl border border-gray-medium p-6 shadow-sm h-32" />}>
+        <Suspense fallback={<div className="bg-white rounded-2xl border border-gray-medium p-6 shadow-pop h-44" />}>
           <LoginCard />
         </Suspense>
 

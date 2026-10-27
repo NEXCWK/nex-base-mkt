@@ -2,8 +2,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   CalendarClock, Plus, Pencil, Trash2, Loader2,
-  ChevronLeft, ChevronRight, Users, Clock, Target, ListChecks,
+  ChevronLeft, ChevronRight, Users, Clock, Target, ListChecks, CalendarDays,
 } from "lucide-react";
+import { Tabs, useTabParam } from "@/components/ui/tabs";
 import {
   startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay,
   addMonths, subMonths, format,
@@ -14,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -65,9 +67,15 @@ const EMPTY_FORM = {
 
 // ─── Calendar helpers ───────────────────────────────────────────────────────────
 
-function routineAppliesOn(m: MeetingRoutine, day: Date, thirdThursday: Date | null): boolean {
+function routineAppliesOn(
+  m: MeetingRoutine,
+  day: Date,
+  thirdThursday: Date | null,
+  firstWeekday: Date | null
+): boolean {
   if (m.frequency === "semanal") return m.weekday !== null && getDay(day) === m.weekday;
-  if (m.monthlyRule === "primeiros-dias") return day.getDate() === 1;
+  // "Entre os primeiros dias do mês": first business day, never a weekend.
+  if (m.monthlyRule === "primeiros-dias") return !!firstWeekday && isSameDay(day, firstWeekday);
   if (m.monthlyRule === "terceira-quinta") return !!thirdThursday && isSameDay(day, thirdThursday);
   return false;
 }
@@ -78,12 +86,13 @@ function buildCalendar(monthDate: Date, routines: MeetingRoutine[]) {
   const days = eachDayOfInterval({ start, end });
   const thursdays = days.filter((d) => getDay(d) === 4);
   const thirdThursday = thursdays[2] ?? null;
+  const firstWeekday = days.find((d) => getDay(d) !== 0 && getDay(d) !== 6) ?? null;
 
   const cells: { date: Date | null; routines: MeetingRoutine[] }[] = [];
   const leading = getDay(start);
   for (let i = 0; i < leading; i++) cells.push({ date: null, routines: [] });
   for (const d of days) {
-    cells.push({ date: d, routines: routines.filter((m) => routineAppliesOn(m, d, thirdThursday)) });
+    cells.push({ date: d, routines: routines.filter((m) => routineAppliesOn(m, d, thirdThursday, firstWeekday)) });
   }
   while (cells.length % 7 !== 0) cells.push({ date: null, routines: [] });
   return cells;
@@ -95,6 +104,7 @@ export default function ReunioesDaAreaPage() {
   const [routines, setRoutines] = useState<MeetingRoutine[]>([]);
   const [loading, setLoading] = useState(true);
   const [displayMonth, setDisplayMonth] = useState<Date | null>(null);
+  const [view, setView] = useTabParam("tab", ["calendario", "rotinas"] as const, "calendario");
 
   const [formModal, setFormModal] = useState<{ open: boolean; editing?: MeetingRoutine }>({ open: false });
   const [form, setForm] = useState(EMPTY_FORM);
@@ -190,13 +200,16 @@ export default function ReunioesDaAreaPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await fetch("/api/reunioes-da-area", {
+      const delRes = await fetch("/api/reunioes-da-area", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: deleteTarget.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setRoutines((prev) => prev.filter((r) => r.id !== deleteTarget.id));
       setDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeleting(false);
     }
@@ -205,34 +218,36 @@ export default function ReunioesDaAreaPage() {
   const usedTypes = Array.from(new Set(routines.map((r) => r.type)));
 
   return (
-    <div className="p-4 sm:p-8 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gray-light rounded-lg flex items-center justify-center">
-            <CalendarClock size={17} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Reuniões da Área</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Estrutura oficial de encontros — cadência, participantes, objetivos e calendário do mês.
-            </p>
-          </div>
-        </div>
-        <Button variant="accent" onClick={openCreate}>
-          <Plus size={15} />
-          Nova reunião
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Reuniões da Área"
+        description="Estrutura oficial de encontros — cadência, participantes, objetivos e calendário do mês."
+        actions={
+            <Button variant="accent" onClick={openCreate}>
+              <Plus size={15} />
+              Nova reunião
+            </Button>
+        }
+      />
+
+      <Tabs
+        aria-label="Visualização"
+        items={[
+          { id: "calendario", label: "Calendário do mês", icon: CalendarDays },
+          { id: "rotinas", label: "Rotinas", icon: ListChecks, count: loading ? undefined : routines.length },
+        ]}
+        value={view}
+        onChange={setView}
+      />
 
       {loading ? (
         <div className="flex items-center gap-2 text-muted-foreground text-sm py-10">
           <Loader2 size={15} className="animate-spin" /> Carregando...
         </div>
       ) : (
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-8">
           {/* Legenda */}
-          {routines.length > 0 && (
+          {routines.length > 0 && view === "calendario" && (
             <div>
               <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-3">Legenda</p>
               <div className="flex flex-wrap gap-2">
@@ -261,7 +276,7 @@ export default function ReunioesDaAreaPage() {
                 Criar primeira reunião
               </Button>
             </div>
-          ) : (
+          ) : view === "rotinas" ? (
             <div>
               <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-3">
                 Detalhamento por reunião
@@ -353,14 +368,11 @@ export default function ReunioesDaAreaPage() {
                 ))}
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Calendário do mês */}
-          {displayMonth && (
+          {displayMonth && routines.length > 0 && view === "calendario" && (
             <div>
-              <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-3">
-                Calendário do mês
-              </p>
               <div className="border border-gray-medium rounded-xl overflow-hidden">
                 <div className="bg-black text-white px-5 py-4 flex items-center justify-between">
                   <div>
@@ -414,7 +426,14 @@ export default function ReunioesDaAreaPage() {
                     >
                       {cell.date && (
                         <>
-                          <span className="text-xs font-600 text-muted-foreground">{cell.date.getDate()}</span>
+                          <span
+                            className={cn(
+                              "text-xs font-600 w-6 h-6 -m-0.5 inline-flex items-center justify-center rounded-full",
+                              isSameDay(cell.date, new Date()) ? "bg-black text-white" : "text-muted-foreground"
+                            )}
+                          >
+                            {cell.date.getDate()}
+                          </span>
                           {cell.routines.map((m) => (
                             <span
                               key={m.id}
@@ -588,6 +607,6 @@ export default function ReunioesDaAreaPage() {
           </Button>
         </div>
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

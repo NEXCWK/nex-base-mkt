@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/options";
-import { updatePassword } from "@/lib/auth/users";
+import { findUserByEmail, updatePassword } from "@/lib/auth/users";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { userId, newPassword } = await req.json();
+  const { newPassword } = await req.json();
   if (!newPassword || newPassword.length < 8) {
     return NextResponse.json(
       { error: "A senha deve ter no mínimo 8 caracteres." },
@@ -17,8 +17,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Always act on the signed-in user's own account; never trust an id sent
+  // by the client (that would let anyone reset someone else's password).
+  const user = findUserByEmail(session.user.email);
+  if (!user) {
+    return NextResponse.json({ error: "Usuário não encontrado." }, { status: 404 });
+  }
+
   try {
-    await updatePassword(userId, newPassword);
+    await updatePassword(user.id, newPassword);
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Erro ao atualizar senha." }, { status: 500 });

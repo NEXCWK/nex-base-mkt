@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { User, ChevronDown, ChevronUp, Pencil, Camera, Loader2, Plus, Trash2, Globe } from "lucide-react";
+import { User, Users, Handshake, ChevronDown, ChevronUp, Pencil, Camera, Loader2, Plus, Trash2, Globe } from "lucide-react";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
+import { Tabs, useTabParam } from "@/components/ui/tabs";
+import { LoadingState, EmptyState } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
+import { resizeImage } from "@/lib/image";
 
 interface Partner {
   id: string;
@@ -97,13 +101,16 @@ function ParceirosTab() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await fetch("/api/parceiros", {
+      const delRes = await fetch("/api/parceiros", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: deleteTarget.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setPartners((p) => p.filter((x) => x.id !== deleteTarget.id));
       setDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeleting(false);
     }
@@ -227,27 +234,6 @@ const EMPTY_FORM: ProfileFormData = {
   photoUrl: "",
 };
 
-function resizeImage(file: File, maxPx = 480, quality = 0.85): Promise<string> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > maxPx || height > maxPx) {
-        const ratio = Math.min(maxPx / width, maxPx / height);
-        width = Math.round(width * ratio);
-        height = Math.round(height * ratio);
-      }
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
-      URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL("image/jpeg", quality));
-    };
-    img.src = url;
-  });
-}
 
 function PhotoUpload({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -259,7 +245,7 @@ function PhotoUpload({ value, onChange }: { value: string; onChange: (v: string)
     try {
       const dataUrl = await resizeImage(file);
       onChange(dataUrl);
-    } finally {
+    } catch (e) { window.alert(e instanceof Error ? e.message : "Erro ao processar a imagem."); } finally {
       setProcessing(false);
     }
   }
@@ -327,7 +313,7 @@ function PhotoUpload({ value, onChange }: { value: string; onChange: (v: string)
 export default function NossoTimePage() {
   const { data: session } = useSession();
   const sessionEmail = session?.user?.email ?? "";
-  const [activeTab, setActiveTab] = useState<"time" | "parceiros">("time");
+  const [activeTab, setActiveTab] = useTabParam("tab", ["time", "parceiros"] as const, "time");
 
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -412,50 +398,35 @@ export default function NossoTimePage() {
   };
 
   return (
-    <div className="p-4 sm:p-8 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Nosso Time</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Conheça as pessoas e parceiros da área.
-          </p>
-        </div>
-        {sessionEmail && activeTab === "time" && (
-          <Button variant="accent" size="sm" onClick={openEditModal}>
-            <Pencil size={14} />
-            Editar meu perfil
-          </Button>
-        )}
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Nosso Time"
+        description="Conheça as pessoas e os parceiros da área."
+        actions={
+          sessionEmail && activeTab === "time" ? (
+            <Button variant="accent" onClick={openEditModal}>
+              <Pencil size={15} />
+              Editar meu perfil
+            </Button>
+          ) : undefined
+        }
+      />
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-medium mb-8">
-        {([["time", "Time"], ["parceiros", "Parceiros da Área"]] as const).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setActiveTab(key)}
-            className={cn(
-              "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
-              activeTab === key
-                ? "border-black text-black"
-                : "border-transparent text-muted-foreground hover:text-black"
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        aria-label="Seções do time"
+        items={[
+          { id: "time", label: "Time", icon: Users, count: loading ? undefined : members.length },
+          { id: "parceiros", label: "Parceiros da Área", icon: Handshake },
+        ]}
+        value={activeTab}
+        onChange={setActiveTab}
+      />
 
       {activeTab === "parceiros" && <ParceirosTab />}
 
       {activeTab === "time" && <>
       {/* States */}
-      {loading && (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-5 h-5 rounded-full border-2 border-black border-t-transparent animate-spin" />
-        </div>
-      )}
+      {loading && <LoadingState />}
 
       {!loading && error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -464,12 +435,12 @@ export default function NossoTimePage() {
       )}
 
       {!loading && !error && members.length === 0 && (
-        <div className="rounded-lg border border-gray-medium bg-gray-light p-12 text-center">
-          <User size={32} className="mx-auto mb-3 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            Nenhum membro cadastrado ainda. Seja o primeiro a preencher seu perfil.
-          </p>
-        </div>
+        <EmptyState
+          icon={User}
+          title="Nenhum membro cadastrado ainda"
+          description="Seja o primeiro a preencher seu perfil."
+          action={sessionEmail ? <Button variant="accent" size="sm" onClick={openEditModal}><Pencil size={14} /> Preencher meu perfil</Button> : undefined}
+        />
       )}
 
       {/* Team grid */}
@@ -571,6 +542,7 @@ export default function NossoTimePage() {
                       </div>
                     )}
 
+                    {(member.age || member.likes || member.sports || member.curiosities || (member.bio && member.bio.length > 90)) && (
                     <button
                       onClick={() => toggleExpand(member.email)}
                       className="mt-3 flex items-center gap-1 text-xs text-muted-foreground hover:text-black transition-colors"
@@ -587,6 +559,7 @@ export default function NossoTimePage() {
                         </>
                       )}
                     </button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -654,7 +627,7 @@ export default function NossoTimePage() {
             label="Gostos / Hobbies"
             value={form.likes}
             onChange={(e) => setField("likes", e.target.value)}
-            placeholder="Ex: Musica, Viagens, Fotografia"
+            placeholder="Ex: Música, Viagens, Fotografia"
           />
 
           <PhotoUpload value={form.photoUrl} onChange={(v) => setField("photoUrl", v)} />
@@ -691,6 +664,6 @@ export default function NossoTimePage() {
         </div>
       </Modal>
       </>}
-    </div>
+    </PageContainer>
   );
 }

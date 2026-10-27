@@ -14,11 +14,19 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex h-dvh bg-white">
+    <div className="min-h-dvh bg-white">
+      <a
+        href="#conteudo"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-black focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+      >
+        Pular para o conteúdo
+      </a>
       <Sidebar />
-      <main className="flex-1 lg:ml-60 pt-14 lg:pt-0 overflow-y-auto">
-        <div className="min-h-full">{children}</div>
-      </main>
+      <div className="lg:pl-64 pt-14 lg:pt-0 min-h-dvh flex flex-col">
+        <main id="conteudo" className="flex-1 min-w-0">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { resizeImage } from "@/lib/image";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
 
 interface Evento {
   id: string;
@@ -30,27 +32,6 @@ function formatDate(iso: string) {
   });
 }
 
-function resizeImage(file: File, maxPx = 800, quality = 0.85): Promise<string> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > maxPx || height > maxPx) {
-        const ratio = Math.min(maxPx / width, maxPx / height);
-        width = Math.round(width * ratio);
-        height = Math.round(height * ratio);
-      }
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
-      URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL("image/jpeg", quality));
-    };
-    img.src = url;
-  });
-}
 
 function PhotoUpload({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -59,7 +40,8 @@ function PhotoUpload({ value, onChange }: { value: string; onChange: (v: string)
   async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) return;
     setProcessing(true);
-    try { onChange(await resizeImage(file)); }
+    try { onChange(await resizeImage(file, 800)); }
+    catch (e) { window.alert(e instanceof Error ? e.message : "Erro ao processar a imagem."); }
     finally { setProcessing(false); }
   }
 
@@ -177,13 +159,16 @@ export default function NossosEventosPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await fetch("/api/nossos-eventos", {
+      const delRes = await fetch("/api/nossos-eventos", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: deleteTarget.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setEventos((prev) => prev.filter((x) => x.id !== deleteTarget.id));
       setDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally { setDeleting(false); }
   }
 
@@ -196,18 +181,17 @@ export default function NossosEventosPage() {
   const years = Object.keys(byYear).sort((a, b) => b.localeCompare(a));
 
   return (
-    <div className="p-4 sm:p-8 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Nossos Eventos</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Histórico de eventos realizados pelo Nex.
-          </p>
-        </div>
-        <Button variant="default" size="sm" onClick={openCreate}>
-          <Plus size={14} /> Adicionar evento
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Nossos Eventos"
+        description="Histórico de eventos realizados pelo Nex."
+        actions={
+          <Button variant="default" onClick={openCreate}>
+            <Plus size={15} /> Adicionar evento
+          </Button>
+        }
+      />
+
 
       {loading ? (
         <div className="flex items-center justify-center py-20 text-muted-foreground">
@@ -363,6 +347,6 @@ export default function NossosEventosPage() {
           </Button>
         </div>
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

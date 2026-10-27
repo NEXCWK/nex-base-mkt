@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
 
 interface CertItem {
   id: string;
@@ -148,13 +149,16 @@ export default function CertificacoesPage() {
         deleteTarget.type === "group"
           ? { type: "group", id: deleteTarget.group.id }
           : { type: "item", groupId: deleteTarget.groupId, id: deleteTarget.item.id };
-      await fetch("/api/certificacoes", {
+      const delRes = await fetch("/api/certificacoes", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setDeleteTarget(null);
       await loadGroups();
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeleting(false);
     }
@@ -166,23 +170,17 @@ export default function CertificacoesPage() {
       : `Remover a certificação "${deleteTarget?.item?.name}"?`;
 
   return (
-    <div className="p-4 sm:p-8 max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gray-light rounded-lg flex items-center justify-center">
-            <Award size={17} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Certificações</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Conjuntos de certificações e cursos da equipe</p>
-          </div>
-        </div>
-        <Button variant="accent" onClick={openAddGroup}>
-          <Plus size={15} />
-          Novo conjunto
-        </Button>
-      </div>
+    <PageContainer width="md">
+      <PageHeader
+        title="Certificações"
+        description="Conjuntos de certificações e cursos de ferramentas e plataformas da equipe."
+        actions={
+            <Button variant="accent" onClick={openAddGroup}>
+              <Plus size={15} />
+              Novo conjunto
+            </Button>
+        }
+      />
 
       {loading ? (
         <div className="flex items-center gap-2 text-muted-foreground text-sm py-10">
@@ -397,6 +395,6 @@ export default function CertificacoesPage() {
           </Button>
         </div>
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

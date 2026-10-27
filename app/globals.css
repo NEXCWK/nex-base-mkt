@@ -53,6 +53,8 @@
     --border: 0 0% 90%;
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 42%;
+    --sidebar-width: 16rem;
+    color-scheme: light;
   }
 
   * {
@@ -60,22 +62,70 @@
     box-sizing: border-box;
   }
 
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
     @apply bg-background text-foreground;
-    font-family: 'ProximaNova', system-ui, Arial, sans-serif;
+    font-family: 'ProximaNova', Inter, system-ui, Arial, sans-serif;
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'ProximaNova', system-ui, Arial, sans-serif;
+    font-family: 'ProximaNova', Inter, system-ui, Arial, sans-serif;
     font-weight: 700;
+    letter-spacing: -0.01em;
   }
 
   button, input, textarea, select,
   pre, code, kbd, samp {
-    font-family: 'ProximaNova', system-ui, Arial, sans-serif;
+    font-family: 'ProximaNova', Inter, system-ui, Arial, sans-serif;
+  }
+
+  ::selection {
+    background: #FFD400;
+    color: #000;
+  }
+
+  /* Visible, consistent keyboard focus everywhere */
+  :focus-visible {
+    outline: 2px solid #000;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: none;
+  }
+
+  /* Thin, discreet scrollbars on desktop */
+  @media (pointer: fine) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #D4D4D4 transparent;
+    }
+    *::-webkit-scrollbar { width: 10px; height: 10px; }
+    *::-webkit-scrollbar-thumb {
+      background: #D9D9D9;
+      border-radius: 999px;
+      border: 3px solid transparent;
+      background-clip: content-box;
+    }
+    *::-webkit-scrollbar-thumb:hover { background-color: #BDBDBD; }
+    *::-webkit-scrollbar-track { background: transparent; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
@@ -96,11 +146,27 @@
     from { opacity: 0; transform: scale(0.97) translateY(6px); }
     to { opacity: 1; transform: scale(1) translateY(0); }
   }
+  @keyframes sheet-in {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   .animate-overlay-in {
     animation: overlay-in 0.15s ease-out;
   }
   .animate-modal-in {
-    animation: modal-in 0.18s ease-out;
+    animation: modal-in 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .animate-fade-in-up {
+    animation: fade-in-up 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @media (max-width: 639px) {
+    .animate-modal-in {
+      animation: sheet-in 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    }
   }
 
   .safe-area-bottom {
@@ -113,5 +179,15 @@
   }
   .animate-slide-up {
     animation: slide-up 0.25s ease-out;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Fade the edges of horizontally scrollable tab rows */
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 24px), transparent 100%);
   }
 }

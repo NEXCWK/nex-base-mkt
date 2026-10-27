@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
-import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 export const metadata: Metadata = {
   title: "Nex | Marketing, Comunicação & Vendas",
@@ -27,8 +26,6 @@ export const viewport: Viewport = {
   themeColor: "#FFD400",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
 };
 
@@ -48,7 +45,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <Providers>{children}</Providers>
-        <InstallPrompt />
         <ServiceWorkerRegistration />
       </body>
     </html>

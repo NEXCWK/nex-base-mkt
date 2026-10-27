@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/modal";
 import { MarkdownContent } from "@/components/ui/markdown-content";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
+import { Tabs, SegmentedTabs, useTabParam } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
   Plus,
@@ -25,6 +27,9 @@ import {
   ShieldCheck,
   Info,
   Ban,
+  MessageSquareText,
+  ListChecks,
+  FolderOpen,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -554,6 +559,8 @@ function DiretrizesDesconto() {
     try {
       await persist({ productPolicies: data.productPolicies.filter((p) => p.id !== productDeleteTarget.id) });
       setProductDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setSaving(false);
     }
@@ -613,6 +620,8 @@ function DiretrizesDesconto() {
     try {
       await persist({ campaigns: data.campaigns.filter((c) => c.id !== campaignDeleteTarget.id) });
       setCampaignDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setSaving(false);
     }
@@ -1089,13 +1098,16 @@ function ApresentacoesComerciais() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await fetch("/api/apresentacoes-comerciais", {
+      const delRes = await fetch("/api/apresentacoes-comerciais", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: deleteTarget.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setItems((prev) => prev.filter((i) => i.id !== deleteTarget.id));
       setDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeleting(false);
     }
@@ -1103,11 +1115,11 @@ function ApresentacoesComerciais() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <p className="text-sm text-muted-foreground leading-relaxed">
           Links atualizados das apresentações comerciais por produto. Mantenha sempre o link mais recente.
         </p>
-        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 ml-4">
+        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 self-start sm:self-auto">
           <Plus size={14} />
           Adicionar
         </Button>
@@ -1315,13 +1327,16 @@ function ConteudosVendasTab() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await fetch("/api/conteudos-vendas", {
+      const delRes = await fetch("/api/conteudos-vendas", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: deleteTarget.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setItems((prev) => prev.filter((i) => i.id !== deleteTarget.id));
       setDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeleting(false);
     }
@@ -1337,11 +1352,11 @@ function ConteudosVendasTab() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <p className="text-sm text-muted-foreground leading-relaxed">
           Links de posts, conteúdos e materiais úteis para o processo de vendas.
         </p>
-        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 ml-4">
+        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 self-start sm:self-auto">
           <Plus size={14} />
           Adicionar
         </Button>
@@ -1561,14 +1576,17 @@ function VideoGruposTab({ tipo, descricao }: { tipo: string; descricao: string }
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await fetch("/api/video-grupos", {
+      const delRes = await fetch("/api/video-grupos", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: tipo, id: deleteTarget.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setGrupos((prev) => prev.filter((g) => g.id !== deleteTarget.id));
       if (expandedId === deleteTarget.id) setExpandedId(null);
       setDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeleting(false);
     }
@@ -1620,9 +1638,9 @@ function VideoGruposTab({ tipo, descricao }: { tipo: string; descricao: string }
 
   return (
     <>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <p className="text-sm text-muted-foreground leading-relaxed">{descricao}</p>
-        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 ml-4">
+        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 self-start sm:self-auto">
           <Plus size={14} />
           Novo Conjunto
         </Button>
@@ -2297,128 +2315,65 @@ function ProcessosFechamento() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-type MainTab = "arquivos" | "scripts" | "descontos" | "processos" | "apresentacoes" | "conteudo-vendas";
-type ScriptSubTab = "scripts" | "fups" | "keypoints" | "sla";
-type ConteudoSubTab = "posts" | "carro-chefe" | "sazonais" | "depoimentos" | "influs";
+const MAIN_TABS = [
+  { id: "scripts", label: "Scripts Comerciais", icon: MessageSquareText },
+  { id: "descontos", label: "Diretrizes de Desconto", icon: Percent },
+  { id: "processos", label: "Processos de Fechamento", icon: ListChecks },
+  { id: "apresentacoes", label: "Apresentações", icon: MonitorPlay },
+  { id: "conteudo-vendas", label: "Conteúdo para Vendas", icon: Video },
+  { id: "arquivos", label: "Arquivos", icon: FolderOpen },
+] as const;
+type MainTab = (typeof MAIN_TABS)[number]["id"];
 
-function TabButton({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
-        active
-          ? "border-black text-black"
-          : "border-transparent text-muted-foreground hover:text-black"
-      )}
-    >
-      {label}
-    </button>
-  );
-}
+const SCRIPT_TABS = [
+  { id: "scripts", label: "Scripts" },
+  { id: "fups", label: "FUPs" },
+  { id: "keypoints", label: "Keypoints" },
+  { id: "sla", label: "SLA de Atendimento" },
+] as const;
+type ScriptSubTab = (typeof SCRIPT_TABS)[number]["id"];
 
-function SubTabButton({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
-        active
-          ? "bg-black text-white"
-          : "text-muted-foreground hover:bg-gray-light hover:text-black"
-      )}
-    >
-      {label}
-    </button>
-  );
-}
+const CONTEUDO_TABS = [
+  { id: "posts", label: "Posts & Links" },
+  { id: "carro-chefe", label: "Vídeos Carro-Chefe" },
+  { id: "sazonais", label: "Vídeos Sazonais" },
+  { id: "depoimentos", label: "Depoimentos" },
+  { id: "influs", label: "Vídeos Influs" },
+] as const;
+type ConteudoSubTab = (typeof CONTEUDO_TABS)[number]["id"];
+
+const DOC_PANELS: Record<ScriptSubTab, { apiPath: string; newLabel: string; emptyTitle: string; emptyDesc: string }> = {
+  scripts: { apiPath: "/api/scripts", newLabel: "Novo Script", emptyTitle: "Nenhum script ainda", emptyDesc: "Crie o primeiro script comercial para o time." },
+  fups: { apiPath: "/api/fups", newLabel: "Novo FUP", emptyTitle: "Nenhum FUP ainda", emptyDesc: "Crie o primeiro guia de follow-up para o time." },
+  keypoints: { apiPath: "/api/keypoints", newLabel: "Novo Keypoint", emptyTitle: "Nenhum keypoint ainda", emptyDesc: "Crie o primeiro keypoint de qualificação para o time." },
+  sla: { apiPath: "/api/sla", newLabel: "Novo SLA", emptyTitle: "Nenhum SLA ainda", emptyDesc: "Crie o primeiro SLA de atendimento para o time." },
+};
+
+const VIDEO_DESCRIPTIONS: Record<Exclude<ConteudoSubTab, "posts">, string> = {
+  "carro-chefe": "Principais vídeos de cada produto. Crie um conjunto por produto e envie os vídeos específicos.",
+  sazonais: "Vídeos sazonais com condições especiais ou diferenciais. Crie um conjunto por campanha ou produto.",
+  depoimentos: "Vídeos de depoimentos de clientes. Crie um conjunto por produto ou perfil de cliente.",
+  influs: "Vídeos de influenciadores parceiros. Crie um conjunto por influenciador ou campanha.",
+};
 
 export default function ComercialPage() {
-  const [mainTab, setMainTab] = useState<MainTab>("scripts");
-  const [scriptSubTab, setScriptSubTab] = useState<ScriptSubTab>("scripts");
-  const [conteudoSubTab, setConteudoSubTab] = useState<ConteudoSubTab>("posts");
+  const [mainTab, setMainTab] = useTabParam<MainTab>("tab", MAIN_TABS.map((t) => t.id), "scripts", ["sub"]);
+  const [scriptSubTab, setScriptSubTab] = useTabParam<ScriptSubTab>("sub", SCRIPT_TABS.map((t) => t.id), "scripts");
+  const [conteudoSubTab, setConteudoSubTab] = useTabParam<ConteudoSubTab>("sub", CONTEUDO_TABS.map((t) => t.id), "posts");
 
   return (
-    <div className="p-4 sm:p-8 max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Vendas</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Arquivos, scripts e diretrizes comerciais para o time de vendas.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Vendas"
+        description="Scripts, diretrizes, processos e materiais que o time comercial usa no dia a dia."
+      />
 
-      {/* Main tabs */}
-      <div className="flex gap-1 border-b border-gray-medium mb-8 overflow-x-auto scrollbar-hide">
-        <TabButton label="Arquivos" active={mainTab === "arquivos"} onClick={() => setMainTab("arquivos")} />
-        <TabButton label="Scripts Comerciais" active={mainTab === "scripts"} onClick={() => setMainTab("scripts")} />
-        <TabButton label="Diretrizes de Desconto" active={mainTab === "descontos"} onClick={() => setMainTab("descontos")} />
-        <TabButton label="Processos de Fechamento" active={mainTab === "processos"} onClick={() => setMainTab("processos")} />
-        <TabButton label="Apresentações Comerciais" active={mainTab === "apresentacoes"} onClick={() => setMainTab("apresentacoes")} />
-        <TabButton label="Conteúdo para Vendas" active={mainTab === "conteudo-vendas"} onClick={() => setMainTab("conteudo-vendas")} />
-      </div>
-
-      {mainTab === "arquivos" && <FileUpload section="Comercial" />}
+      <Tabs aria-label="Seções de Vendas" items={[...MAIN_TABS]} value={mainTab} onChange={setMainTab} />
 
       {mainTab === "scripts" && (
         <div>
-          <div className="flex gap-1 mb-6 flex-wrap">
-            <SubTabButton label="Scripts" active={scriptSubTab === "scripts"} onClick={() => setScriptSubTab("scripts")} />
-            <SubTabButton label="FUPs" active={scriptSubTab === "fups"} onClick={() => setScriptSubTab("fups")} />
-            <SubTabButton label="Keypoints" active={scriptSubTab === "keypoints"} onClick={() => setScriptSubTab("keypoints")} />
-            <SubTabButton label="SLA de Atendimento" active={scriptSubTab === "sla"} onClick={() => setScriptSubTab("sla")} />
-          </div>
-          {scriptSubTab === "scripts" && (
-            <DocumentsPanel
-              key="scripts"
-              apiPath="/api/scripts"
-              newLabel="Novo Script"
-              emptyTitle="Nenhum script ainda"
-              emptyDesc="Crie o primeiro script comercial para o time."
-            />
-          )}
-          {scriptSubTab === "fups" && (
-            <DocumentsPanel
-              key="fups"
-              apiPath="/api/fups"
-              newLabel="Novo FUP"
-              emptyTitle="Nenhum FUP ainda"
-              emptyDesc="Crie o primeiro guia de follow-up para o time."
-            />
-          )}
-          {scriptSubTab === "keypoints" && (
-            <DocumentsPanel
-              key="keypoints"
-              apiPath="/api/keypoints"
-              newLabel="Novo Keypoint"
-              emptyTitle="Nenhum keypoint ainda"
-              emptyDesc="Crie o primeiro keypoint de qualificação para o time."
-            />
-          )}
-          {scriptSubTab === "sla" && (
-            <DocumentsPanel
-              key="sla"
-              apiPath="/api/sla"
-              newLabel="Novo SLA"
-              emptyTitle="Nenhum SLA ainda"
-              emptyDesc="Crie o primeiro SLA de atendimento para o time."
-            />
-          )}
+          <SegmentedTabs aria-label="Tipo de documento" items={[...SCRIPT_TABS]} value={scriptSubTab} onChange={setScriptSubTab} />
+          <DocumentsPanel key={scriptSubTab} {...DOC_PANELS[scriptSubTab]} />
         </div>
       )}
 
@@ -2430,60 +2385,16 @@ export default function ComercialPage() {
 
       {mainTab === "conteudo-vendas" && (
         <div>
-          <div className="flex gap-1 mb-6 flex-wrap">
-            <SubTabButton
-              label="Posts & Links"
-              active={conteudoSubTab === "posts"}
-              onClick={() => setConteudoSubTab("posts")}
-            />
-            <SubTabButton
-              label="Vídeos Carro-Chefe"
-              active={conteudoSubTab === "carro-chefe"}
-              onClick={() => setConteudoSubTab("carro-chefe")}
-            />
-            <SubTabButton
-              label="Vídeos Sazonais"
-              active={conteudoSubTab === "sazonais"}
-              onClick={() => setConteudoSubTab("sazonais")}
-            />
-            <SubTabButton
-              label="Vídeos Depoimentos"
-              active={conteudoSubTab === "depoimentos"}
-              onClick={() => setConteudoSubTab("depoimentos")}
-            />
-            <SubTabButton
-              label="Vídeos Influs"
-              active={conteudoSubTab === "influs"}
-              onClick={() => setConteudoSubTab("influs")}
-            />
-          </div>
-          {conteudoSubTab === "posts" && <ConteudosVendasTab />}
-          {conteudoSubTab === "carro-chefe" && (
-            <VideoGruposTab
-              tipo="carro-chefe"
-              descricao="Principais vídeos de cada produto. Crie um conjunto por produto e envie os vídeos específicos."
-            />
-          )}
-          {conteudoSubTab === "sazonais" && (
-            <VideoGruposTab
-              tipo="sazonais"
-              descricao="Vídeos sazonais com condições especiais ou diferenciais. Crie um conjunto por campanha ou produto."
-            />
-          )}
-          {conteudoSubTab === "depoimentos" && (
-            <VideoGruposTab
-              tipo="depoimentos"
-              descricao="Vídeos de depoimentos de clientes. Crie um conjunto por produto ou perfil de cliente."
-            />
-          )}
-          {conteudoSubTab === "influs" && (
-            <VideoGruposTab
-              tipo="influs"
-              descricao="Vídeos de influenciadores parceiros. Crie um conjunto por influenciador ou campanha."
-            />
+          <SegmentedTabs aria-label="Tipo de conteúdo" items={[...CONTEUDO_TABS]} value={conteudoSubTab} onChange={setConteudoSubTab} />
+          {conteudoSubTab === "posts" ? (
+            <ConteudosVendasTab />
+          ) : (
+            <VideoGruposTab key={conteudoSubTab} tipo={conteudoSubTab} descricao={VIDEO_DESCRIPTIONS[conteudoSubTab]} />
           )}
         </div>
       )}
-    </div>
+
+      {mainTab === "arquivos" && <FileUpload section="Comercial" />}
+    </PageContainer>
   );
 }

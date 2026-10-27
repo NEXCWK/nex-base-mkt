@@ -143,13 +143,16 @@ export function CalendarioInfluTab() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await fetch("/api/calendario-influ", {
+      const delRes = await fetch("/api/calendario-influ", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: deleteTarget.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setContatos((prev) => prev.filter((c) => c.id !== deleteTarget.id));
       setDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeleting(false);
     }

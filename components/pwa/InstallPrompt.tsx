@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Download, X, Share, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Platform = "android" | "ios" | "desktop" | "unknown";
 
@@ -29,32 +30,32 @@ function isInStandaloneMode(): boolean {
 
 function IOSGuide({ onClose }: { onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-[200] flex items-end justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+    <div className="fixed inset-0 z-[200] flex items-end justify-center p-4 bg-black/50 backdrop-blur-sm animate-overlay-in">
+      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-pop animate-modal-in">
         <div className="flex items-center justify-between mb-4">
-          <span className="font-700 text-base">Instalar no iPhone / iPad</span>
-          <button onClick={onClose} className="p-1 rounded-md text-muted-foreground hover:bg-gray-100">
+          <span className="font-bold text-base">Instalar no iPhone / iPad</span>
+          <button onClick={onClose} aria-label="Fechar" className="p-1.5 rounded-lg text-muted-foreground hover:bg-gray-light">
             <X size={16} />
           </button>
         </div>
         <ol className="space-y-4 text-sm text-foreground">
           <li className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FFD400] text-xs font-700">1</span>
+            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold">1</span>
             <span>Toque no botão <strong>Compartilhar</strong> <Share size={14} className="inline mb-0.5" /> na barra do Safari.</span>
           </li>
           <li className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FFD400] text-xs font-700">2</span>
+            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold">2</span>
             <span>Role para baixo e toque em <strong>&ldquo;Adicionar à Tela de Início&rdquo;</strong> <Plus size={14} className="inline mb-0.5" />.</span>
           </li>
           <li className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FFD400] text-xs font-700">3</span>
+            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold">3</span>
             <span>Toque em <strong>&ldquo;Adicionar&rdquo;</strong> no canto superior direito.</span>
           </li>
         </ol>
         <p className="mt-4 text-xs text-muted-foreground">O app aparecerá na tela inicial como um aplicativo nativo.</p>
         <button
           onClick={onClose}
-          className="mt-5 w-full rounded-lg bg-[#FFD400] py-2.5 text-sm font-600 text-black transition hover:brightness-95"
+          className="mt-5 w-full rounded-lg bg-black py-2.5 text-sm font-semibold text-white transition hover:bg-gray-dark"
         >
           Entendi
         </button>
@@ -63,7 +64,12 @@ function IOSGuide({ onClose }: { onClose: () => void }) {
   );
 }
 
-export function InstallPrompt() {
+/**
+ * "Instalar app" entry shown inside the app shell (sidebar footer) instead of a
+ * floating button that used to overlap page headers. Hidden when the app is
+ * already installed or the browser can't install it.
+ */
+export function InstallAppButton({ className }: { className?: string }) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [platform, setPlatform] = useState<Platform>("unknown");
   const [visible, setVisible] = useState(false);
@@ -86,34 +92,46 @@ export function InstallPrompt() {
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setVisible(true);
     };
+    const installed = () => setVisible(false);
 
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    window.addEventListener("appinstalled", installed);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", installed);
+    };
   }, []);
 
   const install = async () => {
     if (!deferredPrompt) return;
     setInstalling(true);
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    setInstalling(false);
-    if (outcome === "accepted") setVisible(false);
-    else setDeferredPrompt(null);
+    try {
+      await deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+    } finally {
+      setInstalling(false);
+      // The prompt event can only be used once: hide the entry either way
+      // (it comes back if the browser fires beforeinstallprompt again).
+      setDeferredPrompt(null);
+      setVisible(false);
+    }
   };
 
   if (!visible) return null;
 
   return (
     <>
-      {/* Small discrete fixed button at top */}
       <button
+        type="button"
         onClick={platform === "ios" ? () => setShowIOSGuide(true) : install}
         disabled={installing}
-        className="fixed top-2 right-16 lg:top-3 lg:right-4 z-[45] flex items-center gap-1.5 rounded-lg bg-white border border-gray-200 shadow-sm px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 transition-colors disabled:opacity-50"
-        title="Instalar o app Nex MKT"
+        className={cn(
+          "flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-white transition-colors disabled:opacity-50",
+          className
+        )}
       >
-        <Download size={12} />
-        <span className="hidden lg:inline">{installing ? "Instalando…" : "Instalar app"}</span>
+        <Download size={15} />
+        {installing ? "Instalando…" : "Instalar app"}
       </button>
 
       {showIOSGuide && <IOSGuide onClose={() => setShowIOSGuide(false)} />}

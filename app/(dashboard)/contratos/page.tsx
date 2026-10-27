@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
 
 interface Folder {
   id: string;
@@ -64,33 +65,34 @@ export default function ContratosPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await fetch("/api/contratos", {
+      const delRes = await fetch("/api/contratos", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: deleteTarget.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setFolders((prev) => prev.filter((f) => f.id !== deleteTarget.id));
       if (openId === deleteTarget.id) setOpenId(null);
       setDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeleting(false);
     }
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-4xl mx-auto">
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Contratos</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Organize os contratos por conjunto (tipo de produto ou serviço).
-          </p>
-        </div>
-        <Button variant="default" size="sm" onClick={() => setCreating(true)}>
-          <Plus size={14} />
-          Criar Novo Conjunto
-        </Button>
-      </div>
+    <PageContainer width="md">
+      <PageHeader
+        title="Contratos"
+        description="Organize os contratos por conjunto (tipo de produto ou serviço)."
+        actions={
+          <Button variant="default" onClick={() => setCreating(true)}>
+            <Plus size={15} />
+            Novo conjunto
+          </Button>
+        }
+      />
 
       {loading ? (
         <div className="flex items-center justify-center py-20 text-muted-foreground">
@@ -114,17 +116,17 @@ export default function ContratosPage() {
           {folders.map((folder) => {
             const isOpen = openId === folder.id;
             return (
-              <div key={folder.id} className="border border-gray-medium rounded-xl overflow-hidden bg-white">
+              <div key={folder.id} className={cn("border rounded-xl overflow-hidden bg-white shadow-card transition-colors", isOpen ? "border-[#D4D4D4]" : "border-gray-medium")}>
                 <div className="flex items-center justify-between px-5 py-4">
                   <button
-                    className="flex items-center gap-3 flex-1 text-left"
+                    className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                    aria-expanded={isOpen}
                     onClick={() => setOpenId(isOpen ? null : folder.id)}
                   >
-                    <FolderOpen
-                      size={17}
-                      className={cn("shrink-0 transition-colors", isOpen ? "text-black" : "text-muted-foreground")}
-                    />
-                    <div>
+                    <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors", isOpen ? "bg-black border-black" : "bg-gray-light/60 border-gray-medium")}>
+                      <FolderOpen size={16} strokeWidth={1.75} className={isOpen ? "text-accent" : "text-foreground"} />
+                    </span>
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold">{folder.name}</p>
                       {folder.description && (
                         <p className="text-xs text-muted-foreground mt-0.5">{folder.description}</p>
@@ -214,6 +216,6 @@ export default function ContratosPage() {
           </Button>
         </div>
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

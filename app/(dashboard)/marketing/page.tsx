@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ExternalLink, FolderOpen, Plus, Pencil, Trash2, Loader2, TrendingUp } from "lucide-react";
+import { ExternalLink, FolderOpen, Plus, Pencil, Trash2, Loader2, TrendingUp, FileText } from "lucide-react";
 import { FileUpload } from "@/components/upload/FileUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
-import { cn } from "@/lib/utils";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
+import { Tabs, useTabParam } from "@/components/ui/tabs";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -141,13 +142,16 @@ function VerbaManager() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await fetch("/api/verba", {
+      const delRes = await fetch("/api/verba", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: deleteTarget.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setEntries((prev) => prev.filter((e) => e.id !== deleteTarget.id));
       setDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeleting(false);
     }
@@ -161,11 +165,11 @@ function VerbaManager() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <p className="text-sm text-muted-foreground leading-relaxed">
           Registre a verba investida por plataforma e campanha, separado por mês.
         </p>
-        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 ml-4">
+        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 self-start sm:self-auto">
           <Plus size={14} />
           Adicionar
         </Button>
@@ -379,68 +383,49 @@ function VerbaManager() {
 type MidiaTab = "arquivos" | "verba";
 
 export default function MarketingPage() {
-  const [midiaTab, setMidiaTab] = useState<MidiaTab>("arquivos");
+  const [midiaTab, setMidiaTab] = useTabParam<MidiaTab>("tab", ["arquivos", "verba"], "arquivos");
 
   return (
-    <div className="p-4 sm:p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Marketing</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Estratégias, planos e materiais de marketing do Nex Coworking.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Marketing"
+        description="Estratégias, planos e materiais de mídia do Nex Coworking."
+      />
 
       {/* Drive link */}
-      <div className="border border-gray-medium rounded-xl p-6 bg-white mb-8">
-        <div className="flex items-start gap-4">
-          <div className="mt-0.5 rounded-lg bg-gray-light p-2.5 shrink-0">
-            <FolderOpen size={18} className="text-gray-dark" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-black">Estratégias e organização da área</h2>
-            <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-              Todas as estratégias, calendários, planos de ação e organizações da área de Marketing estão centralizados no Google Drive. Acesse pelo link abaixo.
-            </p>
-            <a
-              href="https://drive.google.com/drive/folders/1bNQu14d8EWKiHmfsQF9k6qDMtjuIcyFH?usp=drive_link"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-black hover:underline underline-offset-2"
-            >
-              Acessar pasta de Marketing no Drive
-              <ExternalLink size={13} />
-            </a>
-          </div>
+      <a
+        href="https://drive.google.com/drive/folders/1bNQu14d8EWKiHmfsQF9k6qDMtjuIcyFH?usp=drive_link"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group mb-8 flex items-start sm:items-center gap-4 rounded-xl border border-gray-medium bg-white p-5 shadow-card transition-all hover:shadow-card-hover hover:border-[#D4D4D4]"
+      >
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-medium bg-gray-light/60 transition-colors group-hover:bg-black group-hover:border-black">
+          <FolderOpen size={19} strokeWidth={1.75} className="text-foreground transition-colors group-hover:text-accent" />
         </div>
-      </div>
-
-      {/* Mídia section */}
-      <div>
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-          Mídia
-        </h2>
-        <div className="flex gap-1 bg-gray-light p-1 rounded-lg w-fit mb-6">
-          {([["arquivos", "Arquivos PDF"], ["verba", "Priorização de Verba"]] as const).map(
-            ([key, tabLabel]) => (
-              <button
-                key={key}
-                onClick={() => setMidiaTab(key)}
-                className={cn(
-                  "px-4 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap",
-                  midiaTab === key
-                    ? "bg-white text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {tabLabel}
-              </button>
-            )
-          )}
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[15px] font-bold text-foreground">Estratégias e organização da área</h2>
+          <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+            Estratégias, calendários, planos de ação e organizações da área de Marketing ficam centralizados no Google Drive.
+          </p>
         </div>
+        <span className="hidden sm:inline-flex items-center gap-1.5 shrink-0 text-sm font-semibold text-foreground">
+          Abrir no Drive
+          <ExternalLink size={13} className="transition-transform group-hover:translate-x-0.5" />
+        </span>
+      </a>
 
-        {midiaTab === "arquivos" && <FileUpload section="Marketing - Mídia" />}
-        {midiaTab === "verba" && <VerbaManager />}
-      </div>
-    </div>
+      <Tabs
+        aria-label="Mídia"
+        items={[
+          { id: "arquivos", label: "Arquivos de Mídia", icon: FileText },
+          { id: "verba", label: "Priorização de Verba", icon: TrendingUp },
+        ]}
+        value={midiaTab}
+        onChange={setMidiaTab}
+      />
+
+      {midiaTab === "arquivos" && <FileUpload section="Marketing - Mídia" />}
+      {midiaTab === "verba" && <VerbaManager />}
+    </PageContainer>
   );
 }

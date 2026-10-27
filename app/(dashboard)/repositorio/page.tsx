@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/modal";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
+import { LoadingState } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -61,6 +63,12 @@ function formatDate(iso: string) {
   } catch {
     return iso;
   }
+}
+
+function isOverdue(dueDate: string) {
+  if (!dueDate) return false;
+  const today = format(new Date(), "yyyy-MM-dd");
+  return dueDate.slice(0, 10) < today;
 }
 
 // ─── Card Detail / Edit Modal ─────────────────────────────────────────────────
@@ -128,13 +136,16 @@ function CardModal({ open, onClose, card, columnId, teamMembers, onSaved, onDele
     if (!card) return;
     setDeleting(true);
     try {
-      await fetch("/api/repositorio?type=card", {
+      const delRes = await fetch("/api/repositorio?type=card", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: card.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       onDeleted(card.id);
       onClose();
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeleting(false);
     }
@@ -292,7 +303,10 @@ function KanbanCardDisplay({ card, teamMembers, onClick }: KanbanCardDisplayProp
   return (
     <div
       onClick={onClick}
-      className="bg-white border border-gray-medium rounded-xl p-3.5 cursor-pointer hover:shadow-sm hover:border-gray-dark transition-all group"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
+      className="bg-white border border-gray-medium rounded-xl p-3.5 cursor-pointer shadow-card hover:shadow-card-hover hover:border-[#D4D4D4] transition-all group"
     >
       <p className="text-sm font-semibold text-foreground leading-snug mb-1">{card.title}</p>
       {card.description && (
@@ -326,7 +340,13 @@ function KanbanCardDisplay({ card, teamMembers, onClick }: KanbanCardDisplayProp
             <span />
           )}
           {card.dueDate && (
-            <span className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0">
+            <span
+              className={cn(
+                "flex items-center gap-1 text-[10px] shrink-0 rounded-full px-1.5 py-0.5",
+                isOverdue(card.dueDate) ? "bg-red-50 text-red-600 font-semibold" : "text-muted-foreground"
+              )}
+              title={isOverdue(card.dueDate) ? "Prazo vencido" : "Prazo"}
+            >
               <Calendar size={10} />
               {formatDate(card.dueDate)}
             </span>
@@ -434,14 +454,17 @@ export default function RepositorioPage() {
     if (!deleteCol) return;
     setDeletingCol(true);
     try {
-      await fetch("/api/repositorio?type=column", {
+      const delRes = await fetch("/api/repositorio?type=column", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: deleteCol.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setColumns((prev) => prev.filter((c) => c.id !== deleteCol.id));
       setCards((prev) => prev.filter((c) => c.columnId !== deleteCol.id));
       setDeleteCol(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeletingCol(false);
     }
@@ -477,27 +500,24 @@ export default function RepositorioPage() {
 
   if (loading) {
     return (
-      <div className="p-4 sm:p-8 flex items-center gap-2 text-muted-foreground text-sm">
-        <Loader2 size={16} className="animate-spin" /> Carregando repositório…
-      </div>
+      <PageContainer width="full">
+        <LoadingState label="Carregando repositório…" />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-4 sm:p-8 flex flex-col h-full min-h-0">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6 shrink-0">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Repositório</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Quadro kanban para organizar informações, projetos e updates do time.
-          </p>
-        </div>
-        <Button variant="default" size="sm" onClick={openCreateColumn} className="ml-4 shrink-0">
-          <Plus size={14} />
-          Nova coluna
-        </Button>
-      </div>
+    <PageContainer width="full">
+      <PageHeader
+        title="Repositório"
+        description="Quadro kanban para organizar informações, projetos e updates do time."
+        actions={
+          <Button variant="default" onClick={openCreateColumn}>
+            <Plus size={15} />
+            Nova coluna
+          </Button>
+        }
+      />
 
       {/* Board */}
       {columns.length === 0 ? (
@@ -513,7 +533,7 @@ export default function RepositorioPage() {
           </Button>
         </div>
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-4 flex-1 min-h-0 items-start">
+        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 items-start snap-x snap-mandatory sm:snap-none">
           {columns.map((col) => {
             const colCards = cards
               .filter((c) => c.columnId === col.id)
@@ -521,8 +541,8 @@ export default function RepositorioPage() {
             return (
               <div
                 key={col.id}
-                className="flex-shrink-0 w-[280px] flex flex-col bg-gray-light/60 border border-gray-medium rounded-xl overflow-hidden"
-                style={{ maxHeight: "calc(100vh - 200px)" }}
+                className="flex-shrink-0 w-[85vw] max-w-[300px] sm:w-[290px] snap-start flex flex-col bg-canvas border border-gray-medium rounded-xl overflow-hidden"
+                style={{ maxHeight: "calc(100dvh - 220px)" }}
               >
                 {/* Column header */}
                 <div className="flex items-center justify-between px-3.5 py-3 border-b border-gray-medium shrink-0">
@@ -632,6 +652,6 @@ export default function RepositorioPage() {
         onSaved={handleCardSaved}
         onDeleted={handleCardDeleted}
       />
-    </div>
+    </PageContainer>
   );
 }
