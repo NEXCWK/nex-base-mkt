@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth/options";
 import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -22,16 +24,25 @@ async function readItems(): Promise<ApresentacaoComercial[]> {
   }
 }
 
+async function unauthorized() {
+  const session = await getServerSession(authOptions);
+  return session?.user ? null : NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+
 async function writeItems(items: ApresentacaoComercial[]) {
   await fs.mkdir(path.join(process.cwd(), "data"), { recursive: true });
   await fs.writeFile(DATA_PATH, JSON.stringify(items, null, 2));
 }
 
 export async function GET() {
+  const denied = await unauthorized();
+  if (denied) return denied;
   return NextResponse.json(await readItems());
 }
 
 export async function POST(req: NextRequest) {
+  const denied = await unauthorized();
+  if (denied) return denied;
   const { produto, url, descricao } = await req.json() as Partial<ApresentacaoComercial>;
   if (!produto?.trim() || !url?.trim()) {
     return NextResponse.json({ error: "produto e url são obrigatórios" }, { status: 400 });
@@ -52,6 +63,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const denied = await unauthorized();
+  if (denied) return denied;
   const { id, produto, url, descricao } = await req.json() as Partial<ApresentacaoComercial>;
   if (!id || !produto?.trim() || !url?.trim()) {
     return NextResponse.json({ error: "id, produto e url são obrigatórios" }, { status: 400 });
@@ -71,6 +84,8 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const denied = await unauthorized();
+  if (denied) return denied;
   const { id } = await req.json() as { id?: string };
   if (!id) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
   const items = await readItems();

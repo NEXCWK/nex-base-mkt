@@ -2,8 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/options";
 import { readFile, writeFile } from "@/lib/data-store";
-import { format } from "date-fns";
 import { sendSlackNotification, buildReportSlackMessage } from "@/lib/slack";
+
+// The team works in Brasília time. The server runs in UTC, so formatting
+// `new Date()` directly would file reports written after 21h under the next
+// day (and they would disappear from "Hoje").
+function todayInSaoPaulo(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -35,7 +46,7 @@ export async function POST(req: NextRequest) {
     id: Date.now().toString(),
     userEmail: session.user.email,
     userName: session.user.name,
-    date: format(new Date(), "yyyy-MM-dd"),
+    date: todayInSaoPaulo(),
     timestamp: new Date().toISOString(),
     feeling: body.feeling || "bom",
     leads: Number(body.leads) || 0,

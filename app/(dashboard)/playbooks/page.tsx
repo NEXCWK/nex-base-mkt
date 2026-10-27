@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Pencil, Trash2, ExternalLink, Building2, Wrench } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Plus, Pencil, Trash2, ExternalLink, Building2, Wrench, BookOpen } from "lucide-react";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
+import { Tabs, SegmentedTabs, useTabParam } from "@/components/ui/tabs";
+import { EmptyState, LoadingState } from "@/components/ui/states";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,10 +33,10 @@ interface Tool {
 
 type MainTab = "arquivos" | "parceiros" | "softwares";
 
-const MAIN_TABS: { id: MainTab; label: string }[] = [
-  { id: "arquivos", label: "Arquivos" },
-  { id: "parceiros", label: "Parceiros (Outsourcing)" },
-  { id: "softwares", label: "Softwares da Área" },
+const MAIN_TABS: { id: MainTab; label: string; icon: React.ElementType }[] = [
+  { id: "arquivos", label: "Playbooks", icon: BookOpen },
+  { id: "parceiros", label: "Parceiros (Outsourcing)", icon: Building2 },
+  { id: "softwares", label: "Softwares da Área", icon: Wrench },
 ];
 
 const FILE_SECTIONS = [
@@ -60,33 +62,27 @@ const EMPTY_TOOL: Omit<Tool, "id" | "createdAt"> = {
 // ─── Arquivos tab ───────────────────────────────────────────────────────────
 
 function ArquivosTab() {
-  const [openSection, setOpenSection] = useState<string | null>("marketing");
+  const [openSection, setOpenSection] = useTabParam(
+    "sub",
+    FILE_SECTIONS.map((sec) => sec.id),
+    "marketing"
+  );
+  const current = FILE_SECTIONS.find((sec) => sec.id === openSection) ?? FILE_SECTIONS[0];
 
   return (
-    <div className="space-y-3">
-      {FILE_SECTIONS.map((sec) => {
-        const isOpen = openSection === sec.id;
-        return (
-          <div key={sec.id} className="border border-gray-medium rounded-lg overflow-hidden">
-            <button
-              className="w-full flex items-center justify-between px-5 py-3.5 bg-white hover:bg-gray-light transition-colors text-left"
-              onClick={() => setOpenSection(isOpen ? null : sec.id)}
-            >
-              <span className="font-medium text-sm text-black">{sec.label}</span>
-              <span className="text-xs text-muted-foreground">{isOpen ? "Recolher" : "Expandir"}</span>
-            </button>
-            {isOpen && (
-              <div className="border-t border-gray-medium p-5 bg-white">
-                <FileUpload
-                  section="Playbooks da Area"
-                  category={sec.label}
-                  label={sec.label}
-                />
-              </div>
-            )}
-          </div>
-        );
-      })}
+    <div>
+      <SegmentedTabs
+        aria-label="Playbook da área"
+        items={FILE_SECTIONS.map(({ id, label }) => ({ id, label }))}
+        value={openSection}
+        onChange={setOpenSection}
+      />
+      <FileUpload
+        key={current.id}
+        section="Playbooks da Area"
+        category={current.label}
+        label={`Playbook · ${current.label}`}
+      />
     </div>
   );
 }
@@ -141,7 +137,7 @@ function ParceirosTab() {
 
   async function handleSave() {
     if (!form.name.trim()) {
-      setSaveError("Nome e obrigatorio");
+      setSaveError("Nome é obrigatório");
       return;
     }
     setSaving(true);
@@ -184,7 +180,7 @@ function ParceirosTab() {
       await fetchPartners();
       setDeleteTarget(null);
     } catch {
-      // silently close; list will refresh
+      window.alert("Não foi possível remover. Tente novamente.");
     } finally {
       setDeleting(false);
     }
@@ -196,9 +192,9 @@ function ParceirosTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <p className="text-sm text-muted-foreground">
-          Empresas e profissionais externos parceiros da area.
+          Empresas e profissionais externos que prestam serviço para a área.
         </p>
         <Button variant="accent" size="sm" onClick={openAdd}>
           <Plus size={14} />
@@ -206,11 +202,7 @@ function ParceirosTab() {
         </Button>
       </div>
 
-      {loading && (
-        <div className="flex items-center justify-center py-16">
-          <div className="w-5 h-5 rounded-full border-2 border-black border-t-transparent animate-spin" />
-        </div>
-      )}
+      {loading && <LoadingState />}
 
       {!loading && error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -219,12 +211,12 @@ function ParceirosTab() {
       )}
 
       {!loading && !error && partners.length === 0 && (
-        <div className="rounded-lg border border-gray-medium bg-gray-light p-12 text-center">
-          <Building2 size={32} className="mx-auto mb-3 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            Nenhum parceiro cadastrado ainda.
-          </p>
-        </div>
+        <EmptyState
+          icon={Building2}
+          title="Nenhum parceiro cadastrado ainda"
+          description="Cadastre agências, freelancers e fornecedores que atendem a área."
+          action={<Button variant="outline" size="sm" onClick={openAdd}><Plus size={14} /> Adicionar parceiro</Button>}
+        />
       )}
 
       {!loading && !error && partners.length > 0 && (
@@ -283,10 +275,10 @@ function ParceirosTab() {
             placeholder="Nome da empresa ou profissional"
           />
           <Input
-            label="Servico / Especialidade"
+            label="Serviço / Especialidade"
             value={form.service}
             onChange={(e) => setField("service", e.target.value)}
-            placeholder="Ex: Design Grafico, Desenvolvimento"
+            placeholder="Ex: Design Gráfico, Desenvolvimento"
           />
           <Input
             label="Contato"
@@ -414,7 +406,7 @@ function SoftwaresTab() {
 
   async function handleSave() {
     if (!form.name.trim()) {
-      setSaveError("Nome e obrigatorio");
+      setSaveError("Nome é obrigatório");
       return;
     }
     setSaving(true);
@@ -457,7 +449,7 @@ function SoftwaresTab() {
       await fetchTools();
       setDeleteTarget(null);
     } catch {
-      // silently close; list will refresh
+      window.alert("Não foi possível remover. Tente novamente.");
     } finally {
       setDeleting(false);
     }
@@ -469,9 +461,9 @@ function SoftwaresTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <p className="text-sm text-muted-foreground">
-          Ferramentas e softwares utilizados pela area.
+          Ferramentas e softwares utilizados pela área.
         </p>
         <Button variant="accent" size="sm" onClick={openAdd}>
           <Plus size={14} />
@@ -479,11 +471,7 @@ function SoftwaresTab() {
         </Button>
       </div>
 
-      {loading && (
-        <div className="flex items-center justify-center py-16">
-          <div className="w-5 h-5 rounded-full border-2 border-black border-t-transparent animate-spin" />
-        </div>
-      )}
+      {loading && <LoadingState />}
 
       {!loading && error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -492,12 +480,12 @@ function SoftwaresTab() {
       )}
 
       {!loading && !error && tools.length === 0 && (
-        <div className="rounded-lg border border-gray-medium bg-gray-light p-12 text-center">
-          <Wrench size={32} className="mx-auto mb-3 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            Nenhum software cadastrado ainda.
-          </p>
-        </div>
+        <EmptyState
+          icon={Wrench}
+          title="Nenhum software cadastrado ainda"
+          description="Registre as ferramentas que o time usa e para que servem."
+          action={<Button variant="outline" size="sm" onClick={openAdd}><Plus size={14} /> Adicionar software</Button>}
+        />
       )}
 
       {!loading && !error && tools.length > 0 && (
@@ -576,10 +564,10 @@ function SoftwaresTab() {
             type="url"
           />
           <Textarea
-            label="Descricao"
+            label="Descrição"
             value={form.description}
             onChange={(e) => setField("description", e.target.value)}
-            placeholder="Para que serve e como e utilizado..."
+            placeholder="Para que serve e como é utilizado..."
             rows={3}
           />
 
@@ -655,44 +643,20 @@ function SoftwaresTab() {
 // ─── Page ───────────────────────────────────────────────────────────────────
 
 export default function PlaybooksPage() {
-  const [activeTab, setActiveTab] = useState<MainTab>("arquivos");
+  const [activeTab, setActiveTab] = useTabParam<MainTab>("tab", MAIN_TABS.map((t) => t.id), "arquivos", ["sub"]);
 
   return (
-    <div className="p-4 sm:p-8 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Playbooks da Área</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Arquivos, parceiros e ferramentas da área de marketing e comunicação.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Playbooks da Área"
+        description="Processos documentados, fornecedores externos e as ferramentas usadas pela área."
+      />
 
-      {/* Tab navigation */}
-      <div className="border-b border-gray-medium mb-8">
-        <nav className="flex gap-1" role="tablist">
-          {MAIN_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "px-4 py-2.5 text-sm font-medium rounded-t-md transition-colors relative -mb-px",
-                activeTab === tab.id
-                  ? "text-black border-b-2 border-black"
-                  : "text-muted-foreground hover:text-black hover:bg-gray-light"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      <Tabs aria-label="Seções dos playbooks" items={MAIN_TABS} value={activeTab} onChange={setActiveTab} />
 
-      {/* Tab content */}
       {activeTab === "arquivos" && <ArquivosTab />}
       {activeTab === "parceiros" && <ParceirosTab />}
       {activeTab === "softwares" && <SoftwaresTab />}
-    </div>
+    </PageContainer>
   );
 }

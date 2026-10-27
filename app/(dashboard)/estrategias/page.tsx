@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FileUpload } from "@/components/upload/FileUpload";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
+import { Tabs, useTabParam } from "@/components/ui/tabs";
+import { FolderOpen, NotebookPen, Check } from "lucide-react";
 
 const TAGS = [
   "Instagram",
@@ -16,6 +19,13 @@ const TAGS = [
 ] as const;
 
 type Tag = (typeof TAGS)[number];
+
+// Tag values double as storage keys for saved notes, so only the displayed
+// label is accented.
+const TAG_LABELS: Partial<Record<Tag, string>> = {
+  Lancamento: "Lançamento",
+  "Midia Paga": "Mídia Paga",
+};
 
 const NOTES_KEY = "estrategias_notes";
 
@@ -33,76 +43,94 @@ function loadNotes(): Record<Tag, string> {
 }
 
 export default function EstrategiasPage() {
+  const [tab, setTab] = useTabParam("tab", ["arquivos", "anotacoes"] as const, "arquivos");
   const [activeTag, setActiveTag] = useState<Tag>("Instagram");
   const [notes, setNotes] = useState<Record<Tag, string>>(
     () => Object.fromEntries(TAGS.map((t) => [t, ""])) as Record<Tag, string>
   );
   const [saved, setSaved] = useState(false);
+  const savedTimer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     setNotes(loadNotes());
+    return () => clearTimeout(savedTimer.current);
   }, []);
 
   function handleNoteChange(value: string) {
     const updated = { ...notes, [activeTag]: value };
     setNotes(updated);
-    localStorage.setItem(NOTES_KEY, JSON.stringify(updated));
+    try { localStorage.setItem(NOTES_KEY, JSON.stringify(updated)); } catch { /* ignore */ }
     setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
+    clearTimeout(savedTimer.current);
+    savedTimer.current = setTimeout(() => setSaved(false), 1500);
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Estratégias</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Arquivos e anotações organizados por canal estratégico.
-        </p>
-      </div>
+    <PageContainer width="md">
+      <PageHeader
+        title="Estratégias"
+        description="Arquivos e anotações organizados por canal estratégico."
+      />
 
-      <div className="mb-8">
-        <FileUpload section="Estrategias" />
-      </div>
+      <Tabs
+        aria-label="Seções de estratégias"
+        items={[
+          { id: "arquivos", label: "Arquivos", icon: FolderOpen },
+          { id: "anotacoes", label: "Anotações por Canal", icon: NotebookPen },
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
 
-      <div className="border border-gray-medium rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-medium bg-gray-light">
-          <h2 className="text-sm font-semibold">Anotações por Canal</h2>
-        </div>
+      {tab === "arquivos" && <FileUpload section="Estrategias" />}
 
-        <div className="p-4">
-          <div className="flex flex-wrap gap-2 mb-5">
-            {TAGS.map((tag) => (
-              <button
-                key={tag}
-                onClick={() => setActiveTag(tag)}
-                className={cn(
-                  "px-3 py-1 rounded-full text-xs font-medium border transition-colors",
-                  activeTag === tag
-                    ? "bg-black text-white border-black"
-                    : "bg-white text-gray-dark border-gray-medium hover:border-black hover:bg-gray-light"
-                )}
-              >
-                {tag}
-              </button>
-            ))}
+      {tab === "anotacoes" && (
+        <div className="rounded-xl border border-gray-medium bg-white shadow-card overflow-hidden">
+          <div className="flex flex-wrap gap-2 border-b border-gray-medium bg-canvas p-4">
+            {TAGS.map((tag) => {
+              const hasNote = !!notes[tag]?.trim();
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => setActiveTag(tag)}
+                  aria-pressed={activeTag === tag}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
+                    activeTag === tag
+                      ? "bg-black text-white border-black"
+                      : "bg-white text-gray-dark border-gray-medium hover:border-black"
+                  )}
+                >
+                  {hasNote && <span className={cn("h-1.5 w-1.5 rounded-full", activeTag === tag ? "bg-accent" : "bg-black")} />}
+                  {TAG_LABELS[tag] ?? tag}
+                </button>
+              );
+            })}
           </div>
 
-          <div>
+          <div className="p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-dark">{activeTag}</span>
-              {saved && (
-                <span className="text-xs text-muted-foreground">Salvo</span>
-              )}
+              <span className="text-sm font-semibold text-foreground">{TAG_LABELS[activeTag] ?? activeTag}</span>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 text-xs text-muted-foreground transition-opacity",
+                  saved ? "opacity-100" : "opacity-0"
+                )}
+                aria-live="polite"
+              >
+                <Check size={12} /> Salvo neste navegador
+              </span>
             </div>
             <Textarea
               value={notes[activeTag] ?? ""}
               onChange={(e) => handleNoteChange(e.target.value)}
-              placeholder={`Adicione anotações sobre estratégias de ${activeTag}...`}
-              rows={6}
+              placeholder={`Adicione anotações sobre estratégias de ${TAG_LABELS[activeTag] ?? activeTag}...`}
+              rows={10}
             />
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </PageContainer>
   );
 }

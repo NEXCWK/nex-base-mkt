@@ -1,4 +1,4 @@
-const CACHE_NAME = "nex-mkt-v1";
+const CACHE_NAME = "nex-mkt-v2";
 
 const STATIC_ASSETS = [
   "/",
@@ -51,8 +51,11 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       caches.match(request).then(
         (cached) => cached ?? fetch(request).then((res) => {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          // Only cache successful responses (never a 404/500 for good).
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
           return res;
         })
       )
@@ -63,7 +66,15 @@ self.addEventListener("fetch", (event) => {
   // Network-first with offline fallback for navigation
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(() => caches.match("/") ?? new Response("Offline", { status: 503 }))
+      // caches.match() returns a Promise, so the fallback has to be resolved
+      // before choosing the offline response.
+      fetch(request).catch(async () =>
+        (await caches.match("/")) ??
+        new Response("Você está offline. Verifique sua conexão e tente novamente.", {
+          status: 503,
+          headers: { "Content-Type": "text/plain; charset=utf-8" },
+        })
+      )
     );
   }
 });

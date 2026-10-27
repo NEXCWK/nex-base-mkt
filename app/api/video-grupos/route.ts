@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth/options";
 import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -34,18 +36,27 @@ async function readGrupos(type: string): Promise<VideoGrupo[]> {
   }
 }
 
+async function unauthorized() {
+  const session = await getServerSession(authOptions);
+  return session?.user ? null : NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+
 async function writeGrupos(type: string, grupos: VideoGrupo[]) {
   await fs.mkdir(path.join(process.cwd(), "data"), { recursive: true });
   await fs.writeFile(dataPath(type), JSON.stringify(grupos, null, 2));
 }
 
 export async function GET(req: NextRequest) {
+  const denied = await unauthorized();
+  if (denied) return denied;
   const type = req.nextUrl.searchParams.get("type") || "";
   if (!type) return NextResponse.json({ error: "type required" }, { status: 400 });
   return NextResponse.json(await readGrupos(type));
 }
 
 export async function POST(req: NextRequest) {
+  const denied = await unauthorized();
+  if (denied) return denied;
   const body = await req.json();
   const { type, name } = body as { type?: string; name?: string };
   if (!type || !name?.trim()) {
@@ -59,6 +70,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const denied = await unauthorized();
+  if (denied) return denied;
   const body = await req.json();
   const { type, id, links } = body as { type?: string; id?: string; links?: VideoLink[] };
   if (!type || !id) {
@@ -73,6 +86,8 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const denied = await unauthorized();
+  if (denied) return denied;
   const body = await req.json();
   const { type, id } = body as { type?: string; id?: string };
   if (!type || !id) {

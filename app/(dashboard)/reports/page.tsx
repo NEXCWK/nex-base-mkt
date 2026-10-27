@@ -18,6 +18,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
+import { Tabs, SegmentedTabs, useTabParam } from "@/components/ui/tabs";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -179,7 +181,7 @@ export default function ReportsPage() {
   const { data: session } = useSession();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"hoje" | "indicadores" | "historico">("hoje");
+  const [tab, setTab] = useTabParam("tab", ["hoje", "indicadores", "historico"] as const, "hoje");
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -254,55 +256,42 @@ export default function ReportsPage() {
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-4 sm:p-8 max-w-4xl mx-auto">
-
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gray-light rounded-lg flex items-center justify-center">
-            <BookOpen size={17} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Report Diário</h1>
-            <p className="text-sm text-muted-foreground mt-0.5 capitalize">
-              {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
-            </p>
-          </div>
-        </div>
-
-        {!myTodayReport && (
-          <Button variant="accent" onClick={() => setFormOpen(true)}>
-            <Plus size={15} />
-            Escrever report de hoje
-          </Button>
-        )}
-      </div>
+    <PageContainer width="md">
+      <PageHeader
+        title="Report Diário"
+        description={
+          <span className="capitalize" suppressHydrationWarning>
+            {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+          </span>
+        }
+        actions={
+          !myTodayReport && !loading ? (
+            <Button variant="accent" onClick={() => setFormOpen(true)}>
+              <Plus size={15} />
+              Escrever report de hoje
+            </Button>
+          ) : undefined
+        }
+      />
 
       {/* Success banner */}
       {submitSuccess && (
-        <div className="mb-5 flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 font-medium">
+        <div role="status" className="mb-5 flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 font-medium animate-fade-in-up">
           <CheckCircle2 size={15} />
           Report do dia enviado com sucesso!
         </div>
       )}
 
-      {/* Tab nav */}
-      <div className="flex gap-1 bg-gray-light p-1 rounded-lg w-fit mb-6">
-        {([["hoje", "Hoje"], ["indicadores", "Indicadores"], ["historico", "Histórico"]] as const).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={cn(
-              "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
-              tab === key
-                ? "bg-white text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        aria-label="Seções do report"
+        items={[
+          { id: "hoje", label: "Hoje", icon: BookOpen, count: loading ? undefined : todayReports.length },
+          { id: "indicadores", label: "Indicadores", icon: BarChart3 },
+          { id: "historico", label: "Histórico", icon: Clock },
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
 
       {/* ── HOJE ── */}
       {tab === "hoje" && (
@@ -441,7 +430,7 @@ export default function ReportsPage() {
         open={formOpen}
         onClose={() => setFormOpen(false)}
         title="Report Diário"
-        description={`${session?.user?.name ?? ""} — ${format(new Date(), "dd/MM/yyyy")}`}
+        description={`${session?.user?.name ?? ""} · ${format(new Date(), "dd/MM/yyyy")}`}
         className="max-w-lg"
       >
         <DailyReportForm
@@ -453,7 +442,7 @@ export default function ReportsPage() {
           onCancel={() => setFormOpen(false)}
         />
       </Modal>
-    </div>
+    </PageContainer>
   );
 }
 
@@ -794,24 +783,22 @@ function KpiDashboard({ reports, loading }: { reports: Report[]; loading: boolea
   return (
     <div className="flex flex-col gap-6">
       {/* Range selector */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           Consolidado dos últimos {range} dias · {inRange.length} {inRange.length === 1 ? "report" : "reports"}
         </p>
-        <div className="flex gap-1 bg-gray-light p-1 rounded-lg">
-          {([7, 30, 90] as const).map((r) => (
-            <button
-              key={r}
-              onClick={() => setRange(r)}
-              className={cn(
-                "px-3 py-1 rounded-md text-xs font-medium transition-colors",
-                range === r ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {r} dias
-            </button>
-          ))}
-        </div>
+        <SegmentedTabs
+          aria-label="Período"
+          size="sm"
+          className="mb-0"
+          items={[
+            { id: "7", label: "7 dias" },
+            { id: "30", label: "30 dias" },
+            { id: "90", label: "90 dias" },
+          ]}
+          value={String(range) as "7" | "30" | "90"}
+          onChange={(v) => setRange(Number(v) as 7 | 30 | 90)}
+        />
       </div>
 
       {/* Stat cards */}

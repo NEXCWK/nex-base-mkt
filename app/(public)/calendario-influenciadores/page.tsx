@@ -18,7 +18,7 @@ export default function CalendarioInfluenciadoresPublicPage() {
   }, []);
 
   return (
-    <div className="min-h-dvh bg-gray-light/40">
+    <div className="min-h-dvh bg-canvas">
       <header className="bg-white border-b border-gray-medium">
         <div className="max-w-5xl mx-auto px-4 sm:px-8 py-5 flex items-center gap-3">
           <Image src="/brand/logo-nex-preto.png" alt="Nex Coworking" width={80} height={32} className="object-contain" priority />

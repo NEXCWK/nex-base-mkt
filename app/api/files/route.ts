@@ -27,28 +27,74 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const buffer = fs.readFileSync(filePath);
   const ext = path.extname(storedName).toLowerCase();
   const mimeMap: Record<string, string> = {
     ".pdf": "application/pdf",
     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     ".png": "image/png",
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
     ".mp4": "video/mp4",
   };
   const contentType = mimeMap[ext] ?? "application/octet-stream";
 
-  const displayName = path.basename(storedName.replace(/^\d+_/, ""));
+  // Stored names are "<id>_<original>", where the id is a timestamp plus a
+  // short random suffix; strip it so downloads keep the original file name.
+  const displayName = path.basename(storedName.replace(/^\d{13}[a-z0-9]{0,5}_/, ""));
   const disposition = download ? "attachment" : "inline";
+  const baseHeaders = {
+    "Content-Type": contentType,
+    "Content-Disposition": `${disposition}; filename="${displayName.replace(/"/g, "")}"; filename*=UTF-8''${encodeURIComponent(displayName)}`,
+    "Cache-Control": "private, max-age=3600",
+    "Accept-Ranges": "bytes",
+  };
 
+  const { size } = fs.statSync(filePath);
+
+  // Byte-range support: Safari/iOS only plays <video> when the server answers
+  // range requests, and it also lets every browser seek without downloading
+  // the whole file first.
+  const range = req.headers.get("range");
+  const match = range ? /^bytes=(\d*)-(\d*)$/.exec(range.trim()) : null;
+  if (match && (match[1] || match[2])) {
+    let start: number;
+    let end: number;
+    if (match[1]) {
+      start = Number(match[1]);
+      end = match[2] ? Math.min(Number(match[2]), size - 1) : size - 1;
+    } else {
+      // "bytes=-N" → last N bytes
+      start = Math.max(0, size - Number(match[2]));
+      end = size - 1;
+    }
+    if (start > end || start >= size) {
+      return new NextResponse(null, { status: 416, headers: { "Content-Range": `bytes */${size}` } });
+    }
+    const chunk = Buffer.alloc(end - start + 1);
+    const fd = fs.openSync(filePath, "r");
+    try {
+      fs.readSync(fd, chunk, 0, chunk.length, start);
+    } finally {
+      fs.closeSync(fd);
+    }
+    return new NextResponse(chunk, {
+      status: 206,
+      headers: {
+        ...baseHeaders,
+        "Content-Length": String(chunk.length),
+        "Content-Range": `bytes ${start}-${end}/${size}`,
+      },
+    });
+  }
+
+  const buffer = fs.readFileSync(filePath);
   return new NextResponse(buffer, {
     headers: {
-      "Content-Type": contentType,
+      ...baseHeaders,
       "Content-Length": String(buffer.length),
-      "Content-Disposition": `${disposition}; filename="${displayName}"; filename*=UTF-8''${encodeURIComponent(displayName)}`,
-      "Cache-Control": "private, max-age=3600",
     },
   });
 }

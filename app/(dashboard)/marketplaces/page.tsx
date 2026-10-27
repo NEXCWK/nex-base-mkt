@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Store, ExternalLink, Pencil, Plus, Trash2, Loader2,
   Key, Mail, Phone, Monitor, DollarSign, LayoutList, StickyNote,
+  Eye, EyeOff, Copy, Check,
 } from "lucide-react";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +37,33 @@ function systemUrl(system: string) {
   if (!system) return "";
   const first = system.split(" /")[0].trim();
   return first.startsWith("http") ? first : `https://${first}`;
+}
+
+// Passwords are masked by default (screens get shared in meetings) and can be
+// revealed or copied with one click.
+function SecretRow({ label, value }: { label: string; value: string }) {
+  const [visible, setVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch { /* clipboard unavailable */ }
+  }
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      <Key size={12} className="shrink-0 text-muted-foreground" />
+      <span className="text-muted-foreground">{label}:</span>
+      <span className="min-w-0 truncate font-mono text-foreground">{visible ? value : "••••••••"}</span>
+      <button type="button" onClick={() => setVisible((v) => !v)} className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-gray-light" aria-label={visible ? "Ocultar senha" : "Mostrar senha"} title={visible ? "Ocultar" : "Mostrar"}>
+        {visible ? <EyeOff size={12} /> : <Eye size={12} />}
+      </button>
+      <button type="button" onClick={copy} className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-gray-light" aria-label="Copiar senha" title="Copiar">
+        {copied ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+      </button>
+    </div>
+  );
 }
 
 function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
@@ -121,12 +150,15 @@ export default function MarketplacesPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await fetch("/api/marketplaces", {
+      const delRes = await fetch("/api/marketplaces", {
         method: "DELETE", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: deleteTarget.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setItems((prev) => prev.filter((x) => x.id !== deleteTarget.id));
       setDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally { setDeleting(false); }
   }
 
@@ -134,18 +166,16 @@ export default function MarketplacesPage() {
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
   return (
-    <div className="p-4 sm:p-8 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Marketplaces</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Plataformas parceiras e seus dados de acesso e precificação.
-          </p>
-        </div>
-        <Button variant="default" size="sm" onClick={openCreate}>
-          <Plus size={14} /> Adicionar
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Marketplaces"
+        description="Plataformas parceiras e seus dados de acesso e precificação."
+        actions={
+          <Button variant="default" onClick={openCreate}>
+            <Plus size={15} /> Adicionar marketplace
+          </Button>
+        }
+      />
 
       {loading ? (
         <div className="flex items-center justify-center py-20 text-muted-foreground">
@@ -162,7 +192,7 @@ export default function MarketplacesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {items.map((m) => (
-            <div key={m.id} className="border border-gray-medium rounded-xl bg-white overflow-hidden hover:shadow-md transition-shadow">
+            <div key={m.id} className="border border-gray-medium rounded-xl bg-white overflow-hidden shadow-card hover:shadow-card-hover transition-shadow">
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-medium">
                 <div className="flex items-center gap-3 min-w-0">
@@ -199,7 +229,7 @@ export default function MarketplacesPage() {
                 <div className="pb-2.5 border-b border-gray-medium space-y-2">
                   <InfoRow icon={Monitor} label="Sistema" value={m.system} />
                   <InfoRow icon={Key} label="Login" value={m.login} />
-                  {m.password && <InfoRow icon={Key} label="Senha" value={m.password} />}
+                  {m.password && <SecretRow label="Senha" value={m.password} />}
                 </div>
 
                 {/* Pricing */}
@@ -235,7 +265,7 @@ export default function MarketplacesPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Input label="Login" value={form.login} onChange={f("login")} placeholder="reservasparceiros@nex.work" />
-            <Input label="Senha" value={form.password} onChange={f("password")} placeholder="••••••" />
+            <Input label="Senha" autoComplete="off" value={form.password} onChange={f("password")} placeholder="••••••" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Input label="Diária" value={form.dailyRate} onChange={f("dailyRate")} placeholder="R$ 00,00" />
@@ -273,6 +303,6 @@ export default function MarketplacesPage() {
           </Button>
         </div>
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

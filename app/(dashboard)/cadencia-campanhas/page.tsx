@@ -1,9 +1,11 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import {
-  Megaphone, Plus, Pencil, Trash2, Loader2,
+  Plus, Pencil, Trash2, Loader2,
   ArrowUp, ArrowDown,
 } from "lucide-react";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
+import { LoadingState } from "@/components/ui/states";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -192,6 +194,8 @@ export default function CadenciaCampanhasPage() {
     try {
       await persist({ rules: data.rules.filter((r) => r.id !== ruleDeleteTarget.id) });
       setRuleDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setSaving(false);
     }
@@ -240,6 +244,8 @@ export default function CadenciaCampanhasPage() {
     try {
       await persist({ flowSteps: data.flowSteps.filter((s) => s.id !== stepDeleteTarget.id) });
       setStepDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setSaving(false);
     }
@@ -294,6 +300,8 @@ export default function CadenciaCampanhasPage() {
     try {
       await persist({ roles: data.roles.filter((r) => r.id !== roleDeleteTarget.id) });
       setRoleDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setSaving(false);
     }
@@ -301,39 +309,46 @@ export default function CadenciaCampanhasPage() {
 
   if (loading || !data) {
     return (
-      <div className="p-4 sm:p-8 max-w-5xl mx-auto">
-        <div className="flex items-center gap-2 text-muted-foreground text-sm py-10">
-          <Loader2 size={15} className="animate-spin" /> Carregando...
-        </div>
-      </div>
+      <PageContainer>
+        <LoadingState />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-10 gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gray-light rounded-lg flex items-center justify-center">
-            <Megaphone size={17} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Cadência de Campanhas</h1>
-            <p className="text-sm text-muted-foreground mt-0.5 max-w-2xl">{data.subtitle}</p>
-          </div>
-        </div>
-        <button
-          onClick={openTextsEdit}
-          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors shrink-0"
-          title="Editar textos gerais"
-        >
-          <Pencil size={14} />
-        </button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Cadência de Campanhas"
+        description={data.subtitle}
+        actions={
+          <Button variant="outline" onClick={openTextsEdit}>
+            <Pencil size={14} />
+            Editar textos
+          </Button>
+        }
+      />
+
+      {/* Índice da página */}
+      <nav aria-label="Nesta página" className="sticky top-14 lg:top-0 z-20 -mx-4 sm:mx-0 mb-8 bg-white/90 backdrop-blur-md border-y sm:border sm:rounded-xl border-gray-medium px-4 sm:px-2 py-2 overflow-x-auto scrollbar-hide">
+        <ul className="flex gap-1 whitespace-nowrap">
+          {[
+            ["principios", "Princípios"],
+            ["por-que", "Por que existem"],
+            ["fluxo", "Fluxo da campanha"],
+            ["papeis", "Papéis"],
+          ].map(([id, label]) => (
+            <li key={id}>
+              <a href={`#${id}`} className="inline-flex px-3 py-1.5 rounded-lg text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors">
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
       <div className="flex flex-col gap-12">
         {/* Princípios da cadência */}
-        <section>
+        <section id="principios" className="scroll-mt-28">
           <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-1">
             Princípios da cadência
           </p>
@@ -373,7 +388,7 @@ export default function CadenciaCampanhasPage() {
         </section>
 
         {/* Por que essas regras existem */}
-        <section>
+        <section id="por-que" className="scroll-mt-28">
           <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-1">
             Por que essas regras existem
           </p>
@@ -386,7 +401,7 @@ export default function CadenciaCampanhasPage() {
         </section>
 
         {/* Fluxo de criação de uma campanha */}
-        <section>
+        <section id="fluxo" className="scroll-mt-28">
           <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-1">
             Fluxo de criação de uma campanha
           </p>
@@ -454,7 +469,7 @@ export default function CadenciaCampanhasPage() {
         </section>
 
         {/* Papéis no processo */}
-        <section>
+        <section id="papeis" className="scroll-mt-28">
           <p className="text-xs font-600 uppercase tracking-wide text-muted-foreground mb-1">
             Papéis no processo
           </p>
@@ -732,6 +747,6 @@ export default function CadenciaCampanhasPage() {
           </Button>
         </div>
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

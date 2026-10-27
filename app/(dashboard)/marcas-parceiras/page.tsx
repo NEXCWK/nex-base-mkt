@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
+import { resizeImage } from "@/lib/image";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
 
 interface MarcaParceira {
   id: string;
@@ -22,27 +24,6 @@ interface MarcaParceira {
 
 const EMPTY_FORM = { name: "", category: "", bio: "", website: "", photoUrl: "" };
 
-function resizeImage(file: File, maxPx = 480, quality = 0.85): Promise<string> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > maxPx || height > maxPx) {
-        const ratio = Math.min(maxPx / width, maxPx / height);
-        width = Math.round(width * ratio);
-        height = Math.round(height * ratio);
-      }
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
-      URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL("image/jpeg", quality));
-    };
-    img.src = url;
-  });
-}
 
 function LogoUpload({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +34,7 @@ function LogoUpload({ value, onChange }: { value: string; onChange: (v: string) 
     setProcessing(true);
     try {
       onChange(await resizeImage(file));
-    } finally {
+    } catch (e) { window.alert(e instanceof Error ? e.message : "Erro ao processar a imagem."); } finally {
       setProcessing(false);
     }
   }
@@ -191,31 +172,33 @@ export default function MarcasParceirasPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await fetch("/api/marcas-parceiras", {
+      const delRes = await fetch("/api/marcas-parceiras", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: deleteTarget.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setMarcas((p) => p.filter((x) => x.id !== deleteTarget.id));
       setDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeleting(false);
     }
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Marcas Parceiras</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Marcas e empresas parceiras do Nex Coworking.
-          </p>
-        </div>
-        <Button variant="default" size="sm" onClick={openCreate}>
-          <Plus size={14} /> Adicionar marca
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Marcas Parceiras"
+        description="Marcas e empresas parceiras do Nex Coworking."
+        actions={
+          <Button variant="default" onClick={openCreate}>
+            <Plus size={15} /> Adicionar marca
+          </Button>
+        }
+      />
+
 
       {loading ? (
         <div className="flex items-center justify-center py-20 text-muted-foreground">
@@ -355,6 +338,6 @@ export default function MarcasParceirasPage() {
           </Button>
         </div>
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

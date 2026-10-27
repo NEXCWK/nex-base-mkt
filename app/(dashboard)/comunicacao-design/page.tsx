@@ -28,12 +28,15 @@ import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
+import { Tabs, SegmentedTabs, useTabParam } from "@/components/ui/tabs";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { resizeImage } from "@/lib/image";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = "recursos" | "datas-comemorativas" | "conteudo-influs" | "calendario-influ";
+type Tab = "recursos" | "datas-comemorativas" | "influenciadores";
 
 interface DataComemorativa {
   id: string;
@@ -94,28 +97,25 @@ const LINKS = [
 
 function RecursosTab() {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {LINKS.map(({ icon: Icon, title, desc, label, href }) => (
-        <div key={title} className="border border-gray-medium rounded-xl p-6 bg-white">
-          <div className="flex items-start gap-4">
-            <div className="mt-0.5 rounded-lg bg-gray-light p-2.5 shrink-0">
-              <Icon size={18} className="text-gray-dark" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-base font-semibold text-black">{title}</h2>
-              <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{desc}</p>
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-black hover:underline underline-offset-2"
-              >
-                {label}
-                <ExternalLink size={13} />
-              </a>
-            </div>
+        <a
+          key={title}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex flex-col rounded-xl border border-gray-medium bg-white p-6 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover hover:border-[#D4D4D4]"
+        >
+          <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl border border-gray-medium bg-gray-light/60 transition-colors group-hover:border-black group-hover:bg-black">
+            <Icon size={19} strokeWidth={1.75} className="text-foreground transition-colors group-hover:text-accent" />
           </div>
-        </div>
+          <h2 className="text-base font-bold text-foreground">{title}</h2>
+          <p className="mt-1.5 flex-1 text-sm text-muted-foreground leading-relaxed">{desc}</p>
+          <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
+            {label}
+            <ExternalLink size={13} className="transition-transform group-hover:translate-x-0.5" />
+          </span>
+        </a>
       ))}
     </div>
   );
@@ -184,13 +184,16 @@ function DatasComemorativasTab() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await fetch("/api/datas-comemorativas", {
+      const delRes = await fetch("/api/datas-comemorativas", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: deleteTarget.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setItems((prev) => prev.filter((i) => i.id !== deleteTarget.id));
       setDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeleting(false);
     }
@@ -206,11 +209,11 @@ function DatasComemorativasTab() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <p className="text-sm text-muted-foreground leading-relaxed">
           Datas importantes para a marca Nex e suas ações comemorativas.
         </p>
-        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 ml-4">
+        <Button variant="default" size="sm" onClick={openCreate} className="shrink-0 self-start sm:self-auto">
           <Plus size={14} />
           Adicionar
         </Button>
@@ -355,27 +358,6 @@ function DatasComemorativasTab() {
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
-function resizeImage(file: File, maxPx = 480, quality = 0.85): Promise<string> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > maxPx || height > maxPx) {
-        const ratio = Math.min(maxPx / width, maxPx / height);
-        width = Math.round(width * ratio);
-        height = Math.round(height * ratio);
-      }
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
-      URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL("image/jpeg", quality));
-    };
-    img.src = url;
-  });
-}
 
 function PhotoUploadInf({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -385,6 +367,7 @@ function PhotoUploadInf({ value, onChange }: { value: string; onChange: (v: stri
     if (!file.type.startsWith("image/")) return;
     setProcessing(true);
     try { onChange(await resizeImage(file)); }
+    catch (e) { window.alert(e instanceof Error ? e.message : "Erro ao processar a imagem."); }
     finally { setProcessing(false); }
   }
 
@@ -512,12 +495,15 @@ function InfluencerDetailScreen({
   async function handleDelete() {
     setDeleting(true);
     try {
-      await fetch("/api/conteudo-influs", {
+      const delRes = await fetch("/api/conteudo-influs", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: influencer.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       onDelete();
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeleting(false);
     }
@@ -570,7 +556,7 @@ function InfluencerDetailScreen({
         className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-5"
       >
         <ChevronLeft size={15} />
-        Voltar para Conteúdo Influs
+        Voltar para Conteúdo dos Influs
       </button>
 
       {/* Header */}
@@ -946,13 +932,16 @@ function ConteudoInflusTab() {
     if (!avulsoDeleteTarget) return;
     setDeletingAvulso(true);
     try {
-      await fetch("/api/conteudo-influs", {
+      const delRes = await fetch("/api/conteudo-influs", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: avulsoDeleteTarget.id }),
       });
+      if (!delRes.ok) throw new Error("Não foi possível excluir. Tente novamente.");
       setInfluencers((prev) => prev.filter((i) => i.id !== avulsoDeleteTarget.id));
       setAvulsoDeleteTarget(null);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Erro ao excluir.");
     } finally {
       setDeletingAvulso(false);
     }
@@ -982,7 +971,7 @@ function ConteudoInflusTab() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-5 gap-3">
         <p className="text-sm text-muted-foreground leading-relaxed">
           Cadastre influenciadores parceiros e os vídeos/conteúdos que eles postaram.
         </p>
@@ -998,23 +987,18 @@ function ConteudoInflusTab() {
         </div>
       </div>
 
-      {/* Sub-tabs: Todos / Fixos / Avulsos */}
-      <div className="flex gap-1 bg-gray-light p-1 rounded-lg w-fit mb-6">
-        {CONTENT_SUB_TABS.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setSubTab(key)}
-            className={cn(
-              "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
-              subTab === key
-                ? "bg-white text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {/* Filtro: Todos / Fixos / Avulsos */}
+      <SegmentedTabs
+        aria-label="Filtrar por tipo"
+        size="sm"
+        items={CONTENT_SUB_TABS.map(({ key, label }) => ({
+          id: key,
+          label,
+          count: key === "todos" ? influencers.length : influencers.filter((i) => i.tipo === (key === "fixos" ? "fixo" : "avulso")).length,
+        }))}
+        value={subTab}
+        onChange={setSubTab}
+      />
 
       {loading ? (
         <div className="flex items-center gap-2 text-muted-foreground text-sm py-10">
@@ -1267,47 +1251,39 @@ function ConteudoInflusTab() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: "recursos", label: "Recursos" },
-  { key: "datas-comemorativas", label: "Datas Comemorativas" },
-  { key: "conteudo-influs", label: "Conteúdo Influs" },
-  { key: "calendario-influ", label: "Calendário Influ (Avulso)" },
-];
+const TABS = [
+  { id: "recursos", label: "Recursos", icon: FolderOpen },
+  { id: "datas-comemorativas", label: "Datas Comemorativas", icon: CalendarHeart },
+  { id: "influenciadores", label: "Influenciadores", icon: Video },
+] as const;
+
+const INFLU_TABS = [
+  { id: "conteudo", label: "Conteúdo dos Influs" },
+  { id: "calendario", label: "Calendário de Avulsos" },
+] as const;
+type InfluSubTab = (typeof INFLU_TABS)[number]["id"];
 
 export default function ComunicacaoDesignPage() {
-  const [tab, setTab] = useState<Tab>("recursos");
+  const [tab, setTab] = useTabParam<Tab>("tab", TABS.map((t) => t.id), "recursos", ["sub"]);
+  const [influTab, setInfluTab] = useTabParam<InfluSubTab>("sub", INFLU_TABS.map((t) => t.id), "conteudo");
 
   return (
-    <div className="p-4 sm:p-8 max-w-3xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Comunicação e Design</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Acesse os materiais, diretrizes e ferramentas da área de Comunicação e Design.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Comunicação e Design"
+        description="Materiais de marca, datas comemorativas e a gestão de influenciadores parceiros."
+      />
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-gray-light p-1 rounded-lg w-fit mb-6">
-        {TABS.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={cn(
-              "px-4 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap",
-              tab === key
-                ? "bg-white text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <Tabs aria-label="Seções de Comunicação e Design" items={[...TABS]} value={tab} onChange={setTab} />
 
       {tab === "recursos" && <RecursosTab />}
       {tab === "datas-comemorativas" && <DatasComemorativasTab />}
-      {tab === "conteudo-influs" && <ConteudoInflusTab />}
-      {tab === "calendario-influ" && <CalendarioInfluTab />}
-    </div>
+      {tab === "influenciadores" && (
+        <div>
+          <SegmentedTabs aria-label="Influenciadores" items={[...INFLU_TABS]} value={influTab} onChange={setInfluTab} />
+          {influTab === "conteudo" ? <ConteudoInflusTab /> : <CalendarioInfluTab />}
+        </div>
+      )}
+    </PageContainer>
   );
 }

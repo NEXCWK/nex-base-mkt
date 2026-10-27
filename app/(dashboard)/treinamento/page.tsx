@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import {
-  GraduationCap, CheckCircle2, Circle, ChevronRight, ChevronLeft,
+  CheckCircle2, Circle, ChevronRight, ChevronLeft,
   BookOpen, Users, MapPin, Calendar, FileText, Package,
   Megaphone, Code2, Settings, GitBranch, CheckCheck, LayoutGrid,
   UserPlus, Trash2,
@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
+import { LoadingState } from "@/components/ui/states";
 import {
   MODULES, TOTAL_TASKS,
   type TrainingModule, type TaskType,
@@ -71,7 +73,7 @@ const TYPE_META: Record<TaskType, { label: string; icon: React.ElementType; colo
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TreinamentoPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [trainees, setTrainees] = useState<Trainee[]>([]);
   const [activeTraineeId, setActiveTraineeId] = useState<string | null>(null);
@@ -83,6 +85,10 @@ export default function TreinamentoPage() {
   const [deleteTarget, setDeleteTarget] = useState<Trainee | null>(null);
 
   useEffect(() => {
+    // Wait for the session: the legacy-progress migration below is keyed by
+    // the user's e-mail, and running it while the session is still loading
+    // would create an empty placeholder trail and skip the migration.
+    if (status === "loading") return;
     setMounted(true);
     let list = loadTrainees();
 
@@ -106,7 +112,7 @@ export default function TreinamentoPage() {
     }
     setTrainees(list);
     setActiveTraineeId(list[0]?.id ?? null);
-  }, [session?.user?.email, session?.user?.name]);
+  }, [status, session?.user?.email, session?.user?.name]);
 
   const activeTrainee = trainees.find((t) => t.id === activeTraineeId) ?? null;
   const progress = activeTrainee?.progress ?? {};
@@ -160,38 +166,37 @@ export default function TreinamentoPage() {
     setDeleteTarget(null);
   }
 
-  const totalDone = Object.values(progress).filter(Boolean).length;
+  // Count only tasks that still exist in the trail (old ids would push it past 100%).
+  const totalDone = MODULES.flatMap(getModuleTasks).filter((t) => progress[t.id]).length;
   const globalPct = TOTAL_TASKS ? (totalDone / TOTAL_TASKS) * 100 : 0;
 
   const currentModuleIndex = MODULES.findIndex((m) => m.id === activeModule);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return (
+      <PageContainer width="xl">
+        <LoadingState />
+      </PageContainer>
+    );
+  }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* ── Page header ── */}
-      <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-5">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-9 h-9 bg-gray-light rounded-lg flex items-center justify-center shrink-0">
-            <GraduationCap size={17} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Treinamento</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Trilha de onboarding para novos membros do time Nex
-            </p>
-          </div>
-        </div>
-
+    <PageContainer width="xl">
+      <PageHeader
+        title="Treinamento"
+        description="Trilha de onboarding para novos membros do time Nex."
+        actions={
+          <>
         {/* Trainee controls */}
-        <div className="flex items-center justify-end gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           {trainees.length > 0 && (
             <div className="relative">
               <Users size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <select
                 value={activeTraineeId ?? ""}
                 onChange={(e) => { setActiveTraineeId(e.target.value); setActiveModule(null); }}
-                className="pl-7 pr-3 h-9 rounded-md border border-gray-medium text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black max-w-[200px]"
+                aria-label="Treinamento ativo"
+                className="pl-7 pr-3 h-10 rounded-lg border border-gray-medium text-sm bg-white shadow-xs focus:outline-none focus:ring-2 focus:ring-black max-w-[220px]"
               >
                 {trainees.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
@@ -210,19 +215,22 @@ export default function TreinamentoPage() {
               <Trash2 size={14} />
             </Button>
           )}
-          <Button variant="accent" size="sm" onClick={() => setNewOpen(true)}>
-            <UserPlus size={14} />
+          <Button variant="accent" onClick={() => setNewOpen(true)}>
+            <UserPlus size={15} />
             Novo treinamento
           </Button>
         </div>
-
+          </>
+        }
+      >
         {activeTrainee && (
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-sm text-muted-foreground mt-4 inline-flex items-center gap-2 rounded-full border border-gray-medium bg-canvas px-3 py-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
             Treinando <span className="font-600 text-foreground">{activeTrainee.name}</span>
             {" · "}iniciado em {format(parseISO(activeTrainee.startedAt), "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
           </p>
         )}
-      </div>
+      </PageHeader>
 
       {/* New trainee modal */}
       <Modal
@@ -270,16 +278,16 @@ export default function TreinamentoPage() {
       </Modal>
 
       {/* ── TRILHA ── */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex gap-6 items-start">
           {/* Module mini-sidebar */}
-          <div className="hidden md:flex w-52 shrink-0 border-r border-gray-medium bg-white flex-col overflow-y-auto scrollbar-hide px-3 py-3 gap-1 ml-8">
+          <nav aria-label="Módulos" className="hidden md:flex w-56 shrink-0 sticky top-6 max-h-[calc(100dvh-3rem)] flex-col overflow-y-auto scrollbar-hide rounded-xl border border-gray-medium bg-canvas p-2 gap-1">
             <button
               onClick={() => setActiveModule(null)}
               className={cn(
                 "flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors text-left",
                 activeModule === null
-                  ? "bg-gray-light text-foreground font-semibold"
-                  : "text-muted-foreground hover:bg-gray-light hover:text-foreground"
+                  ? "bg-white text-foreground font-semibold shadow-card ring-1 ring-black/5"
+                  : "text-muted-foreground hover:bg-white hover:text-foreground"
               )}
             >
               <LayoutGrid size={13} className="shrink-0" />
@@ -299,8 +307,8 @@ export default function TreinamentoPage() {
                   className={cn(
                     "flex items-start gap-2 px-3 py-2.5 rounded-md text-sm transition-colors text-left group",
                     active
-                      ? "bg-gray-light text-foreground font-semibold"
-                      : "text-muted-foreground hover:bg-gray-light hover:text-foreground"
+                      ? "bg-white text-foreground font-semibold shadow-card ring-1 ring-black/5"
+                      : "text-muted-foreground hover:bg-white hover:text-foreground"
                   )}
                 >
                   <div className="shrink-0 mt-0.5">
@@ -323,12 +331,12 @@ export default function TreinamentoPage() {
                 </button>
               );
             })}
-          </div>
+          </nav>
 
           {/* Main content */}
-          <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6">
+          <div className="flex-1 min-w-0">
             {/* Global progress bar */}
-            <div className="mb-6 p-4 bg-white border border-gray-medium rounded-xl">
+            <div className="mb-6 p-5 bg-white border border-gray-medium rounded-xl shadow-card">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-600">Progresso geral</p>
                 <p className="text-sm text-muted-foreground">
@@ -337,7 +345,7 @@ export default function TreinamentoPage() {
               </div>
               <div className="w-full h-2 bg-gray-medium rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-foreground rounded-full transition-all duration-300"
+                  className="h-full bg-accent rounded-full transition-all duration-300"
                   style={{ width: `${globalPct}%` }}
                 />
               </div>
@@ -367,7 +375,7 @@ export default function TreinamentoPage() {
             )}
           </div>
         </div>
-    </div>
+    </PageContainer>
   );
 }
 

@@ -27,12 +27,14 @@ export function Modal({
   // Auto-focus and scroll-lock: only when modal opens, never on re-renders
   React.useEffect(() => {
     if (!open) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
     document.body.style.overflow = "hidden";
     const el = dialogRef.current;
     const target = el?.querySelector<HTMLElement>("input, textarea, select, button:not([aria-label='Fechar'])");
     (target ?? el)?.focus();
     return () => {
       document.body.style.overflow = "";
+      previouslyFocused?.focus?.();
     };
   }, [open]);
 
@@ -48,44 +50,63 @@ export function Modal({
     };
   }, [open, closable, onClose]);
 
+  const titleId = React.useId();
+  const descId = React.useId();
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center sm:p-4">
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-overlay-in"
+        className="absolute inset-0 bg-black/45 backdrop-blur-[2px] animate-overlay-in"
         onClick={closable ? onClose : undefined}
+        aria-hidden
       />
       <div
         ref={dialogRef}
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby={title ? titleId : undefined}
+        aria-describedby={description ? descId : undefined}
         className={cn(
-          "relative z-10 w-full max-w-md rounded-xl bg-white border border-gray-medium shadow-xl",
-          "max-h-[88vh] flex flex-col animate-modal-in",
+          "relative z-10 w-full max-w-md bg-white shadow-pop outline-none",
+          "rounded-t-2xl sm:rounded-2xl border border-gray-medium",
+          "max-h-[92dvh] sm:max-h-[88dvh] flex flex-col animate-modal-in",
           className
         )}
       >
-        <div className="flex items-start justify-between p-6 pb-0 shrink-0">
-          <div>
-            {title && <h2 className="text-lg font-700 leading-tight">{title}</h2>}
+        {/* Grab handle (mobile sheet) */}
+        <div className="sm:hidden flex justify-center pt-2.5 -mb-2 shrink-0" aria-hidden>
+          <span className="h-1 w-10 rounded-full bg-gray-medium" />
+        </div>
+        <div className="flex items-start justify-between gap-4 px-5 sm:px-6 pt-5 sm:pt-6 shrink-0">
+          <div className="min-w-0">
+            {title && (
+              <h2 id={titleId} className="text-lg font-bold leading-tight tracking-tight">
+                {title}
+              </h2>
+            )}
             {description && (
-              <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+              <p id={descId} className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+                {description}
+              </p>
             )}
           </div>
           {closable && onClose && (
             <button
+              type="button"
               onClick={onClose}
               aria-label="Fechar"
-              className="ml-4 rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors"
+              className="-mr-1.5 -mt-1 shrink-0 rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-gray-light transition-colors"
             >
-              <X size={16} />
+              <X size={18} />
             </button>
           )}
         </div>
-        <div className="p-6 overflow-y-auto">{children}</div>
+        <div className="px-5 sm:px-6 pt-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:pb-6 overflow-y-auto overscroll-contain">
+          {children}
+        </div>
       </div>
     </div>
   );

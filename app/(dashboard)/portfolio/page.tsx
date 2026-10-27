@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/modal";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
+import { LoadingState } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -495,6 +497,17 @@ export default function PortfolioPage() {
     })();
   }, []);
 
+  // Edits only persist after "Salvar alterações": warn before leaving with unsaved changes.
+  useEffect(() => {
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [dirty]);
+
   const mutate = useCallback((fn: (prev: Section[]) => Section[]) => {
     setSections((prev) => fn(prev));
     setDirty(true);
@@ -552,47 +565,41 @@ export default function PortfolioPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24 text-muted-foreground">
-        <Loader2 size={20} className="animate-spin mr-2" /> Carregando portfólio…
-      </div>
+      <PageContainer>
+        <LoadingState label="Carregando portfólio…" />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
-      {/* Header */}
-      <header className="pb-6 border-b border-gray-medium">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-medium tracking-widest uppercase text-muted-foreground mb-3 flex items-center gap-2">
-              <span className="inline-block w-4 h-0.5 bg-accent" />
-              Portfólio de produtos
-            </p>
-            <h1 className="text-4xl font-bold tracking-tight leading-none">Espaços, planos<br />&amp; serviços.</h1>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
+    <PageContainer>
+      <PageHeader
+        title="Espaços, planos & serviços"
+        description="Produtos, preços e condições reunidos num lugar só."
+        actions={
+          <>
             {dirty && (
-              <Button variant="accent" size="sm" onClick={save} disabled={saving}>
-                {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+              <Button variant="accent" onClick={save} disabled={saving}>
+                {saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
                 Salvar alterações
               </Button>
             )}
-            <Button variant={editMode ? "default" : "outline"} size="sm" onClick={() => setEditMode((v) => !v)}>
-              {editMode ? <><X size={14} /> Sair da edição</> : <><Pencil size={14} /> Editar</>}
+            <Button variant={editMode ? "default" : "outline"} onClick={() => setEditMode((v) => !v)}>
+              {editMode ? <><X size={15} /> Sair da edição</> : <><Pencil size={15} /> Editar</>}
             </Button>
-          </div>
-        </div>
-        <p className="text-sm text-muted-foreground mt-3 max-w-md">Produtos, preços e condições reunidos num lugar só.</p>
-        {error && <p className="text-xs text-red-500 mt-3">{error}</p>}
+          </>
+        }
+      >
+        {error && <p className="text-sm text-red-600 mt-4">{error}</p>}
         {editMode && (
-          <p className="text-xs text-muted-foreground mt-3 bg-gray-light border border-gray-medium rounded-md px-3 py-2">
+          <p className="text-sm text-foreground mt-4 bg-accent-soft border border-accent/60 rounded-lg px-3.5 py-2.5">
             Modo de edição ativo. Altere seções e itens; clique em <strong>Salvar alterações</strong> para que todos vejam.
           </p>
         )}
-      </header>
+      </PageHeader>
 
       {/* Unit legend */}
-      <div className="flex gap-3 flex-wrap py-5 border-b border-gray-medium">
+      <div className="flex gap-2 flex-wrap pb-5 border-b border-gray-medium">
         {[
           { unit: "fco" as Unit, label: "Francisco Rocha (FCO)" },
           { unit: "cpe" as Unit, label: "Casa de Pedra — Nex House (CPE)" },
@@ -720,6 +727,6 @@ export default function PortfolioPage() {
           </div>
         </Modal>
       )}
-    </div>
+    </PageContainer>
   );
 }

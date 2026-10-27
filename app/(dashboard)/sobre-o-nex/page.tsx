@@ -1,32 +1,33 @@
 "use client";
 
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { FileUpload } from "@/components/upload/FileUpload";
+import { PageContainer, PageHeader } from "@/components/ui/page-header";
+import { Tabs, SegmentedTabs, useTabParam } from "@/components/ui/tabs";
 import {
   Users, Heart, Compass, Layers, Share2, Leaf,
-  MapPin, Phone,
+  MapPin, Phone, History, Sparkles, FolderOpen,
 } from "lucide-react";
 
 // ─── Tab definitions ──────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: "historia", label: "História do Nex" },
-  { id: "manifesto", label: "Manifesto e Posicionamento" },
-  { id: "brandbook", label: "BrandBook" },
-  { id: "codigo-de-cultura", label: "Codigo de Cultura" },
-  { id: "midia-kit", label: "Midia Kit" },
+  { id: "historia", label: "História do Nex", icon: History },
+  { id: "manifesto", label: "Manifesto e Posicionamento", icon: Sparkles },
+  { id: "materiais", label: "Materiais Institucionais", icon: FolderOpen },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
 
-const FILE_UPLOAD_TABS: TabId[] = ["brandbook", "codigo-de-cultura", "midia-kit"];
+// `category` is the storage folder name used by the upload API — keep it
+// unchanged so existing files keep showing up; `label` is just for display.
+const MATERIAIS = [
+  { id: "brandbook", label: "BrandBook", category: "BrandBook" },
+  { id: "codigo-de-cultura", label: "Código de Cultura", category: "Codigo de Cultura" },
+  { id: "midia-kit", label: "Mídia Kit", category: "Midia Kit" },
+] as const;
 
-const FILE_LABELS: Record<string, string> = {
-  "brandbook": "BrandBook",
-  "codigo-de-cultura": "Codigo de Cultura",
-  "midia-kit": "Midia Kit",
-};
+type MaterialId = (typeof MATERIAIS)[number]["id"];
 
 // ─── História do Nex ─────────────────────────────────────────────────────────
 
@@ -107,10 +108,7 @@ function HistoriaTab() {
               {/* Content */}
               <div className={cn("pb-2", i === TIMELINE.length - 1 ? "" : "")}>
                 <div className="flex items-baseline gap-3 mb-1.5">
-                  <span
-                    className="text-sm font-bold tracking-wide"
-                    style={{ color: "#FFD400", textShadow: "0 0 0 #000", WebkitTextStroke: "0.5px #b8980a" }}
-                  >
+                  <span className="text-sm font-bold tracking-wide text-foreground border-b-2 border-accent leading-tight">
                     {item.year}
                   </span>
                   {item.isNew && (
@@ -212,9 +210,9 @@ function ManifestoTab() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-gray-medium rounded-xl overflow-hidden border border-gray-medium">
           {PILLARS.map(({ icon: Icon, name, sub, desc }) => (
             <div key={name} className="bg-white p-5 flex flex-col gap-3">
-              <Icon size={20} className="text-muted-foreground" strokeWidth={1.5} />
+              <Icon size={20} className="text-accent-strong" strokeWidth={1.5} />
               <div>
-                <p className="text-sm font-bold leading-snug" style={{ color: "#b8980a" }}>
+                <p className="text-sm font-bold leading-snug text-foreground">
                   {name}
                 </p>
                 <p className="text-[11px] text-muted-foreground italic mt-0.5">{sub}</p>
@@ -295,58 +293,37 @@ function ManifestoTab() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SobreONexPage() {
-  const [activeTab, setActiveTab] = useState<TabId>("historia");
+  const [activeTab, setActiveTab] = useTabParam<TabId>("tab", TABS.map((t) => t.id), "historia", ["sub"]);
+  const [material, setMaterial] = useTabParam<MaterialId>("sub", MATERIAIS.map((m) => m.id), "brandbook");
+  const current = MATERIAIS.find((m) => m.id === material) ?? MATERIAIS[0];
 
   return (
-    <div className="p-4 sm:p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Sobre o Nex</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          História, identidade e materiais institucionais da empresa.
-        </p>
-      </div>
+    <PageContainer width="md">
+      <PageHeader
+        title="Sobre o Nex"
+        description="História, identidade e materiais institucionais da empresa."
+      />
 
-      {/* Tabs */}
-      <div className="border-b border-gray-medium mb-8">
-        <nav className="flex gap-1 flex-wrap" role="tablist">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "px-4 py-2.5 text-sm font-medium rounded-t-md transition-colors relative -mb-px whitespace-nowrap",
-                activeTab === tab.id
-                  ? "text-black border-b-2 border-black"
-                  : "text-muted-foreground hover:text-black hover:bg-gray-light"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      <Tabs aria-label="Seções sobre o Nex" items={[...TABS]} value={activeTab} onChange={setActiveTab} />
 
-      {/* Content */}
       {activeTab === "historia" && <HistoriaTab />}
       {activeTab === "manifesto" && <ManifestoTab />}
-      {FILE_UPLOAD_TABS.includes(activeTab) && (
+      {activeTab === "materiais" && (
         <div>
-          <div className="mb-4">
-            <h2 className="text-base font-semibold text-black">{FILE_LABELS[activeTab]}</h2>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Arquivos relacionados a {FILE_LABELS[activeTab]}.
-            </p>
-          </div>
+          <SegmentedTabs
+            aria-label="Material"
+            items={MATERIAIS.map(({ id, label }) => ({ id, label }))}
+            value={material}
+            onChange={setMaterial}
+          />
           <FileUpload
-            key={activeTab}
+            key={current.id}
             section="Sobre o Nex"
-            category={FILE_LABELS[activeTab]}
-            label={FILE_LABELS[activeTab]}
+            category={current.category}
+            label={current.label}
           />
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

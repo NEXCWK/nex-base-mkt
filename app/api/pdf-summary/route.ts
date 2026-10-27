@@ -183,7 +183,7 @@ export async function POST(req: NextRequest) {
         if (!text || text.length < 30) {
           throw new Error("no_text");
         }
-        const summary = await generateSummary(text, path.basename(storedName.replace(/^\d+_/, "")));
+        const summary = await generateSummary(text, path.basename(storedName.replace(/^\d{13}[a-z0-9]{0,5}_/, "")));
         // Re-read just before writing in case another request finished meanwhile.
         const fresh = readSummaries(sectionDir);
         if (!fresh[id]) {

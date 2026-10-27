@@ -21,7 +21,7 @@ type FetchState = "idle" | "loading" | "success" | "error";
 function getRelativeLabel(dateStr: string): string {
   const date = parseISO(dateStr);
   if (isToday(date)) return "Hoje";
-  if (isTomorrow(date)) return "Amanha";
+  if (isTomorrow(date)) return "Amanhã";
   return format(date, "EEE, d MMM", { locale: ptBR });
 }
 
@@ -60,14 +60,14 @@ export function CalendarWidget() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-sm">
           <Calendar size={15} className="text-muted-foreground" />
-          Proximos Eventos
+          Próximos eventos
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-3">
         {state === "loading" && (
           <div className="space-y-2">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-12 rounded-md bg-gray-light animate-pulse" />
+              <div key={i} className="h-12 rounded-lg bg-gray-light animate-pulse" />
             ))}
           </div>
         )}
@@ -99,11 +99,11 @@ export function CalendarWidget() {
               return (
                 <li
                   key={event.id}
-                  className="flex items-start gap-3 px-3 py-2.5 rounded-md hover:bg-gray-light transition-colors group"
+                  className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-light transition-colors group"
                 >
                   <span
                     className={cn(
-                      "mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full",
+                      "mt-1.5 shrink-0 w-1.5 h-1.5 rounded-full",
                       isCurrentDay ? "bg-accent" : "bg-gray-medium"
                     )}
                   />
