@@ -22,6 +22,7 @@ const SEED_USERS: User[] = [
   { id: "3", email: "felipe@nexcoworking.com.br", name: "Felipe", password: INITIAL_HASH, firstAccess: true, role: "admin" },
   { id: "4", email: "bruna@nexcoworking.com.br", name: "Bruna", password: INITIAL_HASH, firstAccess: true, role: "member" },
   { id: "5", email: "luiza@nexcoworking.com.br", name: "Luiza", password: INITIAL_HASH, firstAccess: true, role: "member" },
+  { id: "6", email: "admin@nexcoworking.com.br", name: "Admin", password: INITIAL_HASH, firstAccess: true, role: "admin" },
 ];
 
 export function readUsers(): User[] {

@@ -38,5 +38,13 @@
     "password": "$2b$10$ixJ.MOpRPYn90.INcSmMou/RA7.nJf5lCWxeshP9.BFTjF3YbIBPW",
     "firstAccess": true,
     "role": "member"
+  },
+  {
+    "id": "6",
+    "email": "admin@nexcoworking.com.br",
+    "name": "Admin",
+    "password": "$2b$10$ixJ.MOpRPYn90.INcSmMou/RA7.nJf5lCWxeshP9.BFTjF3YbIBPW",
+    "firstAccess": true,
+    "role": "admin"
   }
 ]
